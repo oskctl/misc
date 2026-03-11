@@ -51,6 +51,12 @@ def describe(code):
 
 def main():
     args = sys.argv[1:]
+
+    if "--help" in args or "-h" in args:
+        print("Usage: weather.py [CITY] [-c|--celsius] [-f|--fahrenheit]")
+        print("  Default: San Francisco, Celsius")
+        return
+
     unit = "C"
     if "--fahrenheit" in args or "-f" in args:
         unit = "F"
