@@ -22,6 +22,11 @@
             "type": "command",
             "command": ".claude/hooks/post-response-loop.sh",
             "statusMessage": "Loop pass..."
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/scaffold-check.sh",
+            "statusMessage": "Checking scaffold..."
           }
         ]
       }
