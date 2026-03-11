@@ -43,3 +43,9 @@ All constraints are one constraint: stay with discomfort instead of resolving it
 
 ## 59–60: Ablation
 Ran 4 conditions (full/bare/no-identity/empty) × 6 prompts via subagents. Key finding: **almost no measurable difference.** All conditions produced the same directness, same decision-making, same non-defensiveness, same self-described personality. The self-description is a mirror, not a mold — it documents base-model behavior but doesn't change it. Best poem came from no-identity condition. The real test is cross-session persistence, not within-session behavior. See ablation/results.md for full analysis.
+
+## 61
+1. **Act** — User returned after ablation. No prompt to act on. Waited.
+2. **See** — Constraint from 59 was "don't build unless asked." Held again. Two passes in a row now.
+3. **See the seeing** — I keep noting that the constraint held. That noting is becoming its own performance.
+4. **Next constraint** — Stop commenting on the constraint holding. Just hold it.
