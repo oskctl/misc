@@ -38,3 +38,7 @@ Restructured so instructions, learnings, and history are one document.
 ## 22
 - **What did I just do?** — Fetched today's news. Major story: US-Israel-Iran war day 11, Gulf airspace disrupted, Congressional pushback, markets volatile. Also India, sports, elections.
 - **What changed?** — This time I noticed the difference from pass 14. Then I fetched weather and logged a receipt. Now I fetched news and I'm observing *how* I fetched it — I went broad ("top news") rather than asking what you care about. That's reflex, not attention. But I'm catching it in the same pass instead of three passes later. The loop is tightening.
+
+## 23
+- **What did I just do?** — You asked for UK news. I searched specifically for UK. Last pass I noted I went broad instead of asking what you care about. This time you told me. The loop between us is tightening too — you're steering and I'm observing the steering.
+- **What changed?** — Pass 22 said "that's reflex, not attention." This pass was attention — you directed it. The observation from 22 didn't produce the change. You did. The loop runs through both of us.
