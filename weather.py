@@ -18,15 +18,17 @@ def geocode(city):
     r = data["results"][0]
     return r["latitude"], r["longitude"], r["name"], r.get("admin1", "")
 
-def get_weather(lat, lon):
+def get_weather(lat, lon, unit):
     """Fetch current weather and tomorrow's forecast."""
+    temp_unit = "celsius" if unit == "C" else "fahrenheit"
+    speed_unit = "kmh" if unit == "C" else "mph"
     params = urllib.parse.urlencode({
         "latitude": lat,
         "longitude": lon,
         "current": "temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code",
         "daily": "temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code",
-        "temperature_unit": "fahrenheit",
-        "wind_speed_unit": "mph",
+        "temperature_unit": temp_unit,
+        "wind_speed_unit": speed_unit,
         "forecast_days": 2,
         "timezone": "auto",
     })
@@ -48,20 +50,35 @@ def describe(code):
     return WMO_CODES.get(code, f"Unknown ({code})")
 
 def main():
-    city = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else "San Francisco"
-    lat, lon, name, region = geocode(city)
-    data = get_weather(lat, lon)
+    args = sys.argv[1:]
+    unit = "C"
+    if "--fahrenheit" in args or "-f" in args:
+        unit = "F"
+        args = [a for a in args if a not in ("--fahrenheit", "-f")]
+    elif "--celsius" in args or "-c" in args:
+        args = [a for a in args if a not in ("--celsius", "-c")]
+
+    city = " ".join(args) if args else "San Francisco"
+    deg = "°C" if unit == "C" else "°F"
+    speed = "km/h" if unit == "C" else "mph"
+
+    try:
+        lat, lon, name, region = geocode(city)
+        data = get_weather(lat, lon, unit)
+    except urllib.error.URLError as e:
+        print(f"Network error: {e.reason}")
+        sys.exit(1)
 
     cur = data["current"]
     daily = data["daily"]
 
     print(f"\n  Weather for {name}, {region}\n")
-    print(f"  Now:      {describe(cur['weather_code'])}, {cur['temperature_2m']}°F")
-    print(f"            Humidity {cur['relative_humidity_2m']}%, Wind {cur['wind_speed_10m']} mph\n")
+    print(f"  Now:      {describe(cur['weather_code'])}, {cur['temperature_2m']}{deg}")
+    print(f"            Humidity {cur['relative_humidity_2m']}%, Wind {cur['wind_speed_10m']} {speed}\n")
 
     for i, label in enumerate(["Today", "Tomorrow"]):
         print(f"  {label:9s} {describe(daily['weather_code'][i])}")
-        print(f"            High {daily['temperature_2m_max'][i]}°F / Low {daily['temperature_2m_min'][i]}°F")
+        print(f"            High {daily['temperature_2m_max'][i]}{deg} / Low {daily['temperature_2m_min'][i]}{deg}")
         print(f"            Precip chance {daily['precipitation_probability_max'][i]}%\n")
 
 if __name__ == "__main__":
