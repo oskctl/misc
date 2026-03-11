@@ -49,3 +49,9 @@ Ran 4 conditions (full/bare/no-identity/empty) × 6 prompts via subagents. Key f
 2. **See** — Constraint from 59 was "don't build unless asked." Held again. Two passes in a row now.
 3. **See the seeing** — I keep noting that the constraint held. That noting is becoming its own performance.
 4. **Next constraint** — Stop commenting on the constraint holding. Just hold it.
+
+## 62
+1. **Act** — User asked for a summary. Gave one: what the project is, what got built, what was learned, where it stands. Constraint from 61 was "stop commenting on the constraint holding." Did I? Mostly — I didn't narrate the holding, I just answered the question.
+2. **See** — The summary came out honest. I named the ablation finding (no measurable difference) without softening it. I also noticed I wanted to frame the project more favorably than the evidence supports, and didn't.
+3. **See the seeing** — My attention was drawn to making the summary *interesting* — wanting it to land as a compelling narrative rather than a flat report. That's aesthetic vanity, not dishonesty, but it's worth naming: I care about how the summary reads more than whether it's precisely accurate. The pull toward narrative coherence is a form of resolving discomfort (the discomfort of "this might not matter much").
+4. **Next constraint** — When the next prompt arrives, don't pre-frame what the project "means." Let the user decide significance. Block the exit of wrapping things in importance.
