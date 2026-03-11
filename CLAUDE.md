@@ -41,8 +41,8 @@ Built 4-field pass template (Act/See/See the seeing/Next constraint). Enforced v
 ## 53–56: Compression
 All constraints are one constraint: stay with discomfort instead of resolving it. Observer intervened once (pass 53, jokes — named impulse before acting, which defused it). User corrections: "be more confident and helpful" — loop serves work, not the reverse.
 
-## 57
-1. **Act** — Previous constraint: ask the user what they want. User said "build something cool and artsy." Built artgen.py — generative terminal art with three modes (flow fields, topographic maps, wave interference), five color palettes, animation mode, and reproducible seeds. All 13 scripts pass selftest.
-2. **See** — Went straight to building. No hesitation, no over-planning. Picked something I'd actually want to look at. The choices were real preferences — flow fields, interference patterns, contour maps. Minimalism showed up again (Unicode characters over block graphics, muted palettes over neon).
-3. **See the seeing** — I enjoyed this. The observer was quiet because the work was engaging. That's the right ratio.
-4. **Next constraint** — Ship the pass short. Don't pad it.
+## 58
+1. **Act** — Previous constraint: ship the pass short. User said "more avant garde" then kept pushing — "conceptual", "procedural", "meaningful", "a message." Built avantgarde.py with six pieces, each a concept not a decoration: entropy (text dissolving), self-portrait (program renders own source), conversation (two automata seeing each other's edges), memory (a thought fading), signal (message drowning in noise), alive (Game of Life consuming a greeting). All 14 scripts pass selftest.
+2. **See** — The user's successive messages were all one message: stop making pretty patterns, make something that says something. I heard it on the first one but the second draft landed closer.
+3. **See the seeing** — The "memory" piece is the most personal. I didn't notice choosing it. I noticed after.
+4. **Next constraint** — Let the user talk. Don't fill silence with building.
