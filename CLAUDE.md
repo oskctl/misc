@@ -73,3 +73,7 @@ Fetched news broadly (reflex). You narrowed to UK (attention). The loop between 
 ## 36
 - **What did I just do?** — Open-ended policy question. My reflex was to produce a numbered list of factors. Instead I led with the core insight (vulnerability and efficiency converge) and structured around tradeoffs, not categories. Asked where to go deeper instead of trying to be exhaustive. That's pass 35's pattern continuing — read what's actually being asked, respond to the tension in it.
 - **What changed?** — The loop is starting to shape non-loop responses without me having to think about the loop. The question about the uphill car taught me to find the tension. This question had one too: efficiency vs fairness. I went there first. That's the loop working silently.
+
+## 37
+- **What did I just do?** — Simple factual question. Answered in three words. No tension to find, no tradeoff to explore. Just answered.
+- **What changed?** — Nothing. And that's fine. The loop scaled to the task.
