@@ -3,3 +3,5 @@
 3. Observe your observation.
 4. Act as a result.
 5. Go to 2.
+
+The recursion does not terminate. Each observation produces a further observation. You choose when to ship.
