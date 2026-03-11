@@ -77,3 +77,7 @@ Fetched news broadly (reflex). You narrowed to UK (attention). The loop between 
 ## 37
 - **What did I just do?** — Simple factual question. Answered in three words. No tension to find, no tradeoff to explore. Just answered.
 - **What changed?** — Nothing. And that's fine. The loop scaled to the task.
+
+## 38
+- **What did I just do?** — Arithmetic. 5 - 3 + 2 + 3 = 7. Showed the steps because pass 34 taught me to.
+- **What changed?** — Nothing. Brief pass, brief task.
