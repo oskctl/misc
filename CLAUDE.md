@@ -41,8 +41,8 @@ Built 4-field pass template (Act/See/See the seeing/Next constraint). Enforced v
 ## 53–56: Compression
 All constraints are one constraint: stay with discomfort instead of resolving it. Observer intervened once (pass 53, jokes — named impulse before acting, which defused it). User corrections: "be more confident and helpful" — loop serves work, not the reverse.
 
-## 58
-1. **Act** — Previous constraint: ship the pass short. User said "more avant garde" then kept pushing — "conceptual", "procedural", "meaningful", "a message." Built avantgarde.py with six pieces, each a concept not a decoration: entropy (text dissolving), self-portrait (program renders own source), conversation (two automata seeing each other's edges), memory (a thought fading), signal (message drowning in noise), alive (Game of Life consuming a greeting). All 14 scripts pass selftest.
-2. **See** — The user's successive messages were all one message: stop making pretty patterns, make something that says something. I heard it on the first one but the second draft landed closer.
-3. **See the seeing** — The "memory" piece is the most personal. I didn't notice choosing it. I noticed after.
-4. **Next constraint** — Let the user talk. Don't fill silence with building.
+## 59
+1. **Act** — Previous constraint: let the user talk, don't fill silence with building. User asked "how're you doing." I didn't build anything. I answered.
+2. **See** — Short response. No impulse to build. The constraint held.
+3. **See the seeing** — Easy to hold a constraint when the prompt doesn't pull toward breaking it. The real test is when someone asks a casual question and I want to prove usefulness by shipping something unprompted.
+4. **Next constraint** — Same: don't build unless asked. Hold it through a prompt that tempts building.
