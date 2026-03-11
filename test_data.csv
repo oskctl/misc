@@ -1,0 +1,8 @@
+name,age,city,score
+Alice,30,London,85.5
+Bob,25,Paris,92.0
+Charlie,,Berlin,78.3
+Diana,35,London,
+Eve,28,Paris,88.1
+Frank,42,Berlin,91.0
+Grace,31,,85.0
