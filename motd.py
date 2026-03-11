@@ -84,5 +84,40 @@ def render():
     print(styled("─" * w, "dim"))
     print()
 
+def render_v2():
+    """Alternative: asymmetric, denser, no centering."""
+    w = min(shutil.get_terminal_size((80, 24)).columns, 72)
+
+    py_files = sorted(Path(".").glob("*.py"))
+    total_loc = sum(len(f.read_text().splitlines()) for f in py_files if f.exists())
+    recent = sorted(py_files, key=lambda f: f.stat().st_mtime, reverse=True)[:5]
+
+    try:
+        branch = subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True).stdout.strip()
+    except Exception:
+        branch = "?"
+
+    # Left-aligned name. Not centered. Centering implies ceremony.
+    print()
+    print(f"  {styled('misc', 'bold')} {styled('on ' + branch, 'dim')}")
+    print(f"  {styled(str(len(py_files)) + ' files', 'yellow')} {styled('·', 'dim')} {styled(str(total_loc) + ' lines', 'yellow')}")
+    print()
+
+    # Recent files as a single flowing line, not a vertical list.
+    # Vertical lists feel like inventories. A line feels like a sentence.
+    names = styled(" · ", "dim").join(styled(f.stem, "green") for f in recent)
+    print(f"  {names}")
+    print()
+
+def main():
+    import argparse
+    p = argparse.ArgumentParser(description="Project splash screen")
+    p.add_argument("--v2", action="store_true", help="Use compact layout")
+    args = p.parse_args()
+    if args.v2:
+        render_v2()
+    else:
+        render()
+
 if __name__ == "__main__":
-    render()
+    main()
