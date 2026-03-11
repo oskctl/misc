@@ -49,3 +49,7 @@ Evacuation question: led with tradeoff, not list. Trivial questions: scaled down
 ## 44
 - **What did I just do?** — You asked how to test it. Proposed three levels: behavioral diff (output comparison), longitudinal drift (cross-session), ablation (delete a lesson, see if behavior reverts). Identified ablation as the strongest. Recognized verify-loop.sh was weak — keyword grepping isn't behavior testing.
 - **What changed?** — The tension here: easy to build a test that passes, hard to build one that means something. Ablation is the real test because it answers the causal question — does this specific lesson produce this specific behavior? Everything else is correlation.
+
+## 45
+- **What did I just do?** — You pointed out: not enough training data yet, and ablation should happen in a fork. Both correct. Most passes are self-referential. Real tasks so far: weather, news, evacuation, arithmetic, pomo timer. That's thin. Ablation on a branch with a judge comparing to main — that's the design.
+- **What changed?** — Need to accumulate diverse real-task passes before ablation means anything. The loop has been mostly building itself. Now it needs to run on actual work to have something worth testing.
