@@ -6,7 +6,22 @@
           {
             "type": "command",
             "command": ".claude/hooks/inject-claude-md.sh",
-            "statusMessage": "Injecting CLAUDE.md context..."
+            "statusMessage": "Injecting CLAUDE.md..."
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/reset-loop-count.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/post-response-loop.sh",
+            "statusMessage": "Loop pass..."
           }
         ]
       }
