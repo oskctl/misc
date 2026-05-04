@@ -8,7 +8,7 @@ HDSI is structured around three pillars that capture independent stress channels
 
 ## The three pillars
 
-### Pillar 1: Stock burden (25% weight)
+### Pillar 1: Stock burden (20% weight in 4-pillar form, 25% in 3-pillar)
 
 The level of household debt relative to economic capacity. Two components:
 - BIS-style credit gap: debt-to-GDP minus its HP-filtered trend (default)
@@ -36,7 +36,7 @@ Range of correlations narrows from 0.50 (level) to 0.09 (gap) for the US, and fr
 
 The legacy level form is preserved as opt-in: `python -m src.build_index --level` writes `*_composite_level.csv` outputs. Only useful for reproducing the original POC numbers.
 
-### Pillar 2: Flow burden (45% weight)
+### Pillar 2: Flow burden (35% weight in 4-pillar form, 45% in 3-pillar)
 
 Debt service as a share of disposable income. Two components:
 - DSR level
@@ -65,7 +65,9 @@ Share of households unable to cover essential outgoings — captures the distres
 - Essentials level (own-history z-scored)
 - 5-year change in essentials share
 
-**US**: Census Bureau Supplemental Poverty Measure (SPM), annual 2009-2024. A-grade. Pre-2009 quarters back-filled with the 2009 value (15.3) — conservative imputation that preserves the 2008-Q4 Lehman validation episode. 2025-Q1 forward-filled from the 2024 value pending Sep 2026 release. The 2020-21 stimulus trough (SPM 11.7 → 7.8 → 12.4 across 2019-2022) is real signal driven by the expanded Child Tax Credit and pandemic stimulus — will register as a noticeable P4 movement during the policy transition.
+**US**: Census Bureau Supplemental Poverty Measure (SPM), annual 2009-2024. A-grade. Pre-2009 quarters back-filled with the 2009 value (15.3) — note that this is the post-recession peak, so the backfill *overstates* pre-GFC essentials stress somewhat. The trade-off is intentional: it preserves the 2008-Q4 Lehman validation episode in the composite (P4 contributes ~13 of the 70.5 composite at Lehman) without introducing fabricated variance. Replacing this with the Columbia CPSP "anchored SPM" back-cast for 2006-2008 is queued as ADR-020. 2025-Q1 forward-filled from the 2024 value pending Sep 2026 SPM release. The 2020-21 stimulus trough (SPM 11.7 → 7.8 → 12.4 across 2019-2022) is real signal driven by the expanded Child Tax Credit and pandemic stimulus — will register as a noticeable P4 movement during the policy transition.
+
+**Interpolation caveat for the 5y-change component.** SPM publishes annually but the pillar consumes a quarterly series. Linear interpolation gives 60+ quarterly observations from 16 annual stamps, with the last few quarters being forward-fills of the 2024 value. The `pct_change(20)` 5y-change component is therefore comparing forward-filled 2024 against interpolated 2019-Q4 — partly real signal, partly mechanical drift from the interpolation chain. The recent climb in P4 (50.9 in 2023-Q1 → 65.0 in 2024-Q4) is concentrated in the change_score; the level component is approximately flat. **Don't over-interpret recent P4 trajectory.** The level component is the cleaner read.
 
 **UK**: deferred to v1.2. Citizens Advice National Red Index back-calculates only to FY2019/20, giving three usable observations — below the minimum for country-historical standardisation. Acquiring Joseph Rowntree Foundation Minimum Income Standard "below MIS" share for 2009-2018 will close the gap; until then UK runs on the 3-pillar (25/45/30) form. See `data/_p4_methodology_note.md` and ADR-019.
 

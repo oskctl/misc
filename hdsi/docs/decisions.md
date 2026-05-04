@@ -269,16 +269,17 @@ The trade-off is that the tests don't tell you *why* something broke, only *that
 - US peak shifts slightly: was 81.0 at 2007-Q4 under 3-pillar; now 78.6 at 2007-Q4. Pre-GFC build-up still the historical peak.
 - 2020-21 SPM stimulus trough is real signal not artefact (expanded CTC + stimulus drove SPM from 11.7 → 7.8); will register as a noticeable P4 movement during the 2020-2022 transition. Documented per `data/_p4_methodology_note.md`.
 - UK composite is unchanged in v1.1 (still 3-pillar, weights 25/45/30, backwards-compatible with the v1 snapshot tests).
-- US 2006-2008 backfill is documented but synthetic. Replacing it with Columbia CPSP anchored-SPM is a TODO in the methodology note.
+- US 2006-2008 backfill is documented but synthetic. The flat 15.3 carry-back is the post-recession peak — it overstates pre-GFC essentials stress somewhat, but the composite impact at 2008-Q4 is small and it preserves the validation episode. Replacing with Columbia CPSP anchored-SPM is a TODO in the methodology note (ADR-020).
+- **Interpolation caveat for the 5y-change component.** SPM is annual; the pillar consumes a quarterly series via linear interpolation. The `pct_change(20)` 5y-change inside `build_pillar_4` is therefore comparing forward-filled current values against interpolated past values. The recent climb in P4 (50.9 in 2023-Q1 → 65.0 in 2024-Q4) is concentrated in the change_score; the level component is approximately flat. The level component is the cleaner read; recent P4 trajectory is partly artefact. Documented in methodology.md.
 - New CLI flag `--no-p4` reverts US to the 3-pillar form for reproducibility against the v1 snapshot. Combined with `--level`, reproduces the v0 POC numbers byte-for-byte.
 
-**Status.** US implemented in this change. UK opens ADR-013 as ADR-019b (UK Pillar 4 data acquisition + splice).
+**Status.** US implemented in this change. The UK portion of the original ADR-013 placeholder is split out as ADR-019b (UK Pillar 4 data acquisition + splice).
 
 ---
 
 ## Open ADRs (not yet resolved)
 
-- **ADR-013 / ADR-019b: UK Pillar 4 data acquisition + splice.** Acquire JRF MIS 2009-2018 annual values and CitA NRI underlying tables for 2020/21-2022/23. Apply the splice handling described in `data/_p4_methodology_note.md`. UK build will then move to 4-pillar weights (probably matching US 20/35/25/20, but worth confirming once UK P4 numbers are visible — the splice level-shift may justify a different weight).
+- **ADR-019b: UK Pillar 4 data acquisition + splice** (carved out of the original ADR-013 placeholder). Acquire JRF MIS 2009-2018 annual values and CitA NRI underlying tables for 2020/21-2022/23. Apply the splice handling described in `data/_p4_methodology_note.md`. UK build will then move to 4-pillar weights (probably matching US 20/35/25/20, but worth confirming once UK P4 numbers are visible — the splice level-shift may justify a different weight).
 - **ADR-014: Cross-country backtest.** Spain 2009, Iceland 2008, Korea 1997 are the obvious validation episodes. None implemented yet. Required before claiming the index generalises.
 - **ADR-015: UK Pillar 2 replacement.** Replace the proxy with BoE base rate × debt-to-income. Resolves ADR-007 properly.
 - **ADR-016: Weight robustness stress-test.** Per ADR-009, deferred until structural fixes land. Now substantially unblocked (ADR-017 + ADR-019); should run before any further weight changes.

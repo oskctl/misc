@@ -53,7 +53,7 @@ def build_composite(
 
     df = pd.concat(
         [p1[["p1"]], p2[["p2"]], p3[["p3"]]],
-        axis=1,
+        axis=1, sort=False,
     ).dropna()
 
     w1, w2, w3 = weights
@@ -86,7 +86,7 @@ def build_composite_4(
 
     df = pd.concat(
         [p1[["p1"]], p2[["p2"]], p3[["p3"]], p4[["p4"]]],
-        axis=1,
+        axis=1, sort=False,
     ).dropna()
 
     w1, w2, w3, w4 = weights

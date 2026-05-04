@@ -104,11 +104,12 @@ def chart_country_fans(us, uk):
         add_zone_labels(ax)
         ax.legend(loc="upper right", framealpha=0.9, fontsize=9)
     
-    fig.suptitle("Household Debt Stress Index — POC v1", fontsize=14, fontweight="bold", y=0.995)
+    fig.suptitle("Household Debt Stress Index — v1.1", fontsize=14, fontweight="bold", y=0.995)
     fig.text(
         0.5, 0.01,
-        "Composite of three pillars (stock 25%, flow 45%, inflation-lag 30%). "
-        "Shaded band shows range across pillars (proxy for distributional dispersion).",
+        "Weighted composite of country-specific pillars "
+        "(US: 4-pillar 20/35/25/20 incl. essentials; UK: 3-pillar 25/45/30 — see methodology.md). "
+        "Shaded band shows range across each country's pillars (proxy for distributional dispersion).",
         ha="center", fontsize=8.5, alpha=0.7,
     )
     plt.tight_layout(rect=[0, 0.03, 1, 0.97])
