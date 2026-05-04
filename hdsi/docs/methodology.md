@@ -11,12 +11,12 @@ HDSI is structured around three pillars that capture independent stress channels
 ### Pillar 1: Stock burden (25% weight)
 
 The level of household debt relative to economic capacity. Two components:
-- Debt-to-GDP ratio (or, with `--credit-gap` flag, deviation from HP-filtered trend)
+- BIS-style credit gap: debt-to-GDP minus its HP-filtered trend (default)
 - 5-year change in debt-to-GDP (captures velocity of accumulation)
 
-**Known issue with the level form:** debt-to-GDP inverts in inflation regimes. When nominal GDP outpaces nominal debt during inflation, the ratio falls — but real debt service can simultaneously rise. Same number, opposite meaning depending on regime.
+**Why the credit gap and not the level.** Using the debt-to-GDP level directly inverts in inflation regimes: when nominal GDP outpaces nominal debt during inflation, the ratio falls — but real debt service can simultaneously rise. Same number, opposite meaning depending on regime.
 
-Diagnostic: correlation of debt-to-GDP with P3 (the inflation pillar) by sub-period:
+Diagnostic: correlation of the level form with P3 (the inflation pillar) by sub-period:
 
 | Period | US | UK |
 |---|---|---|
@@ -24,7 +24,7 @@ Diagnostic: correlation of debt-to-GDP with P3 (the inflation pillar) by sub-per
 | Recovery (2011-2019) | +0.42 | −0.72 |
 | Inflation era (2020-2025) | **−0.45** | **−0.87** |
 
-The structural fix is to use the BIS credit gap (level minus HP-filtered trend) instead of the level. The gap stabilises the cross-regime correlation:
+The credit gap stabilises this correlation:
 
 | Period | US gap | UK gap |
 |---|---|---|
@@ -32,9 +32,9 @@ The structural fix is to use the BIS credit gap (level minus HP-filtered trend) 
 | Recovery | −0.17 | −0.69 |
 | Inflation era | −0.26 | −0.74 |
 
-Range of correlations narrows from 0.50 (level) to 0.09 (gap) for the US, and from 0.80 to 0.32 for the UK. Still some regime sensitivity but no sign-flipping.
+Range of correlations narrows from 0.50 (level) to 0.09 (gap) for the US, and from 0.80 to 0.32 for the UK. Still some regime sensitivity but no sign-flipping. See ADR-011 for the full diagnostic and ADR-017 for the decision to make the gap the default.
 
-The credit gap is enabled with `python -m src.build_index --credit-gap`. Default is the level form for backward compatibility with the original POC.
+The legacy level form is preserved as opt-in: `python -m src.build_index --level` writes `*_composite_level.csv` outputs. Only useful for reproducing the original POC numbers.
 
 ### Pillar 2: Flow burden (45% weight)
 
@@ -84,13 +84,16 @@ The penalty reflects an empirical observation: household debt crises don't compe
 
 The POC is validated against two known stress episodes:
 
+Numbers below are under the default (credit-gap) Pillar 1.
+
 | Episode | Composite | P1 | P2 | P3 | Reading |
 |---|---|---|---|---|---|
-| US 2008-Q4 (Lehman) | 75.6 | 82 | 84 | 51 | Debt-led ✓ |
-| US 2022-Q3 (inflation peak) | 64 | 50 | 43 | 87 | Inflation-led ✓ |
-| UK 2022-Q4 / 2023-Q1 | 78.2 | 42 | 92 | 70 | Inflation + rate combo ✓ |
+| US 2008-Q4 (Lehman) | 71.2 | 65 | 84 | 51 | Debt-led ✓ |
+| UK 2023-Q2 (UK peak) | 79.2 | 29 | 95 | 73 | Flow + inflation combo ✓ |
+| US 2025-Q1 (latest) | 52.8 | 37 | 55 | 63 | Mid-range, inflation-tilted |
+| UK 2025-Q1 (latest) | 50.4 | 30 | 53 | 63 | Mid-range, inflation-tilted (but see ADR-010 caveat) |
 
-The composite correctly identifies all three as stress episodes, and the pillar decomposition correctly identifies the dominant channel in each.
+The composite correctly identifies the historical episodes as stress events, and the pillar decomposition correctly identifies the dominant channel in each. These four readings are locked in `tests/test_snapshot.py`.
 
 ## Limitations
 
@@ -114,16 +117,15 @@ In regimes where stress migrates to non-formal channels (UK 2024-25 being the wo
 
 The methodological response is to add a fourth pillar capturing essentials arrears or residual-income negative-budget share (Citizens Advice publishes the latter for UK; ALICE/SPM provides analogues for the US). Not implemented in v0 due to data access constraints.
 
-## What would change in v1
+## What would change next
 
-In rough priority order:
+The structural P1 fix and a snapshot-test harness landed in v1. Remaining priorities, in order:
 
-1. **Switch P1 to BIS credit gap by default.** Structural fix for the inflation-regime inversion. Already implemented as opt-in.
-2. **Add Pillar 4: essentials/residual income.** Substantive fix for the migration blind spot.
-3. **Replace UK P2 proxy with BoE base rate × debt-to-income.** Removes the measurement artefact.
-4. **Backtest against Spain 2009 / Iceland 2008 / Korea 1997.** Test generalisation to non-Anglo crises.
-5. **Stress-test weight robustness.** Perturb the 25/45/30 weights by ±5 points each, see how much the composite moves. If small perturbations produce large composite changes, weights are overfit.
-6. **Distributional fan from household micro data.** Replace pillar-dispersion proxy with empirical quantiles from SCF (US) and WAS (UK).
+1. **Add Pillar 4: essentials/residual income.** Substantive fix for the migration blind spot. Citizens Advice (UK negative-budget share) and ALICE/SPM (US) are the data routes.
+2. **Replace UK P2 proxy with BoE base rate × debt-to-income.** Removes the measurement artefact documented in ADR-010.
+3. **Backtest against Spain 2009 / Iceland 2008 / Korea 1997.** Test generalisation to non-Anglo crises.
+4. **Stress-test weight robustness.** Perturb the 25/45/30 weights by ±5 points each. If small perturbations produce large composite changes, weights are overfit.
+5. **Distributional fan from household micro data.** Replace pillar-dispersion proxy with empirical quantiles from SCF (US) and WAS (UK).
 
 ## Citation
 

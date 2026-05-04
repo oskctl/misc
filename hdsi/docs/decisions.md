@@ -171,11 +171,11 @@ For the full conversation that produced these decisions, see `conversation.md`.
 
 **Decision.** Fix B (BIS credit gap) is the structural fix. Has macroprudential pedigree (Basel III countercyclical capital buffer uses it). Stable across regimes. No new parameters.
 
-**Implementation.** `pillars.build_pillar_1` takes `use_credit_gap` flag. Default False for backward compatibility with the original POC. `python -m src.build_index --credit-gap` produces V2 output.
+**Implementation.** `pillars.build_pillar_1` takes `use_credit_gap` flag. Originally `False` for backward compatibility with the POC; `True` since ADR-017 made it the default.
 
-**Consequences.** V2 raises UK P1 from 9.6 to 30.2 — the "headline-flattering" 9.6 was the inversion problem. V2 reading of 30.2 is closer to the true stress level. V2 raises US P1 from 27.3 to 36.8 (smaller adjustment because US has less inflation-driven distortion).
+**Consequences.** Credit-gap form raises UK P1 from 9.6 to 30.2 — the "headline-flattering" 9.6 was the inversion problem. The new reading of 30.2 is closer to the true stress level. US P1 goes from 27.3 to 36.8 (smaller adjustment because US has less inflation-driven distortion).
 
-**Status.** Implemented as opt-in. Should become default in v1.
+**Status.** Resolved by ADR-017 — credit gap is now default. Legacy level form is opt-in via `--level`.
 
 ---
 
@@ -194,12 +194,51 @@ For the full conversation that produced these decisions, see `conversation.md`.
 
 ---
 
+## ADR-017: Make the BIS credit gap the default for Pillar 1
+
+**Context.** ADR-011 implemented the BIS credit gap as a structural fix for the level-form inversion in inflation regimes, but kept the level form as default for reproducibility against the original POC. The level form is wrong: it inverts (negative correlation with composite stress) in inflation regimes and produces "headline-flattering" readings that disagree with the underlying economy. Keeping a known-broken default in the name of reproducibility was a stop-gap.
+
+**Options considered.**
+- **Keep level as default, gap as opt-in.** Status quo. Preserves byte-for-byte reproduction of the original POC numbers. Costs: anyone running `python -m src.build_index` gets the broken-in-inflation form. Downstream tools (`visualise`, `analyse`) read `us_composite.csv` / `uk_composite.csv` by default — those are the broken form unless the user knows to pass `--credit-gap`.
+- **Swap default to gap, level as opt-in.** Anyone running the entry point gets the structurally correct form. Reproducing the original POC requires explicit `--level`. Output filenames keep the canonical names for the default form; the legacy form gets a `_level` suffix.
+- **Remove level entirely.** Cleanest but loses the ability to re-derive the original POC numbers, which are referenced in `methodology.md` validation tables and external commits.
+
+**Decision.** Swap the default. `python -m src.build_index` now produces credit-gap-form `us_composite.csv` / `uk_composite.csv`. `python -m src.build_index --level` produces `us_composite_level.csv` / `uk_composite_level.csv`. The legacy `_v2` suffix from the opt-in era is retired (it's no longer "version 2 of anything" — it's the default).
+
+**Consequences.**
+- Downstream tools (`visualise`, `analyse`, the snapshot tests' default-form expectations) now operate on the credit-gap form by default. Charts will look slightly different from the v0 PNGs; the qualitative conclusions are unchanged.
+- The 2008 GFC peak composite drops from 75.6 to 71.2 under the new default, because the credit gap registers the pre-GFC build-up as elevated but doesn't pin it at z≈+2 the way the level does. The pillar decomposition still cleanly identifies it as a debt-led episode.
+- The UK 2023-Q2 peak rises from 78.2 to 79.2 — the credit gap and the rapid 5y change both register the pandemic-era debt expansion plus the post-pandemic stress.
+- The "expected numbers" reference table in `docs/CLAUDE.md` is updated and `tests/test_snapshot.py` locks both forms.
+
+**Status.** Implemented in this change. ADR-011's "Should become default in v1" is now satisfied.
+
+---
+
+## ADR-018: Snapshot tests over unit tests
+
+**Context.** The handover doc flagged "no tests" as a risk: analytical conclusions in `analyse.py` depend on the index being correct, and there was no automated way to detect silent regressions. The question was what kind of tests to add for a POC where the data is fixed snapshots and the methodology is the thing being validated.
+
+**Options considered.**
+- **Unit tests on individual functions** (`standardise`, `hp_filter`, `build_pillar_1`, etc.). Testable, but the failure modes that matter aren't usually at the function level — they're at the composition level. A bug where a pillar is correctly built but wrongly weighted, or where the date alignment between debt and CPI silently shifts by one quarter, would slip past per-function tests.
+- **Integration tests** (build the index, assert composite shape). Catches structural breakage but doesn't catch numerical drift.
+- **Snapshot tests** (assert the four reference readings to within 0.1). Directly tests the thing the methodology is validated on. If they break, either the methodology changed (and the snapshot needs updating in the same change) or there's a regression.
+- **Property tests** (e.g. composite is monotonic in each pillar holding others fixed). Conceptually nice but the penalty term and the standardisation feedback loop make this hard to specify cleanly.
+
+**Decision.** Snapshot tests. Both P1 forms covered, four reference points each (US Lehman, UK 2023-Q2 peak, US 2025-Q1, UK 2025-Q1). Tolerance 0.1, matching the precision the docs report numbers to.
+
+**Consequences.** Cheap to maintain — the four reference readings are documented in CLAUDE.md anyway. Cheap to run (~0.08s for all 8 tests). Catches the realistic failure modes: methodology drift, data-file corruption, accidental regressions when refactoring.
+
+The trade-off is that the tests don't tell you *why* something broke, only *that* it did. For diagnosis you still need the analyse.py output. That's fine — the test is the alarm, not the diagnostic.
+
+---
+
 ## Open ADRs (not yet resolved)
 
-- **ADR-013: Pillar 4 (essentials/residual income).** Conceptually agreed as priority 2 but not implemented (data access). Will require Citizens Advice negative-budget share for UK and ALICE/SPM threshold for US.
+- **ADR-013: Pillar 4 (essentials/residual income).** Conceptually agreed as priority 1 but not implemented (data access). Will require Citizens Advice negative-budget share for UK and ALICE/SPM threshold for US.
 - **ADR-014: Cross-country backtest.** Spain 2009, Iceland 2008, Korea 1997 are the obvious validation episodes. None implemented yet. Required before claiming the index generalises.
 - **ADR-015: UK Pillar 2 replacement.** Replace the proxy with BoE base rate × debt-to-income. Resolves ADR-007 properly.
-- **ADR-016: Weight robustness stress-test.** Per ADR-009, deferred until structural fixes land.
+- **ADR-016: Weight robustness stress-test.** Per ADR-009, deferred until structural fixes land. Now unblocked: ADR-017 made the structural P1 fix default.
 
 ---
 

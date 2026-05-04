@@ -12,13 +12,13 @@ HDSI combines three dimensions into a single 0-100 score, normalised against eac
 
 The four primary visualisations cover (1) per-country fan over time, (2) pillar decomposition showing which dimension drives each episode, (3) cross-country comparison, and (4) a 2D quadrant separating debt-driven from inflation-driven stress. The 2008 GFC and 2022-23 inflation episode appear as fundamentally different signatures despite producing similar composite peaks.
 
-US 2008 reading: composite 75.6, with stock and flow pillars at 82+ and inflation pillar at 51. UK 2022-23 reading: composite 78.2, with flow pillar at 92 and inflation pillar at 70 but stock pillar at 42. Same range, different stories.
+US 2008 reading: composite 71.2, with stock and flow pillars at 65+ and inflation pillar at 51. UK 2023 peak reading: composite 79.2, with flow pillar at 95 and inflation pillar at 73 but stock pillar at 29. Same range, different stories.
 
 ## Methodology
 
 Three pillars at the country-aggregate level:
 
-- **Pillar 1 (25%): Stock burden** — household debt-to-GDP level and its 5-year change
+- **Pillar 1 (25%): Stock burden** — BIS-style credit gap (debt-to-GDP minus HP-filtered trend) and its 5-year change
 - **Pillar 2 (45%): Flow burden** — debt service ratio and deviation from 10-year trend
 - **Pillar 3 (30%): Inflation-lag stress** — CPI YoY and cumulative excess CPI above target
 
@@ -26,13 +26,13 @@ Each pillar is z-scored against country's own history then mapped to 0-100 via l
 
 ## Known limitations
 
-This is a POC, not a production index. Three structural limitations are documented in `docs/methodology.md`:
+This is a POC, not a production index. Two structural limitations are documented in `docs/methodology.md`:
 
-1. **Pillar 1 inverts in inflation regimes.** Debt-to-GDP falls during inflation because nominal GDP outpaces nominal debt, but real debt service can still rise. The fix is to use the BIS credit gap (deviation from HP-filtered trend) instead of the level. This is implemented in `src/pillars.py` as an opt-in alternative; default is still the level for reproducibility against the original POC.
+1. **UK Pillar 2 is a proxy.** The UK doesn't publish a household DSR equivalent at quarterly frequency. The current proxy (debt-to-GDP × lagged CPI) is over-responsive to CPI normalisation — about 98% of the apparent recovery in 2024-25 comes from CPI mechanics, not from real debt service relief. A proper implementation would use Bank of England base rate × debt-to-income.
 
-2. **UK Pillar 2 is a proxy.** The UK doesn't publish a household DSR equivalent at quarterly frequency. The current proxy (debt-to-GDP × lagged CPI) is over-responsive to CPI normalisation — about 98% of the apparent recovery in 2024-25 comes from CPI mechanics, not from real debt service relief. A proper implementation would use Bank of England base rate × debt-to-income.
+2. **No essentials/arrears pillar.** The index sees formal credit and macro prices. It cannot see utility arrears, council tax arrears, BNPL, or informal lending. In regimes where stress migrates to non-formal channels (UK 2024-25 being the worked example), the headline composite under-reads the actual stress.
 
-3. **No essentials/arrears pillar.** The index sees formal credit and macro prices. It cannot see utility arrears, council tax arrears, BNPL, or informal lending. In regimes where stress migrates to non-formal channels (UK 2024-25 being the worked example), the headline composite under-reads the actual stress.
+A third structural issue — Pillar 1 (debt-to-GDP level) inverting in inflation regimes — was resolved by switching the default to the BIS credit gap (deviation from HP-filtered trend). The legacy level form is still available via `python -m src.build_index --level` for reproducing the original POC numbers. See ADR-011 and ADR-017.
 
 ## Coverage
 
@@ -42,9 +42,11 @@ US 2006-Q1 to 2025-Q2. UK 2009-Q4 to 2025-Q1. Period chosen because the FRED-pub
 
 ```bash
 pip install -r requirements.txt
-python -m src.build_index    # builds composite scores
-python -m src.visualise      # generates the four chart PNGs
-python -m src.analyse        # diagnostic analyses
+python -m src.build_index           # builds composite scores (BIS credit-gap form, default)
+python -m src.build_index --level    # builds the legacy level-form variant for comparison
+python -m src.visualise              # generates the five chart PNGs
+python -m src.analyse                # diagnostic analyses
+python -m unittest tests.test_snapshot   # locks the four reference numbers
 ```
 
 Charts and CSVs land in `output/`. Raw data is in `data/`.
@@ -69,6 +71,8 @@ Charts and CSVs land in `output/`. Raw data is in `data/`.
 │   ├── build_index.py         # entry point: builds and saves indices
 │   ├── visualise.py           # entry point: produces all charts
 │   └── analyse.py             # diagnostic analyses
+├── tests/
+│   └── test_snapshot.py       # locks the four reference numbers
 ├── output/                    # generated charts and final CSVs
 └── docs/
     ├── methodology.md         # full methodology including limitations
@@ -92,7 +96,7 @@ All data was retrieved from FRED via web scraping in 2026. Refresh strategy: re-
 
 ## Status
 
-This is a v0 proof of concept. Validated against two episodes (US 2008, US/UK 2022-23). Not validated against historical international episodes (Spain 2009, Iceland 2008, Korea 1997 are obvious next backtests). Not built for production — there's no error handling around missing data, no automated data refresh, no CI.
+This is v1: the POC plus the BIS credit-gap structural fix defaulted on, plus snapshot tests that lock the validation numbers. Validated against two episodes (US 2008, US/UK 2022-23). Not validated against historical international episodes (Spain 2009, Iceland 2008, Korea 1997 are obvious next backtests). Not built for production — there's no error handling around missing data, no automated data refresh, no CI. Pillar 4 (essentials/residual income) is the next major piece of work; see `docs/CLAUDE.md` and ADR-013.
 
 ## License
 
