@@ -58,9 +58,14 @@ def add_zone_labels(ax):
         ax.text(xmax, y, label, ha="right", va="center", fontsize=9, alpha=0.6)
 
 
+def _pillar_cols(df):
+    """Return pillar columns present in df, in canonical order."""
+    return [c for c in ["p1", "p2", "p3", "p4"] if c in df.columns]
+
+
 def plot_country_fan(ax, df, label, color, show_legend=True):
     add_threshold_zones(ax)
-    pillars = df[["p1", "p2", "p3"]].values
+    pillars = df[_pillar_cols(df)].values
     p_min, p_max = np.min(pillars, axis=1), np.max(pillars, axis=1)
     
     ax.fill_between(
@@ -99,11 +104,12 @@ def chart_country_fans(us, uk):
         add_zone_labels(ax)
         ax.legend(loc="upper right", framealpha=0.9, fontsize=9)
     
-    fig.suptitle("Household Debt Stress Index — POC v1", fontsize=14, fontweight="bold", y=0.995)
+    fig.suptitle("Household Debt Stress Index — v1.1", fontsize=14, fontweight="bold", y=0.995)
     fig.text(
         0.5, 0.01,
-        "Composite of three pillars (stock 25%, flow 45%, inflation-lag 30%). "
-        "Shaded band shows range across pillars (proxy for distributional dispersion).",
+        "Weighted composite of country-specific pillars "
+        "(US: 4-pillar 20/35/25/20 incl. essentials; UK: 3-pillar 25/45/30 — see methodology.md). "
+        "Shaded band shows range across each country's pillars (proxy for distributional dispersion).",
         ha="center", fontsize=8.5, alpha=0.7,
     )
     plt.tight_layout(rect=[0, 0.03, 1, 0.97])
@@ -112,34 +118,46 @@ def chart_country_fans(us, uk):
 
 
 def chart_pillar_decomposition(us, uk):
-    fig, axes = plt.subplots(3, 2, figsize=(12, 10), sharex="col", sharey=True)
-    titles = [
-        "Pillar 1: Stock burden\n(debt levels)",
-        "Pillar 2: Flow burden\n(debt service)",
-        "Pillar 3: Inflation-lag\n(real income drag)",
-    ]
-    
-    for i, (key, title) in enumerate(zip(["p1", "p2", "p3"], titles)):
+    titles = {
+        "p1": "Pillar 1: Stock burden\n(debt levels)",
+        "p2": "Pillar 2: Flow burden\n(debt service)",
+        "p3": "Pillar 3: Inflation-lag\n(real income drag)",
+        "p4": "Pillar 4: Essentials\n(residual income)",
+    }
+    keys = sorted(set(_pillar_cols(us)) | set(_pillar_cols(uk)),
+                  key=lambda k: ["p1", "p2", "p3", "p4"].index(k))
+    n_rows = len(keys)
+    fig, axes = plt.subplots(n_rows, 2, figsize=(12, 3.3 * n_rows),
+                             sharex="col", sharey=True)
+    if n_rows == 1:
+        axes = axes.reshape(1, -1)
+
+    for i, key in enumerate(keys):
         for j, (df, color, country_label) in enumerate([
             (us, COLOR_US, "United States"),
             (uk, COLOR_UK, "United Kingdom"),
         ]):
             ax = axes[i, j]
-            ax.fill_between(df.index, 0, df[key], color=color, alpha=0.25)
-            ax.plot(df.index, df[key], color=color, lw=1.8)
-            ax.axhline(50, color="#888", ls=":", lw=0.8, alpha=0.7)
-            ax.axhline(75, color="#c74", ls=":", lw=0.8, alpha=0.7)
+            if key in df.columns:
+                ax.fill_between(df.index, 0, df[key], color=color, alpha=0.25)
+                ax.plot(df.index, df[key], color=color, lw=1.8)
+                ax.axhline(50, color="#888", ls=":", lw=0.8, alpha=0.7)
+                ax.axhline(75, color="#c74", ls=":", lw=0.8, alpha=0.7)
+            else:
+                ax.text(0.5, 0.5, "no data\n(see ADR-019)",
+                        ha="center", va="center", transform=ax.transAxes,
+                        fontsize=10, alpha=0.5, style="italic")
             ax.set_ylim(0, 100)
             if i == 0:
                 ax.set_title(country_label, fontweight="bold", loc="left", color=color)
             if j == 0:
-                ax.set_ylabel(title, fontsize=9)
+                ax.set_ylabel(titles[key], fontsize=9)
             ax.grid(axis="y", alpha=0.3)
-    
-    for ax in axes[2]:
+
+    for ax in axes[-1]:
         ax.xaxis.set_major_locator(mdates.YearLocator(2))
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
-    
+
     fig.suptitle(
         "Pillar Decomposition — different stress signatures by episode",
         fontsize=13, fontweight="bold", y=0.995,
@@ -245,7 +263,7 @@ def chart_stress_flavour(us, uk):
 def chart_overlaid_smoothed(us, uk, window: int = 4):
     us, uk = us.copy(), uk.copy()
     for df in [us, uk]:
-        pillars = df[["p1", "p2", "p3"]].values
+        pillars = df[_pillar_cols(df)].values
         df["p_min_raw"] = np.min(pillars, axis=1)
         df["p_max_raw"] = np.max(pillars, axis=1)
         df["p_min"] = df["p_min_raw"].rolling(window, min_periods=2, center=True).mean()

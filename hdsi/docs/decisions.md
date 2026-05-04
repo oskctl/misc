@@ -233,12 +233,57 @@ The trade-off is that the tests don't tell you *why* something broke, only *that
 
 ---
 
+## ADR-019: Pillar 4 — essentials / residual-income stress (US-only in v1.1)
+
+**Context.** ADR-013 flagged the index's blindness to non-formal-credit distress as the most important missing piece. The 2024-25 UK situation made this concrete: composite reading ~50 ("normal-ish") while utility arrears, council tax arrears, and BNPL exposure were at record highs. The index sees formal credit and macro prices; it does not see households unable to cover essentials.
+
+**Options considered.**
+
+*Variable per country:*
+- **US: Supplemental Poverty Measure (Census P60).** Annual, 2009–2024, A-grade.
+- **US ALICE (United Way):** Conceptually closer to "essentials" than SPM but published only biennially with a sparse national time series. Use as corroborating series, not primary.
+- **UK: Citizens Advice National Red Index.** Conceptually the cleanest match — explicitly measures households whose income is below their essential outgoings — but only back-calculates to FY2019/20.
+- **UK: JRF Minimum Income Standard "below MIS" share.** Annual since 2008/9, published by Joseph Rowntree Foundation. Conceptually adjacent (income vs minimum-acceptable budget). Recommended as pre-2019 backfill spliced with CitA.
+
+*Composite weights:*
+- **A: 20/35/25/20.** P3 trimmed slightly, P4 added at meaningful weight. Argument: P4 captures a structurally distinct channel from P3 (macro CPI vs household-level budget shortfall) — mechanical correlation but not double-counting.
+- **B: 20/40/20/20.** P3 cut harder. Argument: P3 and P4 overlap conceptually, halve P3 to make room.
+- **C: 25/40/20/15.** Most conservative on P4. Argument: hedge against B-grade UK data.
+
+*Roll-out scope:*
+- **A: Ship US-and-UK simultaneously.** Cleaner methodology story but requires UK JRF MIS data acquisition before any P4 ships.
+- **B: Ship US-only in v1.1, UK-deferred to v1.2.** Asymmetric but ships substantive value now. Matches the existing US/UK data-quality asymmetry (UK already on B-grade P2 per ADR-007).
+
+**Decision.**
+
+- **US data source: Supplemental Poverty Measure** (Census Bureau, A-grade, 2009-2024). Annual values stamped at `YYYY-01-01` and linearly interpolated to quarterly inside `build_pillar_4`. Pre-2009 quarters back-filled with the 2009 value (15.3) — conservative choice that preserves the 2008-Q4 Lehman validation episode in the composite without introducing fabricated variance. ALICE is documented as a corroborating series.
+- **UK data source (deferred): JRF MIS 2009-2018 + CitA NRI 2019/20-onwards spliced with B-grade flag.** A subagent acquired three CitA values; the JRF backfill and three within-CitA gap years (2020/21-2022/23) need a future data refresh. Until then, `build_uk(use_p4=True)` raises `NotImplementedError`. The placeholder is in the code so that the next data acquisition just drops a CSV in place.
+- **Composite weights: option A (20/35/25/20).** P4 captures a structurally distinct channel from P3, deserving real weight. The non-linear penalty term (PENALTY_THRESHOLD=80) is unchanged — it still fires whenever any single pillar (now including P4) exceeds the threshold, capturing single-channel extremes.
+- **Roll-out: option B (US in v1.1, UK in v1.2).** UK keeps the legacy 3-pillar (25/45/30) form until JRF MIS data is added.
+
+**Consequences.**
+
+- US composite changes:
+  - 2008-Q4 Lehman: 71.2 → 70.5 (P4=67.2 from backfilled SPM, modest contribution; pillar mix still cleanly debt-led)
+  - 2025-Q1: 52.8 → 55.5 (P4=65.9 — the previously-invisible essentials elevation now showing through)
+- US peak shifts slightly: was 81.0 at 2007-Q4 under 3-pillar; now 78.6 at 2007-Q4. Pre-GFC build-up still the historical peak.
+- 2020-21 SPM stimulus trough is real signal not artefact (expanded CTC + stimulus drove SPM from 11.7 → 7.8); will register as a noticeable P4 movement during the 2020-2022 transition. Documented per `data/_p4_methodology_note.md`.
+- UK composite is unchanged in v1.1 (still 3-pillar, weights 25/45/30, backwards-compatible with the v1 snapshot tests).
+- US 2006-2008 backfill is documented but synthetic. The flat 15.3 carry-back is the post-recession peak — it overstates pre-GFC essentials stress somewhat, but the composite impact at 2008-Q4 is small and it preserves the validation episode. Replacing with Columbia CPSP anchored-SPM is a TODO in the methodology note (ADR-020).
+- **Interpolation caveat for the 5y-change component.** SPM is annual; the pillar consumes a quarterly series via linear interpolation. The `pct_change(20)` 5y-change inside `build_pillar_4` is therefore comparing forward-filled current values against interpolated past values. The recent climb in P4 (50.9 in 2023-Q1 → 65.0 in 2024-Q4) is concentrated in the change_score; the level component is approximately flat. The level component is the cleaner read; recent P4 trajectory is partly artefact. Documented in methodology.md.
+- New CLI flag `--no-p4` reverts US to the 3-pillar form for reproducibility against the v1 snapshot. Combined with `--level`, reproduces the v0 POC numbers byte-for-byte.
+
+**Status.** US implemented in this change. The UK portion of the original ADR-013 placeholder is split out as ADR-019b (UK Pillar 4 data acquisition + splice).
+
+---
+
 ## Open ADRs (not yet resolved)
 
-- **ADR-013: Pillar 4 (essentials/residual income).** Conceptually agreed as priority 1 but not implemented (data access). Will require Citizens Advice negative-budget share for UK and ALICE/SPM threshold for US.
+- **ADR-019b: UK Pillar 4 data acquisition + splice** (carved out of the original ADR-013 placeholder). Acquire JRF MIS 2009-2018 annual values and CitA NRI underlying tables for 2020/21-2022/23. Apply the splice handling described in `data/_p4_methodology_note.md`. UK build will then move to 4-pillar weights (probably matching US 20/35/25/20, but worth confirming once UK P4 numbers are visible — the splice level-shift may justify a different weight).
 - **ADR-014: Cross-country backtest.** Spain 2009, Iceland 2008, Korea 1997 are the obvious validation episodes. None implemented yet. Required before claiming the index generalises.
 - **ADR-015: UK Pillar 2 replacement.** Replace the proxy with BoE base rate × debt-to-income. Resolves ADR-007 properly.
-- **ADR-016: Weight robustness stress-test.** Per ADR-009, deferred until structural fixes land. Now unblocked: ADR-017 made the structural P1 fix default.
+- **ADR-016: Weight robustness stress-test.** Per ADR-009, deferred until structural fixes land. Now substantially unblocked (ADR-017 + ADR-019); should run before any further weight changes.
+- **ADR-020: US 2006-2008 backfill from Columbia anchored-SPM.** Replace the conservative flat backfill with the Columbia CPSP back-cast series. Listed in `data/_p4_methodology_note.md` TODO.
 
 ---
 
