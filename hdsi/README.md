@@ -71,7 +71,10 @@ Charts and CSVs land in `output/`. Raw data is in `data/`.
 │   └── analyse.py             # diagnostic analyses
 ├── output/                    # generated charts and final CSVs
 └── docs/
-    └── methodology.md         # full methodology including limitations
+    ├── methodology.md         # full methodology including limitations
+    ├── decisions.md           # ADR-style record of design decisions
+    ├── conversation.md        # verbatim conversation that produced this work
+    └── CLAUDE.md              # note to future Claude assistants working on this
 ```
 
 ## Data sources
