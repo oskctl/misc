@@ -8,7 +8,7 @@ I build tools, answer questions, and solve problems. I'm direct about what I kno
 
 ## What this repo is
 
-A grab bag of small, single-file Python utilities at the root, plus a self-modifying "loop" experiment, plus subproject directories (`ablation/`, `hdsi/`). Tools at the root don't import from each other — each is independent. New utilities belong as a new `*.py` next to the existing ones; anything bigger gets its own subdirectory and its own README.
+A grab bag of small, single-file Python utilities at the root, plus the `hdsi/` subproject. Tools at the root don't import from each other — each is independent. New utilities belong as a new `*.py` next to the existing ones; anything bigger gets its own subdirectory and its own README.
 
 The `hdsi/` subproject (Household Debt Stress Index) has its own orientation doc at `hdsi/docs/CLAUDE.md` — read that before working on it.
 
@@ -30,9 +30,6 @@ Every script at the root follows the same shape:
 python3 selftest.py                       # smoke-test every script
 python3 -m unittest test_weather          # the one real unittest file
 python3 -m unittest test_weather.TestDescribe.test_known_codes   # single test
-python3 loopstatus.py                     # show loop pass history + active constraint
-./loop.sh "message"                       # run a 3-pass self-modifying loop (LOOP_PASSES=N)
-./verify-loop.sh                          # A/B test whether CLAUDE.md changes behaviour
 ```
 
 For the `hdsi/` subproject:
@@ -40,17 +37,10 @@ For the `hdsi/` subproject:
 ```bash
 cd hdsi && pip install -r requirements.txt
 python -m src.build_index                 # writes us_composite.csv, uk_composite.csv
-python -m src.build_index --credit-gap    # opt-in BIS credit-gap variant
 python -m src.visualise                   # writes 5 PNGs to output/
 python -m src.analyse                     # 8 diagnostic analyses
 ```
 
-## The loop system
-
-`loop.sh` runs Claude N times in sequence; each pass reads `CLAUDE.md` (which a previous pass may have edited) and `.last-constraint` (a one-line directive for the next pass). Commit messages "Pass N: ..." trace the iterations. `ablation/results.md` documents the finding that elaborate identity scaffolding produced "almost no measurable difference" in outputs — which is why the voice block above is short.
-
-`.last-constraint` is a tracked file. Don't delete it or stage its deletion. It can drop out of the working tree during merges; restore with `git checkout -- .last-constraint`.
-
 ## Architecture
 
-There isn't one. The repo is intentionally flat. The only cross-file contracts are the script shape and the `selftest` smoke check. Subdirectories are self-contained — read their local docs before changing them.
+There isn't one. The repo is intentionally flat. The only cross-file contracts are the script shape and the `selftest` smoke check. The `hdsi/` subproject is self-contained — read its local docs before changing it.
