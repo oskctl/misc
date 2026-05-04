@@ -9,22 +9,25 @@ A proof-of-concept index measuring household debt stress across countries (curre
 ## What's done
 
 - **POC-quality index** for US and UK, validated against the 2008 GFC and 2022-23 inflation episode. Numbers in the existing CSVs in `output/` are correct.
-- **Five charts** rendering the index with composite line plus pillar-range fan, plus a stress-flavour quadrant.
-- **Diagnostic analyses** in `src/analyse.py` — eight analyses that surface the structural P1 inversion problem, the UK P2 measurement artefact, and trajectory differences.
-- **Structural fix for P1 is now the default** (ADR-017). `python -m src.build_index` uses the BIS credit gap (deviation from HP-filtered trend). The legacy debt-to-GDP level form is preserved as opt-in: `python -m src.build_index --level` writes `*_composite_level.csv` outputs. The level form inverts in inflation regimes — keep it only for reproducing the original POC numbers.
-- **Snapshot tests** at `tests/test_snapshot.py` lock the four reference readings (US 2008-Q4 Lehman, UK 2023-Q2, US 2025-Q1, UK 2025-Q1) under both forms of P1. Run with `python -m unittest tests.test_snapshot`.
+- **Five charts** rendering the index with composite line plus pillar-range fan, plus a stress-flavour quadrant. The pillar-decomposition chart now flexes between 3 and 4 rows depending on which pillars each country has.
+- **Diagnostic analyses** in `src/analyse.py` — eight analyses that surface the structural P1 inversion problem, the UK P2 measurement artefact, and trajectory differences. Auto-detects available pillars per country.
+- **Structural fix for P1 is the default** (ADR-017). `python -m src.build_index` uses the BIS credit gap (deviation from HP-filtered trend). Legacy debt-to-GDP level form is preserved as opt-in: `--level` writes `*_composite_level.csv` outputs.
+- **Pillar 4 (essentials/residual income) is implemented for US** in v1.1 (ADR-019). Source: Census Bureau Supplemental Poverty Measure 2009-2024, A-grade. Conservative pre-2009 flat backfill (15.3) preserves the 2008-Q4 Lehman validation episode. UK side is deferred — only 3 CitA National Red Index data points are extractable (2019/20, 2023/24, 2024/25) which is below the standardisation minimum. UK runs on the 3-pillar form until JRF MIS 2009-2018 is acquired. The asymmetric weights are 20/35/25/20 (US 4-pillar) vs 25/45/30 (UK 3-pillar legacy).
+- **Snapshot tests** at `tests/test_snapshot.py` cover three configurations: default 4-pillar (TestDefault4Pillar), 3-pillar credit-gap reproducing v1 (TestNoP4), and original POC level-form reproducing v0 (TestOriginalPOC). Run with `python -m unittest tests.test_snapshot`.
 
 ## What's explicitly not done (priorities for v1.x)
 
 In rough order of importance:
 
-1. **Pillar 4: essentials / residual income.** The index is currently blind to utility arrears, council tax arrears, BNPL, and informal lending. UK Q1 2025 reading is misleading because of this — composite reads 50 (under the new default) while underlying distress is migrating to non-formal channels. Need to add a fourth pillar capturing residual-income negative-budget share. Data: Citizens Advice publishes this for UK; ALICE / Supplemental Poverty Measure for US. Not at quarterly frequency in either case — interpolation will be needed. **This is the most important missing piece. Documented in `docs/methodology.md` and `docs/decisions.md` (ADR-013).**
+1. **UK Pillar 4 (ADR-019b).** Acquire Joseph Rowntree Foundation Minimum Income Standard "below MIS" share for 2009-2018 (annual PDF reports on jrf.org.uk) plus the Citizens Advice 2025 NRI underlying tables to fill 2020/21, 2021/22, 2022/23. Apply the JRF→CitA splice with a level-correction at the FY2018/19→FY2019/20 join. The placeholder is wired into `build_uk` — passing `use_p4=True` currently raises `NotImplementedError` until the data lands. See `data/_p4_methodology_note.md` and ADR-019.
 
-2. **Backtest against Spain 2009 / Iceland 2008 / Korea 1997.** Index has only been validated against US 2008 and US/UK 2022-23. If it doesn't catch the obvious historical household debt crises with reasonable lead time, the methodology needs revision before adding more countries. Data acquisition: BIS publishes household debt-to-GDP for all three; CPI from OECD. Need to find DSR-equivalent flow measures.
+2. **UK Pillar 2 replacement (ADR-015).** Currently uses a proxy `debt_to_gdp × cpi_yoy(t-2) / 100`. Diagnostic showed 98% of recent UK P2 movement is the proxy responding to CPI mechanics, not real debt service. Replace with BoE base rate × debt-to-income from ONS household sector accounts. The function signature in `src/pillars.py:build_pillar_2` already supports this — pass a real `dsr` series and it'll use that path; B-grade flag will go away.
 
-3. **UK Pillar 2 replacement.** Currently uses a proxy `debt_to_gdp × cpi_yoy(t-2) / 100`. Diagnostic showed 98% of recent UK P2 movement is the proxy responding to CPI mechanics, not real debt service. Replace with BoE base rate × debt-to-income from ONS household sector accounts. The function signature in `src/pillars.py:build_pillar_2` already supports this — pass a real `dsr` series and it'll use that path; B-grade flag will go away.
+3. **US 2006-2008 backfill from Columbia anchored-SPM (ADR-020).** Replaces the current conservative flat backfill (15.3 carried back from 2009). Columbia CPSP publishes the back-cast at https://povertycenter.columbia.edu/historical-spm-data — direct fetch was blocked in v1.1 and the values were not extractable from search snippets either. A successful download would let the 2006-2008 quarters reflect the actual pre-GFC essentials situation rather than the post-shock 2009 level.
 
-4. **Stress-test weights.** Perturb 25/45/30 by ±5pp and ±10pp on each. If composite scores move significantly, weights are overfit. Deferred per user instruction until structural fixes land — now that the P1 fix is default, this is unblocked.
+4. **Backtest against Spain 2009 / Iceland 2008 / Korea 1997 (ADR-014).** Index has only been validated against US 2008 and US/UK 2022-23. If it doesn't catch the obvious historical household debt crises with reasonable lead time, the methodology needs revision before adding more countries. Data acquisition: BIS publishes household debt-to-GDP for all three; CPI from OECD. Need to find DSR-equivalent flow measures.
+
+5. **Stress-test weights (ADR-016).** Perturb 20/35/25/20 (4-pillar) and 25/45/30 (3-pillar) by ±5pp on each. If composite scores move significantly, weights are overfit. Deferred per user instruction until structural fixes landed — now substantially unblocked by ADR-017 + ADR-019.
 
 ## Where the landmines are
 
@@ -44,26 +47,32 @@ In rough order of importance:
 
 ```bash
 pip install -r requirements.txt
-python -m src.build_index            # writes us_composite.csv, uk_composite.csv (credit-gap, default)
-python -m src.build_index --level    # writes us_composite_level.csv, uk_composite_level.csv (legacy)
-python -m src.visualise              # writes 5 PNGs to output/
-python -m src.analyse                # prints 8 diagnostic analyses
-python -m unittest tests.test_snapshot   # asserts the four reference readings under both forms
+python -m src.build_index             # default: credit-gap P1, US 4-pillar, UK 3-pillar
+python -m src.build_index --no-p4     # US 3-pillar (reproduces v1 numbers)
+python -m src.build_index --level     # legacy P1 form (writes *_level.csv)
+python -m src.build_index --level --no-p4   # original POC byte-for-byte
+python -m src.visualise               # writes 5 PNGs to output/
+python -m src.analyse                 # prints 8 diagnostic analyses
+python -m unittest tests.test_snapshot   # asserts reference readings under all three test classes
 ```
 
-Expected numbers under the **default (credit-gap) form**:
-- US Q1 2025: composite=52.8, p1=36.8, p2=54.7, p3=63.1
-- UK Q1 2025: composite=50.4, p1=30.2, p2=53.5, p3=62.8
-- US 2008-Q4 (Lehman): composite=71.2, p1=64.7, p2=83.8, p3=51.4
+Expected numbers under the **v1.1 default (credit-gap P1, US 4-pillar with P4, UK 3-pillar)**:
+- US 2025-Q1: composite=55.5, p1=36.8, p2=54.7, p3=63.1, p4=65.9
+- UK 2025-Q1: composite=50.4, p1=30.2, p2=53.5, p3=62.8 (UK still 3-pillar)
+- US 2008-Q4 (Lehman): composite=70.5, p1=64.7, p2=83.8, p3=51.4, p4=67.2
 - UK 2023-Q2 (UK peak): composite=79.2, p1=29.1, p2=94.7, p3=73.1
 
-Expected numbers under the **legacy --level form**:
-- US Q1 2025: composite=50.4, p1=27.3, p2=54.7, p3=63.1
-- UK Q1 2025: composite=45.3, p1=9.6, p2=53.5, p3=62.8
+Expected numbers under **`--no-p4` (reproduces v1)**:
+- US 2025-Q1: composite=52.8, p1=36.8, p2=54.7, p3=63.1
+- US 2008-Q4 (Lehman): composite=71.2, p1=64.7, p2=83.8, p3=51.4
+
+Expected numbers under **`--level --no-p4` (reproduces v0 POC)**:
+- US 2025-Q1: composite=50.4, p1=27.3, p2=54.7, p3=63.1
+- UK 2025-Q1: composite=45.3, p1=9.6, p2=53.5, p3=62.8
 - US 2008-Q4 (Lehman): composite=75.6, p1=82.4, p2=83.8, p3=51.4
 - UK 2023-Q2 (UK peak): composite=78.2, p1=24.9, p2=94.7, p3=73.1
 
-If your numbers don't match these, something is wrong — start from the data files and trace through. The snapshot test will tell you which side broke.
+If your numbers don't match, the snapshot test will tell you which configuration broke and at which reference point.
 
 ## Where the conversation history is
 
@@ -86,10 +95,11 @@ When proposing changes, walk through the alternative options and pick one with a
 
 In rough priority order:
 
-1. Implement Pillar 4 (essentials/residual income). The hardest one because of data acquisition, but the most important. Probably needs an Excel/CSV download from Citizens Advice and an API call to Census/BLS for ALICE.
-2. Run the Spain/Iceland/Korea backtests. Mostly a data acquisition task plus parameterising `build_index.py` to take country names.
-3. Replace UK P2 with proper DSR. Need BoE base rate + ONS household debt-to-income. Both available via the BoE database.
-4. Stress-test the 25/45/30 weights now that the structural P1 fix is default. Was deferred per ADR-009 until structural fixes landed.
+1. Close out UK Pillar 4 (ADR-019b). Acquire JRF MIS 2009-2018 + CitA NRI 2020/21-2022/23, splice with documented level-correction, switch UK build to 4-pillar weights.
+2. Replace UK P2 with proper DSR. Need BoE base rate + ONS household debt-to-income. Both available via the BoE database.
+3. US 2006-2008 essentials backfill from Columbia anchored-SPM (ADR-020). One-shot data acquisition that removes the conservative flat backfill currently in use.
+4. Run the Spain/Iceland/Korea backtests. Mostly a data acquisition task plus parameterising `build_index.py` to take country names.
+5. Stress-test the new 20/35/25/20 (4-pillar) and 25/45/30 (3-pillar) weights now that structural fixes are landed.
 
 Things that would be lower-value:
 - More charts (we have plenty)
@@ -99,6 +109,6 @@ Things that would be lower-value:
 
 ## Final note
 
-This is real work — the diagnostic findings about P1 inversion in inflation regimes and the UK P2 measurement artefact are non-trivial and the user found them useful. The methodology has holes (documented) but the bones are sound. v1 landed the P1 structural fix as default and added snapshot tests; the next major piece is Pillar 4, then UK P2 replacement, then backtests. Don't let perfect be the enemy of good when extending it.
+This is real work — the diagnostic findings about P1 inversion in inflation regimes and the UK P2 measurement artefact are non-trivial and the user found them useful. The methodology has holes (documented) but the bones are sound. v1 landed the P1 structural fix as default and added snapshot tests; v1.1 added Pillar 4 for the US side and demonstrated the splice/asymmetry approach. The next major piece is closing out UK Pillar 4, then UK P2 replacement, then backtests. Don't let perfect be the enemy of good when extending it.
 
 Good luck.

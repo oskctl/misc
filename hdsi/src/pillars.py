@@ -124,15 +124,65 @@ def build_pillar_3(
     excess_window: int = 12,
 ) -> pd.DataFrame:
     """Pillar 3: Inflation-lag stress.
-    
+
     Two components:
         - CPI YoY (current inflation pressure)
         - Cumulative excess CPI over rolling window (persistence of overshoot)
     """
     df = pd.DataFrame(index=cpi_yoy.index)
     df["cpi_score"] = standardise(cpi_yoy)
-    
+
     excess = (cpi_yoy - target).rolling(excess_window, min_periods=4).sum()
     df["excess_cpi_score"] = standardise(excess)
     df["p3"] = df[["cpi_score", "excess_cpi_score"]].mean(axis=1)
+    return df
+
+
+def annual_to_quarterly(
+    annual: pd.Series,
+    target_index: pd.DatetimeIndex,
+    backfill: bool = True,
+) -> pd.Series:
+    """Reindex an annual-stamped series onto a quarterly index.
+
+    Linear interpolation between annual stamps; forward-fill past the last
+    observation; back-fill before the first observation if backfill=True
+    (otherwise leaves leading NaNs).
+    """
+    out = annual.reindex(target_index.union(annual.index)).sort_index()
+    out = out.interpolate(method="linear")
+    out = out.reindex(target_index)
+    out = out.ffill()
+    if backfill:
+        out = out.bfill()
+    return out
+
+
+def build_pillar_4(
+    essentials_annual: pd.Series,
+    target_index: pd.DatetimeIndex,
+    change_window: int = 20,
+) -> pd.DataFrame:
+    """Pillar 4: Essentials / residual-income stress.
+
+    Share of households unable to cover essential outgoings — captures
+    the distress migration channel that the formal-credit pillars miss.
+    Source per country: see docs/methodology.md and ADR-019.
+
+    Two components, mirroring P1/P3 shape:
+        - Essentials level (own-history z-scored)
+        - 5-year change in essentials share
+
+    `essentials_annual` is expected at annual frequency; this function
+    interpolates linearly to quarterly, forward-fills past the last
+    observation, and back-fills before the first (the back-fill is a
+    conservative pre-data-start imputation — flag it in any commentary
+    that uses pre-series-start quarters).
+    """
+    quarterly = annual_to_quarterly(essentials_annual, target_index)
+    df = pd.DataFrame(index=target_index)
+    df["essentials"] = quarterly
+    df["essentials_score"] = standardise(quarterly)
+    df["essentials_5y_change_score"] = standardise(quarterly.pct_change(change_window) * 100)
+    df["p4"] = df[["essentials_score", "essentials_5y_change_score"]].mean(axis=1)
     return df

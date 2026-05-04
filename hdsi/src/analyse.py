@@ -32,6 +32,18 @@ def _print_header(title: str):
     print("=" * 70)
 
 
+def _pillar_cols(df):
+    """Return pillar columns present in df, in canonical order."""
+    return [c for c in ["p1", "p2", "p3", "p4"] if c in df.columns]
+
+
+def _shared_pillar_cols(*dfs):
+    """Pillar columns present in all of dfs (intersection)."""
+    sets = [set(_pillar_cols(d)) for d in dfs]
+    common = set.intersection(*sets) if sets else set()
+    return [c for c in ["p1", "p2", "p3", "p4"] if c in common]
+
+
 def analysis_1_synchronisation(us, uk):
     _print_header("ANALYSIS 1: How synchronised are the two countries?")
     common = us.join(uk, lsuffix="_us", rsuffix="_uk", how="inner")
@@ -40,9 +52,12 @@ def analysis_1_synchronisation(us, uk):
     
     print(f"\nOverall composite correlation: "
           f"{common['composite_us'].corr(common['composite_uk']):.3f}")
-    for p in ["p1", "p2", "p3"]:
+    for p in _shared_pillar_cols(us, uk):
         c = common[f"{p}_us"].corr(common[f"{p}_uk"])
         print(f"  {p.upper()} correlation: {c:.3f}")
+    only_us = sorted(set(_pillar_cols(us)) - set(_pillar_cols(uk)))
+    if only_us:
+        print(f"  ({', '.join(p.upper() for p in only_us)} present for US only — no cross-country comparison)")
 
 
 def analysis_2_lead_lag(us, uk):
@@ -68,10 +83,11 @@ def analysis_3_pillar_regime(us, uk):
         sub = df.loc[start:end]
         if len(sub) < 4:
             return f"  {label}: insufficient data"
-        c1 = stats.pearsonr(sub["p1"], sub["composite"])[0]
-        c2 = stats.pearsonr(sub["p2"], sub["composite"])[0]
-        c3 = stats.pearsonr(sub["p3"], sub["composite"])[0]
-        print(f"  {label}: P1={c1:+.2f}, P2={c2:+.2f}, P3={c3:+.2f}")
+        cells = [
+            f"{p.upper()}={stats.pearsonr(sub[p], sub['composite'])[0]:+.2f}"
+            for p in _pillar_cols(sub)
+        ]
+        print(f"  {label}: {', '.join(cells)}")
     
     print("\nUS — pillar-composite correlation by period:")
     regress(us, "2006-01-01", "2010-12-31", "GFC era (2006-2010)   ")
@@ -114,22 +130,24 @@ def analysis_4_episodes(us, uk):
 def analysis_5_dispersion(us, uk):
     _print_header("ANALYSIS 5: Pillar dispersion — narrow vs wide fans")
     for df, name in [(us, "US"), (uk, "UK")]:
-        pillars = df[["p1", "p2", "p3"]].values
+        pillars = df[_pillar_cols(df)].values
         df["fan_width"] = np.max(pillars, axis=1) - np.min(pillars, axis=1)
-    
+
+    us_cols = ["composite"] + _pillar_cols(us) + ["fan_width"]
+    uk_cols = ["composite"] + _pillar_cols(uk) + ["fan_width"]
     print("\nUS — 5 WIDEST fans (most concentrated stress):")
-    print(us.nlargest(5, "fan_width")[["composite", "p1", "p2", "p3", "fan_width"]].round(1))
+    print(us.nlargest(5, "fan_width")[us_cols].round(1))
     print("\nUS — 5 NARROWEST fans (most uniform stress):")
-    print(us.nsmallest(5, "fan_width")[["composite", "p1", "p2", "p3", "fan_width"]].round(1))
+    print(us.nsmallest(5, "fan_width")[us_cols].round(1))
     print("\nUK — 5 WIDEST fans:")
-    print(uk.nlargest(5, "fan_width")[["composite", "p1", "p2", "p3", "fan_width"]].round(1))
+    print(uk.nlargest(5, "fan_width")[uk_cols].round(1))
 
 
 def analysis_6_predictive_width(us, uk):
     _print_header("ANALYSIS 6: Does fan width predict subsequent composite movement?")
     for df, name in [(us, "US"), (uk, "UK")]:
         if "fan_width" not in df.columns:
-            pillars = df[["p1", "p2", "p3"]].values
+            pillars = df[_pillar_cols(df)].values
             df["fan_width"] = np.max(pillars, axis=1) - np.min(pillars, axis=1)
         df["composite_abs_change_4q"] = df["composite"].diff(4).abs()
         valid = df.dropna(subset=["fan_width", "composite_abs_change_4q"])
@@ -143,15 +161,12 @@ def analysis_7_current_reading(us, uk):
         latest = df.iloc[-1]
         latest_date = df.index[-1].date()
         pct_c = (df["composite"] <= latest["composite"]).sum() / len(df) * 100
-        pct_1 = (df["p1"] <= latest["p1"]).sum() / len(df) * 100
-        pct_2 = (df["p2"] <= latest["p2"]).sum() / len(df) * 100
-        pct_3 = (df["p3"] <= latest["p3"]).sum() / len(df) * 100
-        
+
         print(f"\n{name} as of {latest_date}:")
         print(f"  Composite: {latest['composite']:.1f} (above {pct_c:.0f}% of history)")
-        print(f"  Pillar 1:  {latest['p1']:.1f} (above {pct_1:.0f}% of history)")
-        print(f"  Pillar 2:  {latest['p2']:.1f} (above {pct_2:.0f}% of history)")
-        print(f"  Pillar 3:  {latest['p3']:.1f} (above {pct_3:.0f}% of history)")
+        for p in _pillar_cols(df):
+            pct = (df[p] <= latest[p]).sum() / len(df) * 100
+            print(f"  {p.upper()}:        {latest[p]:.1f} (above {pct:.0f}% of history)")
 
 
 def analysis_8_trajectory(us, uk):
@@ -159,7 +174,7 @@ def analysis_8_trajectory(us, uk):
     for df, name in [(us, "US"), (uk, "UK")]:
         recent = df.tail(8)
         x = np.arange(len(recent))
-        for col in ["composite", "p1", "p2", "p3"]:
+        for col in ["composite"] + _pillar_cols(df):
             slope, _, r, p, _ = stats.linregress(x, recent[col].values)
             annual = slope * 4
             sig = "*" if p < 0.05 else " "
