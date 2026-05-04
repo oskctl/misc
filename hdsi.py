@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""RDSI."""
+"""HDSI."""
 
 import argparse
 import sys
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(prog="rdsi", description="RDSI.")
+    parser = argparse.ArgumentParser(prog="hdsi", description="HDSI.")
     parser.parse_args(argv)
     return 0
 
