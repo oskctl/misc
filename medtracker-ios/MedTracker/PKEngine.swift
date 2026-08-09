@@ -67,6 +67,18 @@ enum PKEngine {
         return points.map { Point(date: $0.date, level: $0.level / peak, projected: $0.projected) }
     }
 
+    /// Where the level is right now, relative to the recent (2-day) peak, and
+    /// which way it's heading over the next hour.
+    static func currentStatus(for medication: Medication) -> (level: Double, trend: String)? {
+        let points = curve(for: medication, pastDays: 2, futureDays: 0.25, stepMinutes: 15)
+        guard let nowIndex = points.lastIndex(where: { !$0.projected }) else { return nil }
+        let now = points[nowIndex].level
+        let inAnHour = points[min(nowIndex + 4, points.count - 1)].level
+        let trend = inAnHour > now * 1.03 ? "rising"
+                  : inAnHour < now * 0.97 ? "falling" : "steady"
+        return (now, trend)
+    }
+
     // MARK: Typical adult elimination half-lives (hours) — prefill only, always
     // user-editable. Substring-matched against the medication name.
 

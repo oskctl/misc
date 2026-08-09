@@ -17,6 +17,7 @@ struct MedicationEditView: View {
     @State private var strengthPerValue = 5.0
     @State private var strengthPerUnit = "mL"
     @State private var form = MedForm.tablet
+    @State private var route = MedRoute.unspecified
     @State private var tintName = "blue"
     @State private var notes = ""
     @State private var estimateLevels = false
@@ -36,6 +37,11 @@ struct MedicationEditView: View {
                     Picker("Form", selection: $form) {
                         ForEach(MedForm.allCases) { f in
                             Text(f.label).tag(f)
+                        }
+                    }
+                    Picker("Route", selection: $route) {
+                        ForEach(MedRoute.allCases) { r in
+                            Text(r.label).tag(r)
                         }
                     }
                 }
@@ -159,6 +165,7 @@ struct MedicationEditView: View {
         strengthPerValue = med.strengthPerValue == 1 && med.strengthPerUnit.isEmpty ? 5 : med.strengthPerValue
         strengthPerUnit = med.strengthPerUnit.isEmpty ? "mL" : med.strengthPerUnit
         form = med.form
+        route = med.route
         tintName = med.tintName
         notes = med.notes
         estimateLevels = med.halfLifeHours != nil
@@ -181,6 +188,7 @@ struct MedicationEditView: View {
             med.strengthPerUnit = ""
         }
         med.form = form
+        med.route = route
         med.tintName = tintName
         med.notes = notes
         med.halfLifeHours = estimateLevels && halfLifeHours > 0 ? halfLifeHours : nil

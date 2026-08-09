@@ -55,6 +55,15 @@ enum DoseStatus: String, Codable {
     case taken, skipped
 }
 
+enum MedRoute: String, Codable, CaseIterable, Identifiable {
+    case unspecified, oral, sublingual, subcutaneous, intramuscular,
+         inhaled, nasal, topical, transdermal, ophthalmic, rectal, other
+    var id: String { rawValue }
+    var label: String {
+        self == .unspecified ? "Not set" : rawValue.capitalized
+    }
+}
+
 enum DurationKind: String, Codable, CaseIterable, Identifiable {
     case ongoing      // daily-driver meds: runs until archived/paused
     case courseDays   // finite course: "for 10 days"
@@ -90,6 +99,8 @@ final class Medication {
     /// Absorption half-life in hours (0.5 ≈ regular oral, 2 ≈ extended release, 24 ≈ weekly injection).
     var absorptionHalfLifeHours: Double = 0.5
     var formRaw: String = MedForm.tablet.rawValue
+    /// Optional administration route; mostly useful when the same drug is taken two ways.
+    var routeRaw: String = MedRoute.unspecified.rawValue
     /// Health-style icon tint; one of `medTintNames`.
     var tintName: String = "blue"
     var notes: String = ""
@@ -113,6 +124,11 @@ final class Medication {
     var form: MedForm {
         get { MedForm(rawValue: formRaw) ?? .other }
         set { formRaw = newValue.rawValue }
+    }
+
+    var route: MedRoute {
+        get { MedRoute(rawValue: routeRaw) ?? .unspecified }
+        set { routeRaw = newValue.rawValue }
     }
 
     /// "50 mg", "250 mg/5 mL", "100 mcg/puff" — nil when no strength is set.
@@ -161,6 +177,9 @@ final class Schedule {
     var minHoursBetween: Double?
     /// Soft cap surfaced in the UI; never blocks logging.
     var maxPerDay: Int?
+    /// Soft cap in active units per day (paracetamol "4 g/day"), when strength
+    /// links doses to active amounts. Also never blocks logging.
+    var maxActivePerDay: Double?
     /// "as needed *for migraine*" — shown when logging and in summaries.
     var prnReason: String = ""
 
@@ -272,6 +291,19 @@ final class Schedule {
             return qty / med.strengthPerValue * sv
         }
         return nil
+    }
+
+    /// Active units taken against this schedule today; nil when strength can't
+    /// link a logged dose to an active amount.
+    var activeTakenToday: Double? {
+        guard medication?.strengthValue != nil else { return nil }
+        let dayStart = Calendar.current.startOfDay(for: .now)
+        var total = 0.0
+        for log in logs where log.status == .taken && log.takenAt >= dayStart {
+            guard let amount = activeAmount(for: log.quantity) else { return nil }
+            total += amount
+        }
+        return total
     }
 
     /// "2 tablets (1000 mg)" — dose with the linked active amount when derivable.

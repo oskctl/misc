@@ -45,6 +45,12 @@ struct TodayView: View {
                         ForEach(prn, id: \.uuid) { schedule in prnRow(schedule) }
                     }
                 }
+                let pkMeds = medications.filter { !$0.isArchived && $0.halfLifeHours != nil }
+                if !pkMeds.isEmpty {
+                    Section("Estimated Levels") {
+                        ForEach(pkMeds) { med in levelRow(med) }
+                    }
+                }
                 if !done.isEmpty {
                     Section("Logged") {
                         ForEach(done) { item in doneRow(item) }
@@ -171,6 +177,32 @@ struct TodayView: View {
         .foregroundStyle(.primary)
     }
 
+    @ViewBuilder
+    private func levelRow(_ med: Medication) -> some View {
+        NavigationLink {
+            MedicationDetailView(medication: med)
+        } label: {
+            HStack(spacing: 12) {
+                MedIcon(medication: med, size: 34)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(med.name).font(.body.weight(.semibold))
+                    if let status = PKEngine.currentStatus(for: med) {
+                        Text("≈\(Int(status.level * 100))% of recent peak · \(status.trend)")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text("No doses logged yet")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Spacer()
+                MiniLevelChart(medication: med)
+                    .frame(width: 96, height: 38)
+            }
+        }
+    }
+
     private func prnStatusText(_ schedule: Schedule) -> String {
         var parts: [String] = [schedule.doseText]
         if !schedule.prnReason.isEmpty { parts.append("for \(schedule.prnReason)") }
@@ -184,6 +216,10 @@ struct TodayView: View {
         if let cap = schedule.maxPerDay {
             let taken = ScheduleEngine.takenToday(for: schedule)
             parts.append("\(taken) of \(cap) today")
+        }
+        if let cap = schedule.maxActivePerDay, let taken = schedule.activeTakenToday,
+           let unit = schedule.medication?.strengthUnit {
+            parts.append("\(taken.compactFormatted) of \(cap.compactFormatted) \(unit) today")
         }
         return parts.joined(separator: " · ")
     }
@@ -283,9 +319,15 @@ struct DoseActionSheet: View {
     }
 
     private var capWarning: String? {
-        guard let s = resolvedSchedule, let cap = s.maxPerDay else { return nil }
-        let taken = ScheduleEngine.takenToday(for: s)
-        return taken >= cap ? "Already at \(cap) dose limit today" : nil
+        guard let s = resolvedSchedule else { return nil }
+        if let cap = s.maxPerDay, ScheduleEngine.takenToday(for: s) >= cap {
+            return "Already at \(cap) dose limit today"
+        }
+        if let cap = s.maxActivePerDay, let taken = s.activeTakenToday, taken >= cap,
+           let unit = s.medication?.strengthUnit {
+            return "Already at \(cap.compactFormatted) \(unit) limit today"
+        }
+        return nil
     }
 
     private func act(_ status: DoseStatus) {

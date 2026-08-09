@@ -41,6 +41,7 @@ concentration sets it explicitly (250 mg per 5 mL, 100 mcg per puff, 100 units/m
 | `halfLifeHours` | Double? | non-nil enables the estimated-levels chart |
 | `absorptionHalfLifeHours` | Double | 0.5 oral IR · 2 extended release · 24 weekly injection |
 | `form` | enum | tablet, capsule, liquid, injection, inhaler, patch, cream, drops, spray, other |
+| `route` | enum | optional: oral, sublingual, subcutaneous, inhaled, topical, transdermal, … |
 | `tintName` | String | Health-style icon color |
 | `notes` | String | free text |
 | `isArchived` | Bool | archived meds keep history but stop reminding |
@@ -62,7 +63,8 @@ dose are two schedules; so are "regular daily" + "extra as needed").
 | `anchorDate` | Date | day-zero for `everyNDays` and `cycle` phase |
 | `hoursBetween` | Double | for `everyNHours`: reminder interval (supports 0.5 steps) |
 | `minHoursBetween` | Double? | PRN safety floor for "every 4–6 h": dose allowed from +4 h, reminder at +6 h |
-| `maxPerDay` | Int? | optional cap, surfaced as a warning when exceeded |
+| `maxPerDay` | Int? | optional dose-count cap, surfaced as a warning when exceeded |
+| `maxActivePerDay` | Double? | optional cap in active units (paracetamol "4 g/day"); tracked via strength-linked logged amounts. Soft, like all caps |
 | `prnReason` | String | "as needed *for migraine*" |
 | `quantity` / `quantityMax` | Double / Double? | dose per administration; `quantityMax` makes it a range ("1–2 tablets") — the log sheet asks which was taken |
 | `quantityUnit` | String | tablet, capsule, mL, puff, drop, unit, patch, spray, sachet |
@@ -162,6 +164,11 @@ medical device): per-medication level curves computed from logged doses.
   for the past 7 days from actual logs, dashed projection 3 days forward
   assuming scheduled doses are taken (PRN excluded from projection), a dashed
   "now" rule, and a permanent caption: estimated from half-life, indicative only.
+- **Today overview:** an "Estimated Levels" section on Today shows each
+  PK-enabled medication as a small multiple — sparkline (last 36 h + 12 h
+  projection) plus "≈62% of recent peak · falling" — and links to the full
+  chart on the detail page. Each medication keeps its own normalized scale;
+  curves are never overlaid.
 - **Known limits (accepted):** patches/depots (zero-order release) aren't
   modeled; active metabolites are approximated by using the effective half-life;
   nonlinear-elimination drugs (alcohol, high-dose phenytoin) don't fit the

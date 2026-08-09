@@ -17,7 +17,9 @@ struct MedicationDetailView: View {
                     Text(medication.displayName)
                         .font(.title2.bold())
                         .multilineTextAlignment(.center)
-                    Text(medication.form.label)
+                    Text(medication.route == .unspecified
+                         ? medication.form.label
+                         : "\(medication.form.label) · \(medication.route.label)")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     if !medication.notes.isEmpty {

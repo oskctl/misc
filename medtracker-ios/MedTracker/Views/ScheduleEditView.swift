@@ -23,6 +23,8 @@ struct ScheduleEditView: View {
     @State private var minHours = 4.0
     @State private var hasMaxPerDay = false
     @State private var maxPerDay = 4
+    @State private var hasMaxActive = false
+    @State private var maxActive = 4000.0
     @State private var prnReason = ""
     @State private var quantity = 1.0
     @State private var hasRange = false
@@ -62,6 +64,20 @@ struct ScheduleEditView: View {
                         Toggle("Max doses per day", isOn: $hasMaxPerDay)
                         if hasMaxPerDay {
                             Stepper("\(maxPerDay) per day", value: $maxPerDay, in: 1...24)
+                        }
+                        if medication.strengthValue != nil {
+                            Toggle("Max \(medication.strengthUnit) per day", isOn: $hasMaxActive)
+                            if hasMaxActive {
+                                HStack {
+                                    Text("Limit")
+                                    Spacer()
+                                    TextField("4000", value: $maxActive, format: .number)
+                                        .keyboardType(.decimalPad)
+                                        .multilineTextAlignment(.trailing)
+                                        .frame(width: 80)
+                                    Text(medication.strengthUnit).foregroundStyle(.secondary)
+                                }
+                            }
                         }
                         TextField("Reason (e.g. for headache)", text: $prnReason)
                     }
@@ -248,6 +264,8 @@ struct ScheduleEditView: View {
             minHours = s.minHoursBetween ?? max(0.5, s.hoursBetween - 2)
             hasMaxPerDay = s.maxPerDay != nil
             maxPerDay = s.maxPerDay ?? 4
+            hasMaxActive = s.maxActivePerDay != nil
+            maxActive = s.maxActivePerDay ?? 4000
             prnReason = s.prnReason
             quantity = s.quantity
             hasRange = s.quantityMax != nil
@@ -277,6 +295,7 @@ struct ScheduleEditView: View {
         s.hoursBetween = hoursBetween
         s.minHoursBetween = hasMinHours && minHours < hoursBetween ? minHours : nil
         s.maxPerDay = hasMaxPerDay ? maxPerDay : nil
+        s.maxActivePerDay = hasMaxActive && medication.strengthValue != nil && maxActive > 0 ? maxActive : nil
         s.prnReason = prnReason.trimmingCharacters(in: .whitespaces)
         s.quantity = quantity
         s.quantityMax = hasRange && quantityMaxV > quantity ? quantityMaxV : nil

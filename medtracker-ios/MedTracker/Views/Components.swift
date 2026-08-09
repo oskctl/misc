@@ -103,6 +103,39 @@ struct LevelsChartView: View {
     }
 }
 
+/// Sparkline-sized level curve for the Today overview: last ~36 h solid,
+/// next 12 h dashed, "now" rule. Axes hidden — the big chart lives on detail.
+struct MiniLevelChart: View {
+    let medication: Medication
+
+    var body: some View {
+        let points = PKEngine.curve(for: medication, pastDays: 1.5, futureDays: 0.5, stepMinutes: 15)
+        let tint = medTint(medication.tintName)
+        Chart {
+            ForEach(points.filter { !$0.projected }) { p in
+                LineMark(x: .value("Time", p.date), y: .value("Level", p.level),
+                         series: .value("Series", "Actual"))
+                    .foregroundStyle(tint)
+                    .lineStyle(StrokeStyle(lineWidth: 1.5))
+                    .interpolationMethod(.monotone)
+            }
+            ForEach(points.filter { $0.projected }) { p in
+                LineMark(x: .value("Time", p.date), y: .value("Level", p.level),
+                         series: .value("Series", "Projected"))
+                    .foregroundStyle(tint.opacity(0.5))
+                    .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
+                    .interpolationMethod(.monotone)
+            }
+            RuleMark(x: .value("Now", Date.now))
+                .foregroundStyle(.quaternary)
+                .lineStyle(StrokeStyle(lineWidth: 1))
+        }
+        .chartXAxis(.hidden)
+        .chartYAxis(.hidden)
+        .chartYScale(domain: 0...1.05)
+    }
+}
+
 /// Standard row: icon, title, subtitle. Trailing content is up to the caller.
 struct MedRowLabel: View {
     let medication: Medication?
