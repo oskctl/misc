@@ -1,0 +1,168 @@
+# MedTracker — Specification
+
+A lightweight, local-only iOS medication tracker for personal use. Not for App Store
+distribution, not a medical device, no server, no accounts.
+
+## Goals
+
+- Add medications with strength, form, and notes.
+- Attach one or more dose schedules per medication, covering the common real-world
+  regimens (see the schedule matrix below).
+- Log every dose (taken or skipped) with quantity and timestamp, stored encrypted
+  at rest on-device.
+- Fire native iOS notifications at dose times with quick actions to **Log**, **Skip**,
+  or **Snooze 15 min** — actionable straight from the lock screen without opening
+  the app.
+- Ad-hoc (PRN / "as needed") logging with optional per-day maximums.
+
+## Non-goals
+
+- No cloud sync, no sharing, no HealthKit export (all future options; the data layer
+  doesn't preclude them).
+- No drug database / interaction checking. Medication names are free text.
+- No true calendar-monthly schedules ("1st of each month") — `every N days` with
+  N=28/30 covers the realistic cases (depot injections, B12, bisphosphonates weekly
+  via N=7). Can be added later as a new day pattern.
+
+## Data model
+
+Three SwiftData entities. All fields local, store encrypted at rest (see Security).
+
+### Medication
+| Field | Type | Notes |
+|---|---|---|
+| `name` | String | e.g. "Sertraline" |
+| `strengthValue` | Double? | e.g. 50 |
+| `strengthUnit` | String | mg, mcg, g, mL, IU, %, units |
+| `form` | enum | tablet, capsule, liquid, injection, inhaler, patch, cream, drops, spray, other |
+| `notes` | String | free text |
+| `isArchived` | Bool | archived meds keep history but stop reminding |
+| `schedules` | [Schedule] | cascade delete |
+| `logs` | [DoseLog] | cascade delete |
+
+### Schedule
+One medication can have several (e.g. a morning 2-tablet dose and an evening 1-tablet
+dose are two schedules; so are "regular daily" + "extra as needed").
+
+| Field | Type | Notes |
+|---|---|---|
+| `kind` | enum | `fixedTimes`, `everyNHours`, `asNeeded` |
+| `dayPattern` | enum | for `fixedTimes`: `daily`, `daysOfWeek`, `everyNDays`, `cycle` |
+| `timesOfDay` | [Int] | minutes from midnight, local wall-clock |
+| `daysOfWeek` | [Int] | 1=Sun … 7=Sat (Calendar convention) |
+| `intervalDays` | Int | for `everyNDays` |
+| `cycleDaysOn` / `cycleDaysOff` | Int | e.g. 21 on / 7 off |
+| `anchorDate` | Date | day-zero for `everyNDays` and `cycle` phase |
+| `hoursBetween` | Double | for `everyNHours` (supports 0.5 steps) |
+| `maxPerDay` | Int? | optional cap, surfaced as a warning when exceeded |
+| `quantity` | Double | dose amount, e.g. 2 |
+| `quantityUnit` | String | tablet, capsule, mL, puff, drop, unit, patch, spray, sachet |
+| `instructions` | String | "with food", "don't lie down for 30 min" |
+| `startDate` / `endDate` | Date / Date? | schedules with an end date expire (finite courses, e.g. antibiotics) |
+| `isPaused` | Bool | mute reminders without deleting the schedule |
+
+### DoseLog
+| Field | Type | Notes |
+|---|---|---|
+| `takenAt` | Date | actual time of the action |
+| `scheduledAt` | Date? | the planned occurrence; nil for ad-hoc doses |
+| `status` | enum | `taken`, `skipped` |
+| `quantity` / `quantityUnit` | Double / String | copied from schedule, editable |
+| `notes` | String | free text |
+| `medication` / `schedule` | refs | schedule is nil for ad-hoc |
+
+## Schedule matrix — how common regimens map
+
+| Real-world regimen | Configuration |
+|---|---|
+| Once daily (statin, SSRI) | `fixedTimes` + `daily`, 1 time |
+| Twice / 3× / 4× daily (antibiotics, metformin) | `fixedTimes` + `daily`, 2–4 times (presets fill sensible spread: 08/20, 08/14/20, 08/12/16/20) |
+| Morning 2 tablets, evening 1 (levothyroxine titration, insulin split) | two `fixedTimes` schedules with different quantities |
+| Weekly (methotrexate, alendronate, GLP-1 injection) | `fixedTimes` + `everyNDays`, N=7 |
+| Every other day (some steroids taper) | `everyNDays`, N=2 |
+| Every 2 weeks / monthly depot | `everyNDays`, N=14 / 28 |
+| Specific weekdays (Mon/Wed/Fri — e.g. dialysis-day meds) | `fixedTimes` + `daysOfWeek` |
+| 21 on / 7 off (combined oral contraceptive) | `fixedTimes` + `cycle` 21/7 |
+| 5 on / 2 off, weekdays-only | `daysOfWeek` Mon–Fri (or `cycle` 5/2 if phase-anchored) |
+| Every 4–6 h after last dose, max 4/day (paracetamol, ibuprofen) | `everyNHours` h=6 (or 4), `maxPerDay`=4 — reminder chains off the last logged dose |
+| Finite course (7-day antibiotic) | any of the above + `endDate` |
+| Pure PRN (antihistamine, GTN spray) | `asNeeded` — no reminders, one-tap logging |
+| Truly ad hoc (no schedule at all) | "Log a dose" from anywhere; log has no schedule ref |
+
+## Reminders / notifications
+
+- `UNUserNotificationCenter` with a `DOSE_REMINDER` category carrying three actions:
+  - **Log** — records a `taken` DoseLog at the tap time against the scheduled occurrence.
+  - **Skip** (destructive style) — records a `skipped` log.
+  - **Snooze 15 min** — re-schedules the same reminder one-off.
+  - Actions carry no `.authenticationRequired` option so they work from the lock screen.
+- Tapping the notification body opens the app on Today.
+- Foreground delivery shows banner + sound (`willPresent` returns `.banner .sound .list`).
+- **Scheduling window:** iOS caps pending local notifications at 64. The app computes
+  concrete occurrences for the next **7 days** (capped at 55 requests, earliest-first)
+  and schedules each as a non-repeating calendar trigger, identifier
+  `meddose|<scheduleUUID>|<unix-ts>`. The whole set is torn down and rebuilt:
+  - on every app foreground,
+  - after any log/skip/snooze action,
+  - after any medication or schedule edit.
+  A final "Open MedTracker to keep reminders running" notification is planted at the
+  end of the window as a dead-man's switch in case the app isn't opened for 7 days.
+- **`everyNHours` chains:** these have no precomputed occurrences. When a dose is
+  logged, one notification is scheduled at `takenAt + hoursBetween`. Skipping does not
+  restart the chain. Before the first-ever dose the Today screen shows "available now".
+- Notifications request `.timeSensitive` interruption level; without the optional
+  Time Sensitive Notifications capability iOS silently downgrades it — no failure.
+
+### Time zones & DST
+`timesOfDay` are local wall-clock minutes; triggers are built from `DateComponents`
+via `Calendar.current`, so 08:00 stays 08:00 across DST transitions and travel.
+`everyNHours` chains are absolute durations (6 h means 6 h regardless of clock changes).
+
+## Security
+
+- **Local only.** No network code anywhere in the app.
+- **Encryption at rest:** the SwiftData store files are set to
+  `NSFileProtectionCompleteUntilFirstUserAuthentication`. Deliberately *not*
+  `...Complete`: lock-screen quick actions (Log/Skip) wake the app in the background
+  while the device is locked, and with full protection the store would be unreadable
+  and the action would be lost. Until-first-unlock still means encrypted at rest
+  (powered-off / before-first-unlock), which is the right trade-off here.
+- **App lock (optional, on by settings toggle):** Face ID / Touch ID / passcode via
+  `LocalAuthentication`, re-locks when the app leaves the foreground. This gates the
+  UI, not the notification actions — by design.
+- **Export:** Settings offers a JSON export via share sheet so the data is never
+  trapped. Export is explicit user action only.
+
+## Screens
+
+1. **Today** (default tab) — timeline of today's doses: Overdue, Upcoming, Done.
+   Each row: med name, dose, scheduled time, Log/Skip buttons. Below: PRN section —
+   `everyNHours` meds show "available now" or "next from 14:32"; `asNeeded` meds get
+   a one-tap log row. Toolbar: "Log a dose" for fully ad-hoc entries.
+2. **Medications** — active list (name, strength, schedule summary), archived section.
+   Add/edit medication; per-medication detail with its schedules (add/edit/pause/delete)
+   and recent history.
+3. **History** — logs grouped by day, newest first, filterable by medication;
+   7-day adherence stat (taken / scheduled for fixed schedules); swipe to delete;
+   tap to edit a log entry.
+4. **Settings** — notification permission status/re-request, app lock toggle,
+   refresh reminders now, JSON export, data counts.
+
+## Edge cases handled
+
+- **Missed doses** stay visible in Today's Overdue until logged or skipped (same-day);
+  older unlogged occurrences simply appear as gaps in History/adherence — no nagging.
+- **Duplicate protection:** logging from both the notification and the app against the
+  same occurrence is idempotent (occurrence already logged ⇒ second log is ignored).
+- **Quantity ≠ default:** the in-app log sheet allows overriding quantity/time/notes;
+  the notification quick action always logs the schedule's default at tap-time.
+- **Archived meds / paused or expired schedules** generate no occurrences and no
+  notifications, but their history remains.
+- **maxPerDay** on PRN schedules is a soft cap: the UI warns ("4 of 4 taken today")
+  but never refuses to log — the log must reflect reality.
+
+## Build / distribution
+
+Personal sideload via Xcode (free Apple ID: re-sign every 7 days; paid developer
+account: 1 year). See README.md. iOS 17+, SwiftUI + SwiftData, zero third-party
+dependencies.
