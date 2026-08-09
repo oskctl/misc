@@ -62,11 +62,8 @@ struct MedicationDetailView: View {
                                 Text(schedule.summary)
                                     .font(.subheadline.weight(.medium))
                                 Text(schedule.kind.label).font(.footnote).foregroundStyle(.secondary)
-                                if let p = schedule.courseProgress {
-                                    Text(schedule.isExpired
-                                         ? "Course complete"
-                                         : (p.unit == "day" ? "Day \(p.done) of \(p.total)"
-                                                            : "\(p.done) of \(p.total) doses taken"))
+                                if let progress = schedule.courseProgressText {
+                                    Text(progress)
                                         .font(.caption.weight(.semibold))
                                         .foregroundStyle(schedule.isExpired ? .green : .orange)
                                 } else if schedule.isExpired {
@@ -108,9 +105,7 @@ struct MedicationDetailView: View {
                 }
                 ForEach(Array(recent), id: \.uuid) { log in
                     HStack {
-                        Image(systemName: log.status == .taken ? "checkmark.circle.fill" : "minus.circle.fill")
-                            .foregroundStyle(log.status == .taken ? AnyShapeStyle(.green) : AnyShapeStyle(.tertiary))
-                            .imageScale(.small)
+                        DoseStatusIcon(status: log.status)
                         Text("\(log.quantity.compactFormatted) \(log.quantityUnit)")
                         Spacer()
                         Text(log.takenAt.formatted(date: .abbreviated, time: .shortened))

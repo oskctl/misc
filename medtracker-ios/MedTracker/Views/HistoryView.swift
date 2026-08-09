@@ -16,11 +16,21 @@ struct HistoryView: View {
                 adherenceHeader
                 let grouped = groupedLogs
                 if grouped.isEmpty {
-                    ContentUnavailableView(
-                        "No doses logged",
-                        systemImage: "clock.arrow.circlepath",
-                        description: Text("Logged and skipped doses appear here.")
-                    )
+                    if logs.isEmpty {
+                        ContentUnavailableView(
+                            "No doses logged",
+                            systemImage: "clock.arrow.circlepath",
+                            description: Text("Logged and skipped doses appear here.")
+                        )
+                    } else if !searchText.isEmpty {
+                        ContentUnavailableView.search(text: searchText)
+                    } else {
+                        ContentUnavailableView(
+                            "No doses for this medication",
+                            systemImage: "line.3.horizontal.decrease.circle",
+                            description: Text("Change or clear the filter to see other history.")
+                        )
+                    }
                 }
                 ForEach(grouped, id: \.day) { group in
                     Section(dayLabel(group.day)) {
@@ -68,7 +78,7 @@ struct HistoryView: View {
         let q = searchText.trimmingCharacters(in: .whitespaces)
         if !q.isEmpty {
             result = result.filter {
-                ($0.medication?.name.localizedCaseInsensitiveContains(q) ?? false)
+                ($0.medication?.displayName.localizedCaseInsensitiveContains(q) ?? false)
                 || $0.notes.localizedCaseInsensitiveContains(q)
             }
         }
@@ -92,13 +102,18 @@ struct HistoryView: View {
 
     @ViewBuilder
     private var adherenceHeader: some View {
-        let stats = ScheduleEngine.adherence(medications: medications, days: 7)
-        if stats.scheduled > 0 {
+        // Scope the stat to the med filter so it matches the list below;
+        // hide it entirely while searching, where a global figure would mislead.
+        let scoped = filterMed.map { [$0] } ?? medications
+        let stats = ScheduleEngine.adherence(medications: scoped, days: 7)
+        if stats.scheduled > 0 && searchText.isEmpty {
+            let ratio = Double(stats.taken) / Double(stats.scheduled)
+            let color: Color = ratio >= 0.8 ? .green : (ratio >= 0.5 ? .orange : .red)
             Section {
                 HStack(spacing: 6) {
-                    Text("\(Int(Double(stats.taken) / Double(stats.scheduled) * 100))%")
+                    Text(ratio.formatted(.percent.precision(.fractionLength(0))))
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.green)
+                        .foregroundStyle(color)
                     Text("adherence · \(stats.taken) of \(stats.scheduled) doses · last 7 days")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -133,9 +148,7 @@ struct HistoryView: View {
                 Text(log.takenAt.formatted(date: .omitted, time: .shortened))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
-                Image(systemName: log.status == .taken ? "checkmark.circle.fill" : "minus.circle.fill")
-                    .foregroundStyle(log.status == .taken ? AnyShapeStyle(.green) : AnyShapeStyle(.tertiary))
-                    .imageScale(.small)
+                DoseStatusIcon(status: log.status)
             }
         }
     }

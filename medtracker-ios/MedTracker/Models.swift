@@ -266,6 +266,17 @@ final class Schedule {
         }
     }
 
+    /// Single source of the course-progress label used across views.
+    var courseProgressText: String? {
+        guard let p = courseProgress else { return nil }
+        if isExpired { return "Course complete" }
+        switch durationKind {
+        case .courseDays: return "Day \(p.done) of \(p.total)"
+        case .courseDoses: return "\(p.done) of \(p.total) doses taken"
+        case .ongoing: return nil
+        }
+    }
+
     /// Unit label the dose is expressed in (product unit, or strength unit for
     /// active-unit dosing like insulin).
     var doseUnitLabel: String {

@@ -54,7 +54,7 @@ struct MedIcon: View {
         let tint = medTint(medication?.tintName ?? "gray")
         ZStack {
             Circle()
-                .fill(tint.opacity(0.16))
+                .fill(tint.opacity(0.22))
             Image(systemName: medication?.form.symbolName ?? "pills.fill")
                 .font(.system(size: size * 0.44, weight: .medium))
                 .foregroundStyle(tint)
@@ -136,6 +136,18 @@ struct MiniLevelChart: View {
         .chartXAxis(.hidden)
         .chartYAxis(.hidden)
         .chartYScale(domain: 0...1.05)
+    }
+}
+
+/// Shared taken/skipped glyph so the three list contexts can't drift.
+struct DoseStatusIcon: View {
+    let status: DoseStatus?
+    var scale: Image.Scale = .small
+
+    var body: some View {
+        Image(systemName: status == .taken ? "checkmark.circle.fill" : "minus.circle.fill")
+            .foregroundStyle(status == .taken ? AnyShapeStyle(.green) : AnyShapeStyle(.tertiary))
+            .imageScale(scale)
     }
 }
 

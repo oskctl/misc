@@ -10,7 +10,8 @@ struct MedicationListView: View {
     private var filtered: [Medication] {
         let q = searchText.trimmingCharacters(in: .whitespaces)
         guard !q.isEmpty else { return medications }
-        return medications.filter { $0.name.localizedCaseInsensitiveContains(q) }
+        // Match what the row displays (name + strength), not just the name.
+        return medications.filter { $0.displayName.localizedCaseInsensitiveContains(q) }
     }
     private var active: [Medication] { filtered.filter { !$0.isArchived } }
     private var archived: [Medication] { filtered.filter { $0.isArchived } }
@@ -24,6 +25,8 @@ struct MedicationListView: View {
                         systemImage: "pills",
                         description: Text("Tap + to add your first medication.")
                     )
+                } else if filtered.isEmpty {
+                    ContentUnavailableView.search(text: searchText)
                 }
                 Section {
                     ForEach(active) { med in
@@ -76,17 +79,25 @@ struct MedicationListView: View {
 
     @ViewBuilder
     private func medRow(_ med: Medication) -> some View {
+        let schedules = sortedSchedules(med)
         HStack(spacing: 10) {
             MedIcon(medication: med)
             VStack(alignment: .leading, spacing: 1) {
                 Text(med.displayName)
                     .font(.body.weight(.medium))
                     .lineLimit(1)
-                Text(scheduleLine(med))
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                if let badge = statusBadge(med) {
+                if schedules.isEmpty {
+                    Text("No schedule")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                ForEach(schedules, id: \.uuid) { s in
+                    Text(s.isPaused ? s.summary + " · paused" : s.summary)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                if let badge = statusBadge(schedules) {
                     Text(badge)
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(.orange)
@@ -95,20 +106,21 @@ struct MedicationListView: View {
         }
     }
 
-    private func scheduleLine(_ med: Medication) -> String {
-        med.schedules.isEmpty
-            ? "No schedule"
-            : med.schedules.map(\.summary).joined(separator: " · ")
+    /// Deterministic order — the SwiftData to-many relationship is unordered.
+    private func sortedSchedules(_ med: Medication) -> [Schedule] {
+        med.schedules.sorted {
+            ($0.startDate, $0.uuid.uuidString) < ($1.startDate, $1.uuid.uuidString)
+        }
     }
 
-    private func statusBadge(_ med: Medication) -> String? {
-        if med.schedules.contains(where: { $0.isPaused }) { return "Paused" }
-        for s in med.schedules {
-            if let p = s.courseProgress {
-                return s.isExpired ? "Course complete"
-                     : p.unit == "day" ? "Day \(p.done) of \(p.total)"
-                                       : "\(p.done) of \(p.total) doses"
-            }
+    /// A running course wins; "complete" only when no course is still running.
+    private func statusBadge(_ schedules: [Schedule]) -> String? {
+        let courses = schedules.filter { $0.durationKind != .ongoing }
+        if let running = courses.first(where: { !$0.isExpired }) {
+            return running.courseProgressText
+        }
+        if courses.contains(where: { $0.isExpired }) {
+            return "Course complete"
         }
         return nil
     }

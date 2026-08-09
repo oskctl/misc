@@ -303,9 +303,7 @@ struct TodayView: View {
         HStack {
             MedRowLabel(medication: schedule.medication, subtitle: doneSubtitle(item))
             Spacer()
-            Image(systemName: item.log?.status == .taken ? "checkmark.circle.fill" : "minus.circle.fill")
-                .foregroundStyle(item.log?.status == .taken ? AnyShapeStyle(.green) : AnyShapeStyle(.tertiary))
-                .imageScale(.medium)
+            DoseStatusIcon(status: item.log?.status, scale: .medium)
         }
     }
 
@@ -339,7 +337,8 @@ struct TodayView: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 7)
-            .background(Capsule().fill(Color(uiColor: .tertiarySystemFill)))
+            // Card-colored ground (not a gray fill) so the tinted icon stays legible.
+            .background(Capsule().fill(Color(uiColor: .secondarySystemGroupedBackground)))
             .opacity(lockedUntil == nil ? 1 : 0.6)
         }
         .buttonStyle(.plain)
@@ -371,7 +370,7 @@ struct TodayView: View {
                     .frame(width: 128, height: 34)
             }
             .padding(10)
-            .background(RoundedRectangle(cornerRadius: 12).fill(Color(uiColor: .tertiarySystemFill)))
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color(uiColor: .secondarySystemGroupedBackground)))
         }
         .buttonStyle(.plain)
     }
