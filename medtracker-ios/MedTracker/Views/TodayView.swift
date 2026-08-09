@@ -173,9 +173,10 @@ struct TodayView: View {
 
     private func prnStatusText(_ schedule: Schedule) -> String {
         var parts: [String] = [schedule.doseText]
+        if !schedule.prnReason.isEmpty { parts.append("for \(schedule.prnReason)") }
         if schedule.kind == .everyNHours {
-            if let next = ScheduleEngine.nextAllowed(for: schedule), next > now {
-                parts.append("next from \(next.formatted(date: .omitted, time: .shortened))")
+            if let from = ScheduleEngine.availableFrom(for: schedule), from > now {
+                parts.append("allowed from \(from.formatted(date: .omitted, time: .shortened))")
             } else {
                 parts.append("available now")
             }
@@ -200,6 +201,7 @@ struct DoseActionSheet: View {
     var schedule: Schedule?
 
     @State private var time = Date.now
+    @State private var qty = 1.0
 
     private var resolvedSchedule: Schedule? { occurrence?.schedule ?? schedule }
 
@@ -232,6 +234,11 @@ struct DoseActionSheet: View {
                 }
             }
 
+            if let s = resolvedSchedule, let maxQ = s.quantityMax, maxQ > s.quantity {
+                Stepper("Quantity: \(qty.compactFormatted) \(qty == 1 ? s.doseUnitLabel : s.doseUnitLabel.pluralized)",
+                        value: $qty, in: s.quantity...maxQ, step: 0.5)
+                    .padding(.horizontal, 32)
+            }
             DatePicker("Time", selection: $time, displayedComponents: .hourAndMinute)
                 .datePickerStyle(.compact)
                 .padding(.horizontal, 32)
@@ -264,14 +271,15 @@ struct DoseActionSheet: View {
         }
         .presentationDetents([.medium])
         .presentationDragIndicator(.hidden)
+        .onAppear { qty = resolvedSchedule?.quantity ?? 1 }
     }
 
     private var contextLine: String {
         guard let s = resolvedSchedule else { return "" }
         if let occ = occurrence {
-            return "Take \(s.doseText) · scheduled \(occ.date.formatted(date: .omitted, time: .shortened))"
+            return "Take \(s.doseDetailText) · scheduled \(occ.date.formatted(date: .omitted, time: .shortened))"
         }
-        return "Take \(s.doseText)"
+        return "Take \(s.doseDetailText)"
     }
 
     private var capWarning: String? {
@@ -282,9 +290,9 @@ struct DoseActionSheet: View {
 
     private func act(_ status: DoseStatus) {
         if let occ = occurrence {
-            LogService.log(occurrence: occ, status: status, at: time, in: context)
+            LogService.log(occurrence: occ, status: status, at: time, quantity: qty, in: context)
         } else if let s = schedule {
-            LogService.log(schedule: s, status: status, at: time, in: context)
+            LogService.log(schedule: s, status: status, at: time, quantity: qty, in: context)
         }
         dismiss()
     }

@@ -13,9 +13,20 @@ struct MedicationEditView: View {
     @State private var hasStrength = true
     @State private var strengthValue = 50.0
     @State private var strengthUnit = "mg"
+    @State private var hasConcentration = false
+    @State private var strengthPerValue = 5.0
+    @State private var strengthPerUnit = "mL"
     @State private var form = MedForm.tablet
     @State private var tintName = "blue"
     @State private var notes = ""
+    @State private var estimateLevels = false
+    @State private var halfLifeHours = 24.0
+    @State private var absorption = 0.5
+
+    /// Forms where strength is usually a concentration, not per-unit.
+    private var concentrationApplies: Bool {
+        [.liquid, .injection, .inhaler, .spray, .drops, .cream].contains(form)
+    }
 
     var body: some View {
         NavigationStack {
@@ -28,7 +39,7 @@ struct MedicationEditView: View {
                         }
                     }
                 }
-                Section("Strength") {
+                Section {
                     Toggle("Has strength", isOn: $hasStrength)
                     if hasStrength {
                         HStack {
@@ -39,6 +50,55 @@ struct MedicationEditView: View {
                             }
                             .labelsHidden()
                         }
+                        if concentrationApplies {
+                            Toggle("Per volume / actuation", isOn: $hasConcentration)
+                            if hasConcentration {
+                                HStack {
+                                    Text("per")
+                                    TextField("5", value: $strengthPerValue, format: .number)
+                                        .keyboardType(.decimalPad)
+                                    TextField("mL", text: $strengthPerUnit)
+                                }
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Strength")
+                } footer: {
+                    if hasStrength && hasConcentration {
+                        Text("e.g. 250 mg per 5 mL, or 100 mcg per 1 puff.")
+                    }
+                }
+
+                Section {
+                    Toggle("Estimate drug levels", isOn: $estimateLevels)
+                    if estimateLevels {
+                        HStack {
+                            Text("Half-life")
+                            Spacer()
+                            TextField("24", value: $halfLifeHours, format: .number)
+                                .keyboardType(.decimalPad)
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 70)
+                            Text("hours").foregroundStyle(.secondary)
+                        }
+                        if let suggested = PKEngine.suggestedHalfLife(forName: name),
+                           suggested != halfLifeHours {
+                            Button("Use typical for \(name): \(suggested.compactFormatted) h") {
+                                halfLifeHours = suggested
+                            }
+                        }
+                        Picker("Absorption", selection: $absorption) {
+                            Text("Regular oral").tag(0.5)
+                            Text("Extended release").tag(2.0)
+                            Text("Weekly injection").tag(24.0)
+                        }
+                    }
+                } header: {
+                    Text("Levels")
+                } footer: {
+                    if estimateLevels {
+                        Text("Draws an indicative level curve from your logged doses. Half-life varies by person — tune it until the curve matches your experience.")
                     }
                 }
                 Section("Color") {
@@ -95,9 +155,17 @@ struct MedicationEditView: View {
         hasStrength = med.strengthValue != nil
         strengthValue = med.strengthValue ?? 50
         strengthUnit = med.strengthUnit
+        hasConcentration = !med.strengthPerUnit.isEmpty
+        strengthPerValue = med.strengthPerValue == 1 && med.strengthPerUnit.isEmpty ? 5 : med.strengthPerValue
+        strengthPerUnit = med.strengthPerUnit.isEmpty ? "mL" : med.strengthPerUnit
         form = med.form
         tintName = med.tintName
         notes = med.notes
+        estimateLevels = med.halfLifeHours != nil
+        halfLifeHours = med.halfLifeHours ?? PKEngine.suggestedHalfLife(forName: med.name) ?? 24
+        absorption = [0.5, 2.0, 24.0].min {
+            abs($0 - med.absorptionHalfLifeHours) < abs($1 - med.absorptionHalfLifeHours)
+        } ?? 0.5
     }
 
     private func saveAndDismiss() {
@@ -105,9 +173,18 @@ struct MedicationEditView: View {
         med.name = name.trimmingCharacters(in: .whitespaces)
         med.strengthValue = hasStrength ? strengthValue : nil
         med.strengthUnit = strengthUnit
+        if hasStrength && concentrationApplies && hasConcentration && strengthPerValue > 0 {
+            med.strengthPerValue = strengthPerValue
+            med.strengthPerUnit = strengthPerUnit.trimmingCharacters(in: .whitespaces)
+        } else {
+            med.strengthPerValue = 1
+            med.strengthPerUnit = ""
+        }
         med.form = form
         med.tintName = tintName
         med.notes = notes
+        med.halfLifeHours = estimateLevels && halfLifeHours > 0 ? halfLifeHours : nil
+        med.absorptionHalfLifeHours = absorption
         if medication == nil {
             context.insert(med)
         }

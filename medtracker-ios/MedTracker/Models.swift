@@ -55,6 +55,20 @@ enum DoseStatus: String, Codable {
     case taken, skipped
 }
 
+enum DurationKind: String, Codable, CaseIterable, Identifiable {
+    case ongoing      // daily-driver meds: runs until archived/paused
+    case courseDays   // finite course: "for 10 days"
+    case courseDoses  // finite course: "until it runs out" — N doses total
+    var id: String { rawValue }
+    var label: String {
+        switch self {
+        case .ongoing: return "Ongoing"
+        case .courseDays: return "For a number of days"
+        case .courseDoses: return "For a number of doses"
+        }
+    }
+}
+
 let strengthUnits = ["mg", "mcg", "g", "mL", "IU", "%", "units"]
 let doseUnits = ["tablet", "capsule", "mL", "puff", "drop", "unit", "patch", "spray", "sachet", "application", "dose"]
 
@@ -64,8 +78,17 @@ let doseUnits = ["tablet", "capsule", "mL", "puff", "drop", "unit", "patch", "sp
 final class Medication {
     var uuid: UUID = UUID()
     var name: String = ""
+    /// Strength is a ratio: `strengthValue strengthUnit` per `strengthPerValue strengthPerUnit`.
+    /// The default denominator (1, "") means "per 1 unit of the form" — a 50 mg tablet.
+    /// A concentration sets it explicitly: 250 mg per 5 mL; 100 mcg per 1 puff.
     var strengthValue: Double?
     var strengthUnit: String = "mg"
+    var strengthPerValue: Double = 1
+    var strengthPerUnit: String = ""
+    /// Elimination half-life in hours; non-nil turns on the estimated-levels chart.
+    var halfLifeHours: Double?
+    /// Absorption half-life in hours (0.5 ≈ regular oral, 2 ≈ extended release, 24 ≈ weekly injection).
+    var absorptionHalfLifeHours: Double = 0.5
     var formRaw: String = MedForm.tablet.rawValue
     /// Health-style icon tint; one of `medTintNames`.
     var tintName: String = "blue"
@@ -92,11 +115,19 @@ final class Medication {
         set { formRaw = newValue.rawValue }
     }
 
+    /// "50 mg", "250 mg/5 mL", "100 mcg/puff" — nil when no strength is set.
+    var strengthText: String? {
+        guard let v = strengthValue else { return nil }
+        var s = "\(v.compactFormatted) \(strengthUnit)"
+        if !strengthPerUnit.isEmpty {
+            s += "/" + (strengthPerValue == 1 ? "" : strengthPerValue.compactFormatted + " ") + strengthPerUnit
+        }
+        return s
+    }
+
     /// "Sertraline 50 mg" or just the name when no strength is set.
     var displayName: String {
-        if let v = strengthValue {
-            return "\(name) \(v.compactFormatted) \(strengthUnit)"
-        }
+        if let s = strengthText { return "\(name) \(s)" }
         return name
     }
 
@@ -123,17 +154,31 @@ final class Schedule {
     /// Day zero for `everyNDays` stepping and `cycle` phase.
     var anchorDate: Date = Calendar.current.startOfDay(for: .now)
 
-    /// Used by `everyNHours`.
+    /// Used by `everyNHours`: the reminder interval ("every 6 h" → remind at +6 h).
     var hoursBetween: Double = 6
+    /// Optional PRN safety floor for "every 4–6 h" labels: earliest allowed re-dose.
+    /// nil means the floor equals `hoursBetween`.
+    var minHoursBetween: Double?
     /// Soft cap surfaced in the UI; never blocks logging.
     var maxPerDay: Int?
+    /// "as needed *for migraine*" — shown when logging and in summaries.
+    var prnReason: String = ""
 
+    /// Dose per administration. `quantityMax` non-nil makes it a range ("1–2 tablets").
     var quantity: Double = 1
+    var quantityMax: Double?
     var quantityUnit: String = "tablet"
+    /// When true, `quantity` is expressed in the medication's strength units
+    /// (insulin "10 units", liquid "250 mg") instead of product units.
+    var doseInActiveUnits: Bool = false
     var instructions: String = ""
 
     var startDate: Date = Calendar.current.startOfDay(for: .now)
     var endDate: Date?
+    /// Ongoing (daily driver) vs. a finite course ("for 10 days" / "20 doses total").
+    var durationKindRaw: String = DurationKind.ongoing.rawValue
+    var courseDays: Int = 10
+    var courseTotalDoses: Int = 20
     var isPaused: Bool = false
 
     var medication: Medication?
@@ -154,28 +199,112 @@ final class Schedule {
         set { dayPatternRaw = newValue.rawValue }
     }
 
+    var durationKind: DurationKind {
+        get { DurationKind(rawValue: durationKindRaw) ?? .ongoing }
+        set { durationKindRaw = newValue.rawValue }
+    }
+
+    /// Last calendar day this schedule is active, if bounded by dates.
+    var effectiveEndDate: Date? {
+        switch durationKind {
+        case .ongoing:
+            return endDate
+        case .courseDays:
+            let start = Calendar.current.startOfDay(for: startDate)
+            return Calendar.current.date(byAdding: .day, value: max(1, courseDays) - 1, to: start)
+        case .courseDoses:
+            return nil
+        }
+    }
+
+    var takenCount: Int {
+        logs.filter { $0.status == .taken }.count
+    }
+
     var isExpired: Bool {
-        guard let end = endDate else { return false }
-        return Calendar.current.startOfDay(for: .now) > Calendar.current.startOfDay(for: end)
+        if let end = effectiveEndDate,
+           Calendar.current.startOfDay(for: .now) > Calendar.current.startOfDay(for: end) {
+            return true
+        }
+        if durationKind == .courseDoses && takenCount >= courseTotalDoses {
+            return true
+        }
+        return false
     }
 
+    /// ("day 6", "of 10") style progress for finite courses; nil for ongoing.
+    var courseProgress: (done: Int, total: Int, unit: String)? {
+        switch durationKind {
+        case .ongoing:
+            return nil
+        case .courseDays:
+            let cal = Calendar.current
+            let day = (cal.dateComponents([.day], from: cal.startOfDay(for: startDate),
+                                          to: cal.startOfDay(for: .now)).day ?? 0) + 1
+            return (min(max(day, 0), courseDays), courseDays, "day")
+        case .courseDoses:
+            return (min(takenCount, courseTotalDoses), courseTotalDoses, "dose")
+        }
+    }
+
+    /// Unit label the dose is expressed in (product unit, or strength unit for
+    /// active-unit dosing like insulin).
+    var doseUnitLabel: String {
+        doseInActiveUnits ? (medication?.strengthUnit ?? quantityUnit) : quantityUnit
+    }
+
+    /// "2 tablets", "1–2 tablets", "10 units".
     var doseText: String {
-        let q = quantity.compactFormatted
-        let unit = quantity == 1 ? quantityUnit : quantityUnit.pluralized
-        return "\(q) \(unit)"
+        let unit = doseUnitLabel
+        if let maxQ = quantityMax, maxQ > quantity {
+            return "\(quantity.compactFormatted)–\(maxQ.compactFormatted) \(maxQ == 1 ? unit : unit.pluralized)"
+        }
+        return "\(quantity.compactFormatted) \(quantity == 1 ? unit : unit.pluralized)"
     }
 
-    /// Short human summary, e.g. "2 tablets · 3× daily at 08:00, 14:00, 20:00".
+    /// Dose in the medication's active units, when strength links the two.
+    /// Count-based dose × per-unit strength, or volume ÷ per-volume × strength.
+    func activeAmount(for qty: Double) -> Double? {
+        guard let med = medication, let sv = med.strengthValue, sv > 0 else { return nil }
+        if doseInActiveUnits { return qty }
+        if med.strengthPerUnit.isEmpty { return qty * sv }
+        if quantityUnit == med.strengthPerUnit, med.strengthPerValue > 0 {
+            return qty / med.strengthPerValue * sv
+        }
+        return nil
+    }
+
+    /// "2 tablets (1000 mg)" — dose with the linked active amount when derivable.
+    var doseDetailText: String {
+        var s = doseText
+        if !doseInActiveUnits, let lo = activeAmount(for: quantity), let unit = medication?.strengthUnit {
+            if let maxQ = quantityMax, let hi = activeAmount(for: maxQ), hi > lo {
+                s += " (\(lo.compactFormatted)–\(hi.compactFormatted) \(unit))"
+            } else {
+                s += " (\(lo.compactFormatted) \(unit))"
+            }
+        }
+        return s
+    }
+
+    /// Short human summary, e.g. "2 tablets · 3× daily at 08:00, 14:00, 20:00 · 10-day course".
     var summary: String {
+        var s: String
         switch kind {
         case .asNeeded:
-            var s = "\(doseText) · as needed"
+            s = "\(doseText) · as needed"
+            if !prnReason.isEmpty { s += " for \(prnReason)" }
             if let cap = maxPerDay { s += " · max \(cap)/day" }
-            return s
         case .everyNHours:
-            var s = "\(doseText) · every \(hoursBetween.compactFormatted) h after last dose"
+            let interval: String
+            if let minH = minHoursBetween, minH < hoursBetween {
+                interval = "\(minH.compactFormatted)–\(hoursBetween.compactFormatted)"
+            } else {
+                interval = hoursBetween.compactFormatted
+            }
+            s = "\(doseText) · every \(interval) h after last dose"
+            if !prnReason.isEmpty { s += " for \(prnReason)" }
             if let cap = maxPerDay { s += " · max \(cap)/day" }
-            return s
         case .fixedTimes:
             let times = timesOfDay.sorted().map(\.asTimeString).joined(separator: ", ")
             let days: String
@@ -191,8 +320,14 @@ final class Schedule {
             case .cycle:
                 days = "\(cycleDaysOn) on / \(cycleDaysOff) off"
             }
-            return "\(doseText) · \(days) at \(times)"
+            s = "\(doseText) · \(days) at \(times)"
         }
+        switch durationKind {
+        case .ongoing: break
+        case .courseDays: s += " · \(courseDays)-day course"
+        case .courseDoses: s += " · \(courseTotalDoses)-dose course"
+        }
+        return s
     }
 }
 
@@ -287,8 +422,10 @@ extension Int {
 
 extension String {
     /// Naive pluralizer, good enough for dose units ("tablet" → "tablets", "puff" → "puffs").
+    /// Measurement units (mg, mL, IU, %) never pluralize.
     var pluralized: String {
-        if isEmpty || hasSuffix("s") || self == "mL" { return self }
+        let measurementUnits: Set<String> = ["mg", "mcg", "g", "mL", "L", "IU", "%"]
+        if isEmpty || hasSuffix("s") || measurementUnits.contains(self) { return self }
         return self + "s"
     }
 }

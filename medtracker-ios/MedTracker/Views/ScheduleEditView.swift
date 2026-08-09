@@ -19,14 +19,21 @@ struct ScheduleEditView: View {
     @State private var cycleDaysOff = 7
     @State private var anchorDate = Calendar.current.startOfDay(for: .now)
     @State private var hoursBetween = 6.0
+    @State private var hasMinHours = false
+    @State private var minHours = 4.0
     @State private var hasMaxPerDay = false
     @State private var maxPerDay = 4
+    @State private var prnReason = ""
     @State private var quantity = 1.0
+    @State private var hasRange = false
+    @State private var quantityMaxV = 2.0
+    @State private var doseInActive = false
     @State private var quantityUnit = "tablet"
     @State private var instructions = ""
     @State private var startDate = Calendar.current.startOfDay(for: .now)
-    @State private var hasEndDate = false
-    @State private var endDate = Calendar.current.date(byAdding: .day, value: 7, to: .now) ?? .now
+    @State private var durationKind = DurationKind.ongoing
+    @State private var courseDays = 10
+    @State private var courseDoses = 20
 
     var body: some View {
         NavigationStack {
@@ -51,24 +58,45 @@ struct ScheduleEditView: View {
                 }
 
                 if kind != .fixedTimes {
-                    Section("Daily limit") {
+                    Section("Limits") {
                         Toggle("Max doses per day", isOn: $hasMaxPerDay)
                         if hasMaxPerDay {
                             Stepper("\(maxPerDay) per day", value: $maxPerDay, in: 1...24)
                         }
+                        TextField("Reason (e.g. for headache)", text: $prnReason)
                     }
                 }
 
-                Section("Dose") {
+                Section {
                     QuantityField(quantity: $quantity, unit: $quantityUnit)
+                    Toggle("Dose range (e.g. 1–2)", isOn: $hasRange)
+                    if hasRange {
+                        Stepper("Up to \(quantityMaxV.compactFormatted)",
+                                value: $quantityMaxV, in: quantity + 0.5...50, step: 0.5)
+                    }
+                    if medication.strengthValue != nil {
+                        Toggle("Dose in \(medication.strengthUnit)", isOn: $doseInActive)
+                    }
                     TextField("Instructions (e.g. with food)", text: $instructions)
+                } header: {
+                    Text("Dose")
+                } footer: {
+                    if doseInActive {
+                        Text("The quantity is an amount of \(medication.strengthUnit) (e.g. insulin units), not a count of \(medication.form.defaultDoseUnit.pluralized).")
+                    }
                 }
 
                 Section("Duration") {
                     DatePicker("Starts", selection: $startDate, displayedComponents: .date)
-                    Toggle("Ends", isOn: $hasEndDate)
-                    if hasEndDate {
-                        DatePicker("End date", selection: $endDate, displayedComponents: .date)
+                    Picker("Duration", selection: $durationKind) {
+                        ForEach(DurationKind.allCases) { d in
+                            Text(d.label).tag(d)
+                        }
+                    }
+                    if durationKind == .courseDays {
+                        Stepper("\(courseDays) days", value: $courseDays, in: 1...365)
+                    } else if durationKind == .courseDoses {
+                        Stepper("\(courseDoses) doses total", value: $courseDoses, in: 1...500)
                     }
                 }
             }
@@ -157,9 +185,20 @@ struct ScheduleEditView: View {
 
     @ViewBuilder
     private var everyNHoursSection: some View {
-        Section("Interval") {
-            Stepper("Every \(hoursBetween.compactFormatted) hours",
+        Section {
+            Stepper("Remind after \(hoursBetween.compactFormatted) hours",
                     value: $hoursBetween, in: 0.5...48, step: 0.5)
+            Toggle("Allowed earlier (e.g. every 4–6 h)", isOn: $hasMinHours)
+            if hasMinHours {
+                Stepper("Allowed after \(minHours.compactFormatted) hours",
+                        value: $minHours, in: 0.5...hoursBetween, step: 0.5)
+            }
+        } header: {
+            Text("Interval")
+        } footer: {
+            if hasMinHours {
+                Text("A dose is allowed from \(minHours.compactFormatted) h after the last one; the reminder fires at \(hoursBetween.compactFormatted) h.")
+            }
         }
     }
 
@@ -205,14 +244,21 @@ struct ScheduleEditView: View {
             cycleDaysOff = s.cycleDaysOff
             anchorDate = s.anchorDate
             hoursBetween = s.hoursBetween
+            hasMinHours = s.minHoursBetween != nil
+            minHours = s.minHoursBetween ?? max(0.5, s.hoursBetween - 2)
             hasMaxPerDay = s.maxPerDay != nil
             maxPerDay = s.maxPerDay ?? 4
+            prnReason = s.prnReason
             quantity = s.quantity
+            hasRange = s.quantityMax != nil
+            quantityMaxV = s.quantityMax ?? s.quantity + 1
+            doseInActive = s.doseInActiveUnits
             quantityUnit = s.quantityUnit
             instructions = s.instructions
             startDate = s.startDate
-            hasEndDate = s.endDate != nil
-            endDate = s.endDate ?? endDate
+            durationKind = s.durationKind
+            courseDays = s.courseDays
+            courseDoses = s.courseTotalDoses
         } else {
             quantityUnit = medication.form.defaultDoseUnit
         }
@@ -229,12 +275,19 @@ struct ScheduleEditView: View {
         s.cycleDaysOff = cycleDaysOff
         s.anchorDate = anchorDate
         s.hoursBetween = hoursBetween
+        s.minHoursBetween = hasMinHours && minHours < hoursBetween ? minHours : nil
         s.maxPerDay = hasMaxPerDay ? maxPerDay : nil
+        s.prnReason = prnReason.trimmingCharacters(in: .whitespaces)
         s.quantity = quantity
+        s.quantityMax = hasRange && quantityMaxV > quantity ? quantityMaxV : nil
+        s.doseInActiveUnits = medication.strengthValue != nil && doseInActive
         s.quantityUnit = quantityUnit
         s.instructions = instructions
         s.startDate = startDate
-        s.endDate = hasEndDate ? endDate : nil
+        s.endDate = nil
+        s.durationKind = durationKind
+        s.courseDays = courseDays
+        s.courseTotalDoses = courseDoses
         if schedule == nil {
             s.medication = medication
             context.insert(s)

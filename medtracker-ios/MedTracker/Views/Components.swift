@@ -1,4 +1,5 @@
 import SwiftUI
+import Charts
 
 // Shared Health-Medications-style visual vocabulary: every medication gets a
 // tinted circular icon whose symbol follows its form. All chrome is standard
@@ -56,6 +57,49 @@ struct MedIcon: View {
                 .foregroundStyle(.white)
         }
         .frame(width: size, height: size)
+    }
+}
+
+/// Estimated-level curve: solid past from logs, dashed projected future,
+/// "now" rule. Y-axis is relative (normalized to window peak) by design.
+struct LevelsChartView: View {
+    let medication: Medication
+
+    var body: some View {
+        let points = PKEngine.curve(for: medication)
+        let past = points.filter { !$0.projected }
+        let future = points.filter { $0.projected }
+        let tint = medTint(medication.tintName)
+        if points.isEmpty {
+            Text("Log a dose to see estimated levels.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        } else {
+            Chart {
+                ForEach(past) { p in
+                    AreaMark(x: .value("Time", p.date), y: .value("Level", p.level))
+                        .foregroundStyle(tint.opacity(0.12))
+                        .interpolationMethod(.monotone)
+                    LineMark(x: .value("Time", p.date), y: .value("Level", p.level),
+                             series: .value("Series", "Actual"))
+                        .foregroundStyle(tint)
+                        .interpolationMethod(.monotone)
+                }
+                ForEach(future) { p in
+                    LineMark(x: .value("Time", p.date), y: .value("Level", p.level),
+                             series: .value("Series", "Projected"))
+                        .foregroundStyle(tint.opacity(0.55))
+                        .lineStyle(StrokeStyle(lineWidth: 2, dash: [4, 4]))
+                        .interpolationMethod(.monotone)
+                }
+                RuleMark(x: .value("Now", Date.now))
+                    .foregroundStyle(.secondary)
+                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 3]))
+            }
+            .chartYAxis(.hidden)
+            .chartYScale(domain: 0...1.05)
+            .frame(height: 150)
+        }
     }
 }
 

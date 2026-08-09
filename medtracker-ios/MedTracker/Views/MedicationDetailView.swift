@@ -37,6 +37,16 @@ struct MedicationDetailView: View {
                 .listRowBackground(Color.clear)
             }
 
+            if medication.halfLifeHours != nil {
+                Section {
+                    LevelsChartView(medication: medication)
+                } header: {
+                    Text("Estimated level")
+                } footer: {
+                    Text("Relative to the past week's peak, from a \(medication.halfLifeHours?.compactFormatted ?? "–") h half-life. Dashed = projected if scheduled doses are taken. Indicative only — not medical guidance.")
+                }
+            }
+
             Section("Schedules") {
                 if medication.schedules.isEmpty {
                     Text("No schedules yet. Add one to get reminders.")
@@ -50,7 +60,14 @@ struct MedicationDetailView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(schedule.kind.label).font(.headline)
                                 Text(schedule.summary).font(.subheadline).foregroundStyle(.secondary)
-                                if schedule.isExpired {
+                                if let p = schedule.courseProgress {
+                                    Text(schedule.isExpired
+                                         ? "Course complete"
+                                         : (p.unit == "day" ? "Day \(p.done) of \(p.total)"
+                                                            : "\(p.done) of \(p.total) doses taken"))
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(schedule.isExpired ? .green : .orange)
+                                } else if schedule.isExpired {
                                     Text("Ended").font(.caption).foregroundStyle(.orange)
                                 }
                             }

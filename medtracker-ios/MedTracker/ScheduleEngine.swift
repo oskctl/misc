@@ -15,7 +15,7 @@ enum ScheduleEngine {
     static func isActiveDay(_ day: Date, for schedule: Schedule, calendar: Calendar = .current) -> Bool {
         let dayStart = calendar.startOfDay(for: day)
         if dayStart < calendar.startOfDay(for: schedule.startDate) { return false }
-        if let end = schedule.endDate, dayStart > calendar.startOfDay(for: end) { return false }
+        if let end = schedule.effectiveEndDate, dayStart > calendar.startOfDay(for: end) { return false }
 
         switch schedule.dayPattern {
         case .daily:
@@ -79,11 +79,19 @@ enum ScheduleEngine {
             .max { $0.takenAt < $1.takenAt }
     }
 
-    /// For an `everyNHours` schedule: the earliest time the next dose is due.
-    /// nil means no dose has ever been taken — available now.
+    /// For an `everyNHours` schedule: when the reminder should fire — last dose
+    /// plus the full interval. nil means no dose has ever been taken.
     static func nextAllowed(for schedule: Schedule) -> Date? {
         guard schedule.kind == .everyNHours, let last = lastTaken(for: schedule) else { return nil }
         return last.takenAt.addingTimeInterval(schedule.hoursBetween * 3600)
+    }
+
+    /// The safety floor: earliest a re-dose is allowed ("every 4–6 h" → +4 h).
+    /// Falls back to the reminder interval when no separate floor is set.
+    static func availableFrom(for schedule: Schedule) -> Date? {
+        guard schedule.kind == .everyNHours, let last = lastTaken(for: schedule) else { return nil }
+        let hours = schedule.minHoursBetween ?? schedule.hoursBetween
+        return last.takenAt.addingTimeInterval(hours * 3600)
     }
 
     /// Count of doses taken today against a schedule (for maxPerDay warnings).
@@ -120,12 +128,13 @@ enum LogService {
     /// has a log is left untouched.
     @discardableResult
     static func log(occurrence: Occurrence, status: DoseStatus,
-                    at time: Date = .now, in context: ModelContext) -> DoseLog? {
+                    at time: Date = .now, quantity: Double? = nil,
+                    in context: ModelContext) -> DoseLog? {
         if let existing = ScheduleEngine.log(for: occurrence) { return existing }
         let s = occurrence.schedule
         let entry = DoseLog(medication: s.medication, schedule: s, status: status,
                             takenAt: time, scheduledAt: occurrence.date,
-                            quantity: s.quantity, quantityUnit: s.quantityUnit)
+                            quantity: quantity ?? s.quantity, quantityUnit: s.doseUnitLabel)
         context.insert(entry)
         try? context.save()
         NotificationManager.shared.refreshAll()
@@ -140,7 +149,7 @@ enum LogService {
         let entry = DoseLog(medication: schedule.medication, schedule: schedule, status: status,
                             takenAt: time, scheduledAt: nil,
                             quantity: quantity ?? schedule.quantity,
-                            quantityUnit: schedule.quantityUnit, notes: notes)
+                            quantityUnit: schedule.doseUnitLabel, notes: notes)
         context.insert(entry)
         try? context.save()
         NotificationManager.shared.refreshAll()

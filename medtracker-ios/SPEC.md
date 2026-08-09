@@ -29,12 +29,19 @@ distribution, not a medical device, no server, no accounts.
 Three SwiftData entities. All fields local, store encrypted at rest (see Security).
 
 ### Medication
+Strength is a **ratio**, not a single value: amount of active ingredient per unit
+of the form. A tablet leaves the denominator implicit (50 mg per 1 tablet); a
+concentration sets it explicitly (250 mg per 5 mL, 100 mcg per puff, 100 units/mL).
+
 | Field | Type | Notes |
 |---|---|---|
 | `name` | String | e.g. "Sertraline" |
-| `strengthValue` | Double? | e.g. 50 |
-| `strengthUnit` | String | mg, mcg, g, mL, IU, %, units |
+| `strengthValue` / `strengthUnit` | Double? / String | numerator: 50 mg |
+| `strengthPerValue` / `strengthPerUnit` | Double / String | denominator: per 5 mL; (1, "") = per form unit |
+| `halfLifeHours` | Double? | non-nil enables the estimated-levels chart |
+| `absorptionHalfLifeHours` | Double | 0.5 oral IR · 2 extended release · 24 weekly injection |
 | `form` | enum | tablet, capsule, liquid, injection, inhaler, patch, cream, drops, spray, other |
+| `tintName` | String | Health-style icon color |
 | `notes` | String | free text |
 | `isArchived` | Bool | archived meds keep history but stop reminding |
 | `schedules` | [Schedule] | cascade delete |
@@ -53,13 +60,22 @@ dose are two schedules; so are "regular daily" + "extra as needed").
 | `intervalDays` | Int | for `everyNDays` |
 | `cycleDaysOn` / `cycleDaysOff` | Int | e.g. 21 on / 7 off |
 | `anchorDate` | Date | day-zero for `everyNDays` and `cycle` phase |
-| `hoursBetween` | Double | for `everyNHours` (supports 0.5 steps) |
+| `hoursBetween` | Double | for `everyNHours`: reminder interval (supports 0.5 steps) |
+| `minHoursBetween` | Double? | PRN safety floor for "every 4–6 h": dose allowed from +4 h, reminder at +6 h |
 | `maxPerDay` | Int? | optional cap, surfaced as a warning when exceeded |
-| `quantity` | Double | dose amount, e.g. 2 |
+| `prnReason` | String | "as needed *for migraine*" |
+| `quantity` / `quantityMax` | Double / Double? | dose per administration; `quantityMax` makes it a range ("1–2 tablets") — the log sheet asks which was taken |
 | `quantityUnit` | String | tablet, capsule, mL, puff, drop, unit, patch, spray, sachet |
+| `doseInActiveUnits` | Bool | quantity is in strength units (insulin "10 units") instead of product units |
 | `instructions` | String | "with food", "don't lie down for 30 min" |
-| `startDate` / `endDate` | Date / Date? | schedules with an end date expire (finite courses, e.g. antibiotics) |
+| `startDate` | Date | |
+| `durationKind` | enum | `ongoing` (daily driver, runs until archived) · `courseDays` ("for 10 days") · `courseDoses` ("until it runs out": N doses total) |
+| `courseDays` / `courseTotalDoses` | Int / Int | course length; day-based courses expire by date, dose-based when the Nth dose is logged. Progress ("Day 6 of 10", "14 of 20 doses") shows on the medication; completion stops reminders and shows "Course complete" |
 | `isPaused` | Bool | mute reminders without deleting the schedule |
+
+Where strength links product and active units, the dose shows both: "2 tablets
+(1000 mg)". A dose entered in active units resolves the other way (insulin
+"10 units" of a 100 units/mL pen = 0.1 mL).
 
 ### DoseLog
 | Field | Type | Notes |
@@ -84,8 +100,12 @@ dose are two schedules; so are "regular daily" + "extra as needed").
 | Specific weekdays (Mon/Wed/Fri — e.g. dialysis-day meds) | `fixedTimes` + `daysOfWeek` |
 | 21 on / 7 off (combined oral contraceptive) | `fixedTimes` + `cycle` 21/7 |
 | 5 on / 2 off, weekdays-only | `daysOfWeek` Mon–Fri (or `cycle` 5/2 if phase-anchored) |
-| Every 4–6 h after last dose, max 4/day (paracetamol, ibuprofen) | `everyNHours` h=6 (or 4), `maxPerDay`=4 — reminder chains off the last logged dose |
-| Finite course (7-day antibiotic) | any of the above + `endDate` |
+| Every 4–6 h after last dose, max 4/day (paracetamol, ibuprofen) | `everyNHours` h=6, `minHoursBetween`=4, `maxPerDay`=4 — allowed from +4 h, reminded at +6 h, chained off the last logged dose |
+| 1–2 tablets per dose | `quantity`=1, `quantityMax`=2 — log sheet asks which |
+| Insulin 10 units before meals | strength 100 units/mL, `doseInActiveUnits`, 3× daily |
+| Finite course (10-day antibiotic) | any of the above + `durationKind: courseDays` |
+| "Until it runs out" (20 tablets dispensed) | `durationKind: courseDoses`, total 20 — ends when the 20th dose is logged |
+| Daily driver (Adderall, statin — runs until prescription changes) | `durationKind: ongoing` (default) |
 | Pure PRN (antihistamine, GTN spray) | `asNeeded` — no reminders, one-tap logging |
 | Truly ad hoc (no schedule at all) | "Log a dose" from anywhere; log has no schedule ref |
 
@@ -117,6 +137,35 @@ dose are two schedules; so are "regular daily" + "extra as needed").
 `timesOfDay` are local wall-clock minutes; triggers are built from `DateComponents`
 via `Calendar.current`, so 08:00 stays 08:00 across DST transitions and travel.
 `everyNHours` chains are absolute durations (6 h means 6 h regardless of clock changes).
+
+## Estimated drug levels
+
+An opt-in, deliberately **indicative** feature (this is a personal tool, not a
+medical device): per-medication level curves computed from logged doses.
+
+- **Model:** one-compartment pharmacokinetics with first-order absorption and
+  elimination (the Bateman function). Each dose contributes
+  `(ka/(ka−ke))·(e^(−ke·t) − e^(−ka·t))`, with `ke = ln2 / halfLife`; the total
+  is the superposition of all doses — valid because elimination is first-order
+  for nearly all common drugs. This captures both behaviors that matter:
+  **accumulation** (weekly GLP-1s stack toward steady state over ~5 half-lives)
+  and **wear-off** (a stimulant's evening roll-off).
+- **Normalized, unitless axis.** Absolute concentrations need volume of
+  distribution and bioavailability, which are unknowable per person. The curve
+  is scaled to the displayed window's peak instead — no mg/L claims, ever.
+- **Tunable per person.** Half-life prefills from a built-in table of ~40 common
+  medications (substring-matched on the name) but is always editable — the
+  intended workflow is nudging it until the curve matches when *you* feel the
+  drug wearing off. Absorption is a 3-way choice: regular oral (~0.5 h),
+  extended release (~2 h), weekly injection (~24 h).
+- **Rendering:** Swift Charts on the medication detail page — solid area+line
+  for the past 7 days from actual logs, dashed projection 3 days forward
+  assuming scheduled doses are taken (PRN excluded from projection), a dashed
+  "now" rule, and a permanent caption: estimated from half-life, indicative only.
+- **Known limits (accepted):** patches/depots (zero-order release) aren't
+  modeled; active metabolites are approximated by using the effective half-life;
+  nonlinear-elimination drugs (alcohol, high-dose phenytoin) don't fit the
+  model; plasma level ≠ felt effect (tolerance, receptor dynamics).
 
 ## Security
 
@@ -159,8 +208,9 @@ no custom chrome to migrate):
    As Needed section — `everyNHours` meds show "available now" or "next from 14:32";
    `asNeeded` meds open the same card. Toolbar: "Log a dose" for fully ad-hoc entries.
 2. **Medications** — active list (name, strength, schedule summary), archived section.
-   Add/edit medication; per-medication detail with its schedules (add/edit/pause/delete)
-   and recent history.
+   Add/edit medication; per-medication detail with the estimated-levels chart (when
+   enabled), its schedules with course progress ("Day 6 of 10" / "14 of 20 doses" /
+   "Course complete"), and recent history.
 3. **History** — logs grouped by day, newest first, filterable by medication;
    7-day adherence stat (taken / scheduled for fixed schedules); swipe to delete;
    tap to edit a log entry.
