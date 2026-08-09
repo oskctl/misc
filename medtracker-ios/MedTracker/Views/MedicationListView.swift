@@ -69,18 +69,22 @@ struct MedicationListView: View {
 
     @ViewBuilder
     private func medRow(_ med: Medication) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(med.displayName).font(.headline)
-            if med.schedules.isEmpty {
-                Text("No schedule").font(.subheadline).foregroundStyle(.secondary)
-            } else {
-                ForEach(med.schedules, id: \.uuid) { s in
-                    Text(s.summary + (s.isPaused ? " (paused)" : ""))
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+        HStack(spacing: 12) {
+            MedIcon(medication: med)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(med.displayName).font(.body.weight(.semibold))
+                if med.schedules.isEmpty {
+                    Text("No schedule").font(.subheadline).foregroundStyle(.secondary)
+                } else {
+                    ForEach(med.schedules, id: \.uuid) { s in
+                        Text(s.summary + (s.isPaused ? " (paused)" : ""))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
         }
+        .padding(.vertical, 2)
     }
 
     private func save() {

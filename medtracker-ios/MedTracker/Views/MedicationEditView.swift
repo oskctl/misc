@@ -14,6 +14,7 @@ struct MedicationEditView: View {
     @State private var strengthValue = 50.0
     @State private var strengthUnit = "mg"
     @State private var form = MedForm.tablet
+    @State private var tintName = "blue"
     @State private var notes = ""
 
     var body: some View {
@@ -39,6 +40,28 @@ struct MedicationEditView: View {
                             .labelsHidden()
                         }
                     }
+                }
+                Section("Color") {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 44))], spacing: 12) {
+                        ForEach(medTintNames, id: \.self) { name in
+                            Button {
+                                tintName = name
+                            } label: {
+                                ZStack {
+                                    Circle()
+                                        .fill(medTint(name).gradient)
+                                        .frame(width: 36, height: 36)
+                                    if name == tintName {
+                                        Image(systemName: "checkmark")
+                                            .font(.subheadline.weight(.bold))
+                                            .foregroundStyle(.white)
+                                    }
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.vertical, 4)
                 }
                 Section("Notes") {
                     TextField("Optional notes", text: $notes, axis: .vertical)
@@ -73,6 +96,7 @@ struct MedicationEditView: View {
         strengthValue = med.strengthValue ?? 50
         strengthUnit = med.strengthUnit
         form = med.form
+        tintName = med.tintName
         notes = med.notes
     }
 
@@ -82,6 +106,7 @@ struct MedicationEditView: View {
         med.strengthValue = hasStrength ? strengthValue : nil
         med.strengthUnit = strengthUnit
         med.form = form
+        med.tintName = tintName
         med.notes = notes
         if medication == nil {
             context.insert(med)

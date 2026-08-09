@@ -89,12 +89,11 @@ struct HistoryView: View {
 
     @ViewBuilder
     private func logRow(_ log: DoseLog) -> some View {
-        HStack {
-            Image(systemName: log.status == .taken ? "checkmark.circle.fill" : "xmark.circle")
-                .foregroundStyle(log.status == .taken ? .green : .orange)
+        HStack(spacing: 12) {
+            MedIcon(medication: log.medication, size: 34)
             VStack(alignment: .leading, spacing: 2) {
                 Text(log.medication?.displayName ?? "Deleted medication")
-                    .font(.headline)
+                    .font(.body.weight(.semibold))
                 HStack(spacing: 4) {
                     Text("\(log.quantity.compactFormatted) \(log.quantityUnit)")
                     if log.scheduledAt == nil {
@@ -108,9 +107,13 @@ struct HistoryView: View {
                 .foregroundStyle(.secondary)
             }
             Spacer()
-            Text(log.takenAt.formatted(date: .omitted, time: .shortened))
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            VStack(alignment: .trailing, spacing: 2) {
+                Image(systemName: log.status == .taken ? "checkmark.circle.fill" : "minus.circle.fill")
+                    .foregroundStyle(log.status == .taken ? AnyShapeStyle(.green) : AnyShapeStyle(.secondary))
+                Text(log.takenAt.formatted(date: .omitted, time: .shortened))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 }

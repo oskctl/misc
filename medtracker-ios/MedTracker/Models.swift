@@ -67,6 +67,8 @@ final class Medication {
     var strengthValue: Double?
     var strengthUnit: String = "mg"
     var formRaw: String = MedForm.tablet.rawValue
+    /// Health-style icon tint; one of `medTintNames`.
+    var tintName: String = "blue"
     var notes: String = ""
     var isArchived: Bool = false
     var createdAt: Date = Date.now

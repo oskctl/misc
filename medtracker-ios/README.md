@@ -12,8 +12,13 @@ iOS 17+, zero third-party dependencies, no network code. Full design in [SPEC.md
   courses with end dates. Multiple schedules per medication.
 - Native notifications with lock-screen quick actions: **Log dose**, **Skip**,
   **Snooze 15 min**.
-- Today timeline (overdue / upcoming / done / PRN), full history with editing and a
+- Today timeline (overdue / upcoming / logged / PRN), full history with editing and a
   7-day adherence stat, JSON export, optional Face ID app lock, store encrypted at rest.
+- Styled after the Medications feature in Apple Health: tinted per-medication icons
+  (form-matched SF Symbols, 12-color palette), tap-a-dose card sheets with big
+  Taken/Skipped buttons, swipe quick actions. Built entirely from standard SwiftUI
+  components, so it adopts the system's current Liquid Glass design (iOS 26/27)
+  automatically when compiled with a current Xcode.
 
 ## Building it
 

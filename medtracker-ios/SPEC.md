@@ -133,12 +133,31 @@ via `Calendar.current`, so 08:00 stays 08:00 across DST transitions and travel.
 - **Export:** Settings offers a JSON export via share sheet so the data is never
   trapped. Export is explicit user action only.
 
+## Design
+
+The app deliberately mirrors the Medications feature inside Apple Health, using
+only standard SwiftUI components so it automatically adopts the current system
+design language (Liquid Glass on iOS 26; iOS 27 ships its second iteration, and
+standard-component SwiftUI apps pick the updated appearance up on recompile —
+no custom chrome to migrate):
+
+- Every medication gets a **tinted circular icon** (12-color Health-style palette,
+  user-picked) whose SF Symbol follows the form — pill, capsule, syringe, inhaler,
+  vial, patch, drop, spray.
+- Tapping a due dose opens a **card sheet** (medium detent): large icon, name,
+  dose context, adjustable time, and prominent **Log as Taken** / **Skipped**
+  buttons — the Health log interaction.
+- Lists are standard inset-grouped with icon-led rows; swipe right-to-left to
+  skip, full swipe left-to-right to log taken.
+- No custom colors, fonts, or materials beyond the med tints; system large titles,
+  standard sheets, `ContentUnavailableView` empty states.
+
 ## Screens
 
-1. **Today** (default tab) — timeline of today's doses: Overdue, Upcoming, Done.
-   Each row: med name, dose, scheduled time, Log/Skip buttons. Below: PRN section —
-   `everyNHours` meds show "available now" or "next from 14:32"; `asNeeded` meds get
-   a one-tap log row. Toolbar: "Log a dose" for fully ad-hoc entries.
+1. **Today** (default tab) — timeline of today's doses: Overdue, Upcoming, Logged.
+   Icon-led rows; tap opens the log card sheet, swipe for quick log/skip. Below:
+   As Needed section — `everyNHours` meds show "available now" or "next from 14:32";
+   `asNeeded` meds open the same card. Toolbar: "Log a dose" for fully ad-hoc entries.
 2. **Medications** — active list (name, strength, schedule summary), archived section.
    Add/edit medication; per-medication detail with its schedules (add/edit/pause/delete)
    and recent history.

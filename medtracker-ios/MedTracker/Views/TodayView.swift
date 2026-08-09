@@ -8,6 +8,8 @@ struct TodayView: View {
     @Query private var logs: [DoseLog]
 
     @State private var now = Date.now
+    @State private var selectedItem: DoseItem?
+    @State private var selectedPRN: Schedule?
     @State private var showAdHocSheet = false
     private let ticker = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
 
@@ -23,29 +25,29 @@ struct TodayView: View {
                 if items.isEmpty && prn.isEmpty {
                     ContentUnavailableView(
                         "Nothing scheduled today",
-                        systemImage: "checkmark.circle",
+                        systemImage: "pills",
                         description: Text("Add a medication and a schedule to get reminders.")
                     )
                 }
 
                 if !overdue.isEmpty {
                     Section("Overdue") {
-                        ForEach(overdue) { item in doseRow(item) }
+                        ForEach(overdue) { item in pendingRow(item) }
                     }
                 }
                 if !upcoming.isEmpty {
                     Section("Upcoming") {
-                        ForEach(upcoming) { item in doseRow(item) }
+                        ForEach(upcoming) { item in pendingRow(item) }
                     }
                 }
                 if !prn.isEmpty {
-                    Section("As needed") {
+                    Section("As Needed") {
                         ForEach(prn, id: \.uuid) { schedule in prnRow(schedule) }
                     }
                 }
                 if !done.isEmpty {
-                    Section("Done") {
-                        ForEach(done) { item in doseRow(item) }
+                    Section("Logged") {
+                        ForEach(done) { item in doneRow(item) }
                     }
                 }
             }
@@ -54,12 +56,18 @@ struct TodayView: View {
                 Button {
                     showAdHocSheet = true
                 } label: {
-                    Label("Log a dose", systemImage: "plus.circle")
+                    Label("Log a dose", systemImage: "plus")
                 }
                 .disabled(medications.filter { !$0.isArchived }.isEmpty)
             }
             .sheet(isPresented: $showAdHocSheet) {
                 AdHocLogSheet()
+            }
+            .sheet(item: $selectedItem) { item in
+                DoseActionSheet(occurrence: item.occurrence)
+            }
+            .sheet(item: $selectedPRN) { schedule in
+                DoseActionSheet(schedule: schedule)
             }
             .onReceive(ticker) { now = $0 }
             .onAppear { now = .now }
@@ -68,7 +76,7 @@ struct TodayView: View {
 
     // MARK: Data
 
-    private struct DoseItem: Identifiable {
+    struct DoseItem: Identifiable {
         let occurrence: Occurrence
         let log: DoseLog?
         var id: String { occurrence.id }
@@ -94,52 +102,73 @@ struct TodayView: View {
     // MARK: Rows
 
     @ViewBuilder
-    private func doseRow(_ item: DoseItem) -> some View {
-        let med = item.occurrence.schedule.medication
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(med?.displayName ?? "—").font(.headline)
-                Text("\(item.occurrence.schedule.doseText) at \(item.occurrence.date.formatted(date: .omitted, time: .shortened))")
+    private func pendingRow(_ item: DoseItem) -> some View {
+        let schedule = item.occurrence.schedule
+        Button {
+            selectedItem = item
+        } label: {
+            HStack {
+                MedRowLabel(medication: schedule.medication,
+                            subtitle: "Take \(schedule.doseText)")
+                Spacer()
+                Text(item.occurrence.date.formatted(date: .omitted, time: .shortened))
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(item.occurrence.date <= now ? AnyShapeStyle(.orange) : AnyShapeStyle(.secondary))
             }
-            Spacer()
-            if let log = item.log {
-                statusBadge(log.status)
-            } else {
-                Button {
-                    LogService.log(occurrence: item.occurrence, status: .skipped, in: context)
-                } label: {
-                    Image(systemName: "xmark.circle").font(.title2)
-                }
-                .buttonStyle(.borderless)
-                .foregroundStyle(.orange)
-                Button {
-                    LogService.log(occurrence: item.occurrence, status: .taken, in: context)
-                } label: {
-                    Image(systemName: "checkmark.circle.fill").font(.title2)
-                }
-                .buttonStyle(.borderless)
-                .foregroundStyle(.green)
+        }
+        .foregroundStyle(.primary)
+        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+            Button {
+                LogService.log(occurrence: item.occurrence, status: .taken, in: context)
+            } label: {
+                Label("Taken", systemImage: "checkmark")
             }
+            .tint(.green)
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button {
+                LogService.log(occurrence: item.occurrence, status: .skipped, in: context)
+            } label: {
+                Label("Skip", systemImage: "xmark")
+            }
+            .tint(.orange)
         }
     }
 
     @ViewBuilder
-    private func prnRow(_ schedule: Schedule) -> some View {
+    private func doneRow(_ item: DoseItem) -> some View {
+        let schedule = item.occurrence.schedule
         HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(schedule.medication?.displayName ?? "—").font(.headline)
-                Text(prnStatusText(schedule))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
+            MedRowLabel(medication: schedule.medication,
+                        subtitle: subtitleForDone(item))
             Spacer()
-            Button("Log") {
-                LogService.log(schedule: schedule, in: context)
-            }
-            .buttonStyle(.bordered)
+            Image(systemName: item.log?.status == .taken ? "checkmark.circle.fill" : "minus.circle.fill")
+                .foregroundStyle(item.log?.status == .taken ? AnyShapeStyle(.green) : AnyShapeStyle(.secondary))
+                .font(.title3)
         }
+    }
+
+    private func subtitleForDone(_ item: DoseItem) -> String {
+        guard let log = item.log else { return "" }
+        let verb = log.status == .taken ? "Taken" : "Skipped"
+        return "\(verb) at \(log.takenAt.formatted(date: .omitted, time: .shortened))"
+    }
+
+    @ViewBuilder
+    private func prnRow(_ schedule: Schedule) -> some View {
+        Button {
+            selectedPRN = schedule
+        } label: {
+            HStack {
+                MedRowLabel(medication: schedule.medication,
+                            subtitle: prnStatusText(schedule))
+                Spacer()
+                Image(systemName: "plus.circle.fill")
+                    .foregroundStyle(.tint)
+                    .font(.title3)
+            }
+        }
+        .foregroundStyle(.primary)
     }
 
     private func prnStatusText(_ schedule: Schedule) -> String {
@@ -157,17 +186,107 @@ struct TodayView: View {
         }
         return parts.joined(separator: " · ")
     }
+}
 
-    @ViewBuilder
-    private func statusBadge(_ status: DoseStatus) -> some View {
-        switch status {
-        case .taken:
-            Label("Taken", systemImage: "checkmark.circle.fill")
-                .font(.subheadline).foregroundStyle(.green)
-        case .skipped:
-            Label("Skipped", systemImage: "xmark.circle")
-                .font(.subheadline).foregroundStyle(.orange)
+// MARK: - Dose action card (Health-style)
+
+/// Card sheet for acting on a dose: big icon, context, prominent
+/// Taken / Skipped buttons. Works for a planned occurrence or a PRN schedule.
+struct DoseActionSheet: View {
+    @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
+
+    var occurrence: Occurrence?
+    var schedule: Schedule?
+
+    @State private var time = Date.now
+
+    private var resolvedSchedule: Schedule? { occurrence?.schedule ?? schedule }
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Capsule()
+                .fill(.tertiary)
+                .frame(width: 36, height: 5)
+                .padding(.top, 8)
+            Spacer(minLength: 0)
+
+            MedIcon(medication: resolvedSchedule?.medication, size: 72)
+            VStack(spacing: 4) {
+                Text(resolvedSchedule?.medication?.displayName ?? "—")
+                    .font(.title2.bold())
+                    .multilineTextAlignment(.center)
+                Text(contextLine)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                if let s = resolvedSchedule, !s.instructions.isEmpty {
+                    Text(s.instructions)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                if let warning = capWarning {
+                    Label(warning, systemImage: "exclamationmark.triangle.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(.orange)
+                        .padding(.top, 4)
+                }
+            }
+
+            DatePicker("Time", selection: $time, displayedComponents: .hourAndMinute)
+                .datePickerStyle(.compact)
+                .padding(.horizontal, 32)
+
+            Spacer(minLength: 0)
+
+            VStack(spacing: 10) {
+                Button {
+                    act(.taken)
+                } label: {
+                    Text("Log as Taken")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+
+                Button {
+                    act(.skipped)
+                } label: {
+                    Text("Skipped")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+            }
+            .padding(.horizontal)
+            .padding(.bottom)
         }
+        .presentationDetents([.medium])
+        .presentationDragIndicator(.hidden)
+    }
+
+    private var contextLine: String {
+        guard let s = resolvedSchedule else { return "" }
+        if let occ = occurrence {
+            return "Take \(s.doseText) · scheduled \(occ.date.formatted(date: .omitted, time: .shortened))"
+        }
+        return "Take \(s.doseText)"
+    }
+
+    private var capWarning: String? {
+        guard let s = resolvedSchedule, let cap = s.maxPerDay else { return nil }
+        let taken = ScheduleEngine.takenToday(for: s)
+        return taken >= cap ? "Already at \(cap) dose limit today" : nil
+    }
+
+    private func act(_ status: DoseStatus) {
+        if let occ = occurrence {
+            LogService.log(occurrence: occ, status: status, at: time, in: context)
+        } else if let s = schedule {
+            LogService.log(schedule: s, status: status, at: time, in: context)
+        }
+        dismiss()
     }
 }
 
@@ -202,7 +321,7 @@ struct AdHocLogSheet: View {
                 DatePicker("Time", selection: $time)
                 TextField("Notes", text: $notes)
             }
-            .navigationTitle("Log a dose")
+            .navigationTitle("Log a Dose")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

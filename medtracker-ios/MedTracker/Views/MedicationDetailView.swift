@@ -12,17 +12,29 @@ struct MedicationDetailView: View {
     var body: some View {
         List {
             Section {
-                LabeledContent("Form", value: medication.form.label)
-                if let v = medication.strengthValue {
-                    LabeledContent("Strength", value: "\(v.compactFormatted) \(medication.strengthUnit)")
+                VStack(spacing: 10) {
+                    MedIcon(medication: medication, size: 76)
+                    Text(medication.displayName)
+                        .font(.title2.bold())
+                        .multilineTextAlignment(.center)
+                    Text(medication.form.label)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    if !medication.notes.isEmpty {
+                        Text(medication.notes)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    if medication.isArchived {
+                        Label("Archived — no reminders", systemImage: "archivebox")
+                            .font(.subheadline)
+                            .foregroundStyle(.orange)
+                    }
                 }
-                if !medication.notes.isEmpty {
-                    Text(medication.notes).font(.subheadline).foregroundStyle(.secondary)
-                }
-                if medication.isArchived {
-                    Label("Archived — no reminders", systemImage: "archivebox")
-                        .foregroundStyle(.orange)
-                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .listRowBackground(Color.clear)
             }
 
             Section("Schedules") {
@@ -87,6 +99,7 @@ struct MedicationDetailView: View {
             }
         }
         .navigationTitle(medication.name)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             Button("Edit") { showEditSheet = true }
         }
