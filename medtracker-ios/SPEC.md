@@ -208,12 +208,29 @@ no custom chrome to migrate):
 - No custom colors, fonts, or materials beyond the med tints; system large titles,
   standard sheets, `ContentUnavailableView` empty states.
 
+### Speed principles
+
+The daily interaction is "glance, tap, done" — the UI optimizes for that over
+completeness-on-screen:
+
+- **One-tap logging with undo, not confirmation.** The circle-check on a row
+  logs instantly (default dose, now); an Undo toast covers mistakes. The adjust
+  sheet (time/quantity) is progressive disclosure — tap the row body.
+- **Batch the common case.** Multiple meds due together get one "Log all N as
+  taken" button.
+- **Answer "am I on track?" in the header** — a small progress gauge with
+  "4 of 7 done · Next at 8 PM".
+- **Collapse what's done, compress what's optional.** Logged doses fold to one
+  line; as-needed meds are chips; level curves are a horizontal card strip.
+
 ## Screens
 
-1. **Today** (default tab) — timeline of today's doses: Overdue, Upcoming, Logged.
-   Icon-led rows; tap opens the log card sheet, swipe for quick log/skip. Below:
-   As Needed section — `everyNHours` meds show "available now" or "next from 14:32";
-   `asNeeded` meds open the same card. Toolbar: "Log a dose" for fully ad-hoc entries.
+1. **Today** (default tab), top to bottom: progress header (gauge, done count,
+   next dose time) · **Due Now** card (overdue + next 30 min; circle-check
+   instant log, "Log all" when >1, swipe to log/skip, row tap opens the adjust
+   card) · **Later Today** compact rows · **As Needed** chips (locked chips show
+   the allowed-from time) · **Levels** horizontal sparkline cards · collapsed
+   **Logged** summary. Toolbar: "Log a dose" for fully ad-hoc entries.
 2. **Medications** — active list (name, strength, schedule summary), archived section.
    Add/edit medication; per-medication detail with the estimated-levels chart (when
    enabled), its schedules with course progress ("Day 6 of 10" / "14 of 20 doses" /
