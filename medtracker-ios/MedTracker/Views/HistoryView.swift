@@ -8,6 +8,7 @@ struct HistoryView: View {
 
     @State private var filterMed: Medication?
     @State private var editingLog: DoseLog?
+    @State private var searchText = ""
 
     var body: some View {
         NavigationStack {
@@ -22,7 +23,7 @@ struct HistoryView: View {
                     )
                 }
                 ForEach(grouped, id: \.day) { group in
-                    Section(group.day.formatted(date: .abbreviated, time: .omitted)) {
+                    Section(dayLabel(group.day)) {
                         ForEach(group.entries, id: \.uuid) { log in
                             Button { editingLog = log } label: { logRow(log) }
                                 .foregroundStyle(.primary)
@@ -38,6 +39,7 @@ struct HistoryView: View {
                 }
             }
             .navigationTitle("History")
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .automatic))
             .toolbar {
                 Menu {
                     Button("All medications") { filterMed = nil }
@@ -59,8 +61,25 @@ struct HistoryView: View {
     // MARK: Data
 
     private var filteredLogs: [DoseLog] {
-        guard let med = filterMed else { return logs }
-        return logs.filter { $0.medication === med }
+        var result = logs
+        if let med = filterMed {
+            result = result.filter { $0.medication === med }
+        }
+        let q = searchText.trimmingCharacters(in: .whitespaces)
+        if !q.isEmpty {
+            result = result.filter {
+                ($0.medication?.name.localizedCaseInsensitiveContains(q) ?? false)
+                || $0.notes.localizedCaseInsensitiveContains(q)
+            }
+        }
+        return result
+    }
+
+    private func dayLabel(_ day: Date) -> String {
+        let cal = Calendar.current
+        if cal.isDateInToday(day) { return "Today" }
+        if cal.isDateInYesterday(day) { return "Yesterday" }
+        return day.formatted(date: .abbreviated, time: .omitted)
     }
 
     private var groupedLogs: [(day: Date, entries: [DoseLog])] {
@@ -76,24 +95,27 @@ struct HistoryView: View {
         let stats = ScheduleEngine.adherence(medications: medications, days: 7)
         if stats.scheduled > 0 {
             Section {
-                HStack {
-                    Label("Last 7 days", systemImage: "chart.bar.fill")
-                    Spacer()
-                    Text("\(stats.taken) of \(stats.scheduled) scheduled doses taken")
+                HStack(spacing: 6) {
+                    Text("\(Int(Double(stats.taken) / Double(stats.scheduled) * 100))%")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.green)
+                    Text("adherence · \(stats.taken) of \(stats.scheduled) doses · last 7 days")
+                        .font(.subheadline)
                         .foregroundStyle(.secondary)
+                    Spacer()
                 }
-                .font(.subheadline)
             }
         }
     }
 
     @ViewBuilder
     private func logRow(_ log: DoseLog) -> some View {
-        HStack(spacing: 12) {
-            MedIcon(medication: log.medication, size: 34)
-            VStack(alignment: .leading, spacing: 2) {
+        HStack(spacing: 10) {
+            MedIcon(medication: log.medication, size: 30)
+            VStack(alignment: .leading, spacing: 1) {
                 Text(log.medication?.displayName ?? "Deleted medication")
-                    .font(.body.weight(.semibold))
+                    .font(.body.weight(.medium))
+                    .lineLimit(1)
                 HStack(spacing: 4) {
                     Text("\(log.quantity.compactFormatted) \(log.quantityUnit)")
                     if log.scheduledAt == nil {
@@ -103,16 +125,17 @@ struct HistoryView: View {
                         Text("· \(log.notes)").lineLimit(1)
                     }
                 }
-                .font(.subheadline)
+                .font(.footnote)
                 .foregroundStyle(.secondary)
             }
             Spacer()
-            VStack(alignment: .trailing, spacing: 2) {
-                Image(systemName: log.status == .taken ? "checkmark.circle.fill" : "minus.circle.fill")
-                    .foregroundStyle(log.status == .taken ? AnyShapeStyle(.green) : AnyShapeStyle(.secondary))
+            HStack(spacing: 6) {
                 Text(log.takenAt.formatted(date: .omitted, time: .shortened))
-                    .font(.subheadline)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
+                Image(systemName: log.status == .taken ? "checkmark.circle.fill" : "minus.circle.fill")
+                    .foregroundStyle(log.status == .taken ? AnyShapeStyle(.green) : AnyShapeStyle(.tertiary))
+                    .imageScale(.small)
             }
         }
     }

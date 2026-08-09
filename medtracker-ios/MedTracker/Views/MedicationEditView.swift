@@ -108,26 +108,27 @@ struct MedicationEditView: View {
                     }
                 }
                 Section("Color") {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 44))], spacing: 12) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 38))], spacing: 10) {
                         ForEach(medTintNames, id: \.self) { name in
                             Button {
                                 tintName = name
                             } label: {
                                 ZStack {
                                     Circle()
-                                        .fill(medTint(name).gradient)
-                                        .frame(width: 36, height: 36)
+                                        .fill(medTint(name))
+                                        .frame(width: 28, height: 28)
                                     if name == tintName {
-                                        Image(systemName: "checkmark")
-                                            .font(.subheadline.weight(.bold))
-                                            .foregroundStyle(.white)
+                                        Circle()
+                                            .strokeBorder(medTint(name), lineWidth: 2)
+                                            .frame(width: 36, height: 36)
                                     }
                                 }
+                                .frame(width: 38, height: 38)
                             }
                             .buttonStyle(.plain)
                         }
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 2)
                 }
                 Section("Notes") {
                     TextField("Optional notes", text: $notes, axis: .vertical)

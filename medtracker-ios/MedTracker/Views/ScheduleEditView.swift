@@ -332,11 +332,11 @@ struct WeekdayPicker: View {
                     if isOn { selection.remove(weekday) } else { selection.insert(weekday) }
                 } label: {
                     Text(label)
-                        .font(.subheadline.weight(.medium))
-                        .frame(maxWidth: .infinity, minHeight: 34)
-                        .background(isOn ? Color.accentColor : Color(uiColor: .systemGray5))
-                        .foregroundStyle(isOn ? Color.white : Color.primary)
-                        .clipShape(Circle())
+                        .font(.footnote.weight(.semibold))
+                        .frame(maxWidth: .infinity, minHeight: 30)
+                        .background(isOn ? Color.accentColor.opacity(0.18) : Color(uiColor: .tertiarySystemFill))
+                        .foregroundStyle(isOn ? Color.accentColor : Color.secondary)
+                        .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
             }

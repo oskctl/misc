@@ -304,8 +304,8 @@ struct TodayView: View {
             MedRowLabel(medication: schedule.medication, subtitle: doneSubtitle(item))
             Spacer()
             Image(systemName: item.log?.status == .taken ? "checkmark.circle.fill" : "minus.circle.fill")
-                .foregroundStyle(item.log?.status == .taken ? AnyShapeStyle(.green) : AnyShapeStyle(.secondary))
-                .font(.title3)
+                .foregroundStyle(item.log?.status == .taken ? AnyShapeStyle(.green) : AnyShapeStyle(.tertiary))
+                .imageScale(.medium)
         }
     }
 

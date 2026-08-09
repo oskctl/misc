@@ -25,22 +25,22 @@ struct DoseActionSheet: View {
                 .padding(.top, 8)
             Spacer(minLength: 0)
 
-            MedIcon(medication: resolvedSchedule?.medication, size: 72)
+            MedIcon(medication: resolvedSchedule?.medication, size: 52)
             VStack(spacing: 4) {
                 Text(resolvedSchedule?.medication?.displayName ?? "—")
-                    .font(.title2.bold())
+                    .font(.title3.bold())
                     .multilineTextAlignment(.center)
                 Text(contextLine)
-                    .font(.subheadline)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
                 if let s = resolvedSchedule, !s.instructions.isEmpty {
                     Text(s.instructions)
-                        .font(.subheadline)
+                        .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
                 if let warning = capWarning {
                     Label(warning, systemImage: "exclamationmark.triangle.fill")
-                        .font(.subheadline)
+                        .font(.footnote.weight(.medium))
                         .foregroundStyle(.orange)
                         .padding(.top, 4)
                 }

@@ -12,31 +12,30 @@ struct MedicationDetailView: View {
     var body: some View {
         List {
             Section {
-                VStack(spacing: 10) {
-                    MedIcon(medication: medication, size: 76)
-                    Text(medication.displayName)
-                        .font(.title2.bold())
-                        .multilineTextAlignment(.center)
-                    Text(medication.route == .unspecified
-                         ? medication.form.label
-                         : "\(medication.form.label) · \(medication.route.label)")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    if !medication.notes.isEmpty {
-                        Text(medication.notes)
-                            .font(.subheadline)
+                HStack(spacing: 12) {
+                    MedIcon(medication: medication, size: 48)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(medication.displayName)
+                            .font(.headline)
+                        Text(medication.route == .unspecified
+                             ? medication.form.label
+                             : "\(medication.form.label) · \(medication.route.label)")
+                            .font(.footnote)
                             .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
+                        if !medication.notes.isEmpty {
+                            Text(medication.notes)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        if medication.isArchived {
+                            Label("Archived — no reminders", systemImage: "archivebox")
+                                .font(.footnote)
+                                .foregroundStyle(.orange)
+                        }
                     }
-                    if medication.isArchived {
-                        Label("Archived — no reminders", systemImage: "archivebox")
-                            .font(.subheadline)
-                            .foregroundStyle(.orange)
-                    }
+                    Spacer()
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
-                .listRowBackground(Color.clear)
+                .padding(.vertical, 2)
             }
 
             if medication.halfLifeHours != nil {
@@ -60,8 +59,9 @@ struct MedicationDetailView: View {
                     } label: {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(schedule.kind.label).font(.headline)
-                                Text(schedule.summary).font(.subheadline).foregroundStyle(.secondary)
+                                Text(schedule.summary)
+                                    .font(.subheadline.weight(.medium))
+                                Text(schedule.kind.label).font(.footnote).foregroundStyle(.secondary)
                                 if let p = schedule.courseProgress {
                                     Text(schedule.isExpired
                                          ? "Course complete"
@@ -100,20 +100,23 @@ struct MedicationDetailView: View {
             }
 
             Section("Recent history") {
-                let recent = medication.logs.sorted { $0.takenAt > $1.takenAt }.prefix(10)
+                let recent = medication.logs.sorted { $0.takenAt > $1.takenAt }.prefix(5)
                 if recent.isEmpty {
-                    Text("No doses logged yet.").foregroundStyle(.secondary)
+                    Text("No doses logged yet.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
                 ForEach(Array(recent), id: \.uuid) { log in
                     HStack {
-                        Image(systemName: log.status == .taken ? "checkmark.circle.fill" : "xmark.circle")
-                            .foregroundStyle(log.status == .taken ? .green : .orange)
+                        Image(systemName: log.status == .taken ? "checkmark.circle.fill" : "minus.circle.fill")
+                            .foregroundStyle(log.status == .taken ? AnyShapeStyle(.green) : AnyShapeStyle(.tertiary))
+                            .imageScale(.small)
                         Text("\(log.quantity.compactFormatted) \(log.quantityUnit)")
                         Spacer()
                         Text(log.takenAt.formatted(date: .abbreviated, time: .shortened))
                             .foregroundStyle(.secondary)
                     }
-                    .font(.subheadline)
+                    .font(.footnote)
                 }
             }
         }

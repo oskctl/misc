@@ -43,18 +43,21 @@ extension MedForm {
     }
 }
 
-/// The tinted circle icon used everywhere a medication appears.
+/// The tinted icon used everywhere a medication appears. Quiet treatment:
+/// a subtle tint-fill circle with a tint-colored glyph (the Reminders/Fitness
+/// idiom), not a saturated block.
 struct MedIcon: View {
     let medication: Medication?
-    var size: CGFloat = 40
+    var size: CGFloat = 34
 
     var body: some View {
+        let tint = medTint(medication?.tintName ?? "gray")
         ZStack {
             Circle()
-                .fill(medTint(medication?.tintName ?? "gray").gradient)
+                .fill(tint.opacity(0.16))
             Image(systemName: medication?.form.symbolName ?? "pills.fill")
-                .font(.system(size: size * 0.42, weight: .medium))
-                .foregroundStyle(.white)
+                .font(.system(size: size * 0.44, weight: .medium))
+                .foregroundStyle(tint)
         }
         .frame(width: size, height: size)
     }
@@ -142,14 +145,16 @@ struct MedRowLabel: View {
     let subtitle: String
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             MedIcon(medication: medication)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(medication?.displayName ?? "—")
-                    .font(.body.weight(.semibold))
+                    .font(.body.weight(.medium))
+                    .lineLimit(1)
                 Text(subtitle)
-                    .font(.subheadline)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
         }
     }
