@@ -17,7 +17,8 @@ export function nominalScale(pxPerM) {
 }
 
 function scaleBar(pxPerM) {
-  const metres = BARS.reduce((a, b) => (Math.abs(b * pxPerM - 180) < Math.abs(a * pxPerM - 180) ? b : a));
+  // Shortest standard bar long enough that the '0' and 'N m' labels never collide on a phone.
+  const metres = BARS.find(b => b * pxPerM >= 200) ?? BARS[BARS.length - 1];
   const len = metres * pxPerM, x = 36, y = H - 34;
   return s('g', { class: 'bar-scale', 'data-show': '' },
     s('rect', { x, y, width: len / 2, height: 7 }),
@@ -32,13 +33,13 @@ function dimensionLine([x1, y1, x2, y2], label) {
   const tick = (x, y) => s('line', { x1: x - 9, y1: y + 9, x2: x + 9, y2: y - 9 });
   const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
   const tx = vertical ? mx - 26 : mx, ty = vertical ? my : my - 22;
-  const w = Math.max(44, label.length * 19 + 16);
+  const w = Math.max(64, label.length * 29 + 24);
   return s('g', { class: 'dim', 'data-show': '' },
     s('line', { x1, y1, x2, y2 }),
     tick(x1, y1), tick(x2, y2),
     s('g', { transform: `translate(${tx} ${ty})${vertical ? ' rotate(-90)' : ''}` },
-      s('rect', { class: 'tag', x: -w / 2, y: -19, width: w, height: 32 }),
-      s('text', { x: 0, y: 5, 'text-anchor': 'middle', text: label }),
+      s('rect', { class: 'tag', x: -w / 2, y: -34, width: w, height: 50 }),
+      s('text', { x: 0, y: 6, 'text-anchor': 'middle', text: label }),
     ),
   );
 }

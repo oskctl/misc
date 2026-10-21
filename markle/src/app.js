@@ -46,8 +46,13 @@ if (!state || state.schema !== 1 || typeof state.games !== 'object') {
 state.settings = { ...DEFAULTS, ...state.settings };
 const previewGames = read(PREVIEW_KEY, {});
 let preview = false;
+try { preview = sessionStorage.getItem('markle:preview') === '1'; } catch { /* no session storage */ }
 
-const save = () => { write(KEY, state); write(PREVIEW_KEY, previewGames); };
+const save = () => {
+  write(KEY, state);
+  if (view && isFuture(view.no)) write(PREVIEW_KEY, previewGames);
+};
+const smooth = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
 const todayKey = () => dateKey(new Date());
 const setMode = CONFIG.mode !== 'daily';
 const issuedNo = () => (setMode ? PUZZLES.length : puzzleNumberOn(CONFIG.startDate, todayKey()));
@@ -58,9 +63,13 @@ const dateOf = no => (setMode ? 'Launch set' : new Date(dateOfPuzzle(CONFIG.star
 // The sheet to open by default: today's in daily mode; the first unfinished one in the launch set.
 const homeNo = () => {
   if (!setMode) return latestIssued();
+  const cur = state.current;
+  if (puzzleByNo.has(cur) && !state.games[cur]?.bonus?.done) return cur;
   const open = PUZZLES.find(p => !['won', 'lost'].includes(state.games[p.no]?.status));
   return open ? open.no : PUZZLES.length;
 };
+// A record's guesses, minus any building that has since left the pool.
+const guessesOf = rec => (rec?.guesses || []).filter(id => byId.has(id));
 
 function recordFor(no, create = false) {
   const bag = isFuture(no) ? previewGames : state.games;
@@ -83,6 +92,10 @@ function applyTheme() {
   const t = state.settings.theme;
   if (t === 'system') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.setAttribute('data-theme', t);
+  for (const m of document.querySelectorAll('meta[name="theme-color"]')) {
+    const dark = /dark/.test(m.media);
+    m.setAttribute('content', t === 'dark' ? '#121211' : t === 'light' ? '#E7E5E0' : dark ? '#121211' : '#E7E5E0');
+  }
 }
 
 async function copyText(text) {
@@ -132,17 +145,21 @@ function guessRow(g, answer, i, isNew) {
       + `${a.architect === 'match' ? 'Same architect. ' : ''}${a.type === 'match' ? 'Same type.' : ''}`;
   return h('li', { class: `row${f.correct ? ' hit' : ''}${isNew ? ' new' : ''}`, 'aria-label': label },
     h('span', { class: 'n', text: String(i + 1) }),
-    h('span', { class: 'name', text: g.name }),
-    h('span', { class: 'metrics' },
-      f.correct ? h('span', { text: 'Identified' }) : h('span', { text: dist }),
-      f.correct ? null : northArrow(f.bearing),
-      h('span', { class: 'pct', text: String(f.pct) }),
+    h('span', { class: 'line' },
+      h('span', { class: 'name', text: g.name }),
+      h('span', { class: 'metrics' },
+        f.correct ? h('span', { text: 'Identified' }) : h('span', { text: dist }),
+        f.correct ? null : northArrow(f.bearing),
+        h('span', { class: 'pct', text: String(f.pct) }),
+      ),
     ),
-    h('span', { class: 'where', text: whereLine(g, answer, f.correct) }),
-    f.correct ? h('span') : h('span', { class: 'chips' },
-      chip(a.year.state, `${g.year} ${yearMark}`, `Year: ${a.year.state}`),
-      chip(a.architect, 'Arch', `Architect: ${a.architect}`),
-      chip(a.type, TYPE_LABELS[g.type] || g.type, `Type: ${a.type}`),
+    h('span', { class: 'line' },
+      h('span', { class: 'where', text: whereLine(g, answer, f.correct) }),
+      f.correct ? null : h('span', { class: 'chips' },
+        chip(a.year.state, `${g.year} ${yearMark}`, `Year: ${a.year.state}`),
+        chip(a.architect, 'Arch', `Architect: ${a.architect}`),
+        chip(a.type, TYPE_LABELS[g.type] || g.type, `Type: ${a.type}`),
+      ),
     ),
   );
 }
@@ -170,6 +187,7 @@ function mount(no) {
   const result = h('div', { class: 'page-result', style: 'display:grid;gap:14px' });
   app.replaceChildren(h('section', { class: 'sheet', 'aria-label': `Sheet ${sheetLabel(no)}` }, sheet.frame, tb, revs), rows, result);
   view = { no, puzzle, answer, sheet, tb, revs, rows, result, revealed: new Set() };
+  if (setMode && state.current !== no && !isFuture(no)) { state.current = no; write(KEY, state); }
   const hash = `#s${sheetLabel(no)}`;
   if (no !== homeNo() && location.hash !== hash) history.replaceState(null, '', hash);
   if (no === homeNo() && /^#s\d+$/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
@@ -200,14 +218,17 @@ function refresh({ newRow = -1 } = {}) {
   if (!view) return;
   const { no, puzzle, answer, sheet } = view;
   const rec = recordFor(no) || { guesses: [], status: 'playing' };
-  const guesses = rec.guesses;
+  const guesses = guessesOf(rec);
   const status = rec.status;
   const finished = status !== 'playing';
   const closeup = (rec.mode ?? state.settings.mode) === 'closeup';
   const stage = closeup ? 6 : stageFor(guesses, answer.id);
   const animate = newRow >= 0;
 
+  // While the Dimension round is open, the main sheet loses its scale too.
+  const measuring = rec.bonus?.view === 'dimension' && !settled(rec.bonus.dimension);
   sheet.setStage(stage);
+  sheet.showScaleBar(!measuring);
   sheet.setZoom(closeup && !finished ? CLOSEUP_FRACTIONS[guesses.length] : null);
   sheet.showDimension(finished && settled(rec.bonus?.dimension) ? 'answer' : null);
   sheet.stamp(finished ? (status === 'won' ? 'Approved' : 'Superseded') : null,
@@ -217,7 +238,7 @@ function refresh({ newRow = -1 } = {}) {
   const hint = s => finished || (!closeup && stage >= s);
   const zoomF = CLOSEUP_FRACTIONS[guesses.length];
   const scale = closeup && !finished ? (zoomF ? nominalScale(puzzle.pxPerM / zoomF) : 'FIT')
-    : stage >= 2 ? nominalScale(puzzle.pxPerM) : 'NTS';
+    : stage >= 2 && !measuring ? nominalScale(puzzle.pxPerM) : 'NTS';
   const cells = [
     cell('Drg No.', `MK-${sheetLabel(no)}`),
     cell('Drawing', puzzle.view === 'INTERIOR ELEVATION' ? 'INT. ELEV.' : puzzle.view),
@@ -258,6 +279,8 @@ function refresh({ newRow = -1 } = {}) {
   $('composer').hidden = finished;
   document.body.classList.toggle('playing', !finished);
   if (finished) renderResult(rec, animate); else view.result.replaceChildren();
+  // Bring the newest feedback row into view above the guess box.
+  if (animate && !finished) view.rows.children[newRow]?.scrollIntoView({ block: 'nearest', behavior: smooth() });
 }
 
 // ---------- Result sheet ----------
@@ -290,7 +313,7 @@ function renderResult(rec, justFinished) {
 
   if (justFinished) {
     announce(won ? `Correct. It's ${answer.name}.` : `Out of guesses. It was ${answer.name}.`);
-    setTimeout(() => result.firstElementChild?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 900);
+    setTimeout(() => result.firstElementChild?.scrollIntoView({ behavior: smooth(), block: 'start' }), 900);
   }
 }
 
@@ -298,8 +321,15 @@ function bonusContext(rec) {
   return {
     puzzle: view.puzzle, record: rec, specs: SPECS, svgText: DRAWINGS[view.puzzle.drawing],
     save,
+    announce,
     onSettled: () => { refreshTitleBlockOnly(); },
-    onDone: () => { refresh(); view.result.querySelector('.card + section, .card + .card')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); },
+    onAdvance: () => {
+      refresh();
+      const slot = view.result.querySelector('section[aria-label="Title block"]');
+      slot?.scrollIntoView({ behavior: smooth(), block: 'start' });
+      setTimeout(() => slot?.querySelector('h3.q')?.focus({ preventScroll: true }), 50);
+    },
+    onDone: () => { refresh(); view.result.querySelector('.card + section, .card + .card')?.scrollIntoView({ behavior: smooth(), block: 'start' }); },
   };
 }
 
@@ -315,7 +345,7 @@ function startBonus() {
   rec.bonus.view = 'architect';
   save();
   refresh();
-  view.result.querySelector('section[aria-label="Title block"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  view.result.querySelector('section[aria-label="Title block"]')?.scrollIntoView({ behavior: smooth(), block: 'start' });
 }
 
 function summary(rec) {
@@ -328,7 +358,7 @@ function summary(rec) {
     spec: SPECS[puzzle.spec.answer] || puzzle.spec.answer,
     notes: `Lie: ${puzzle.notes.lie.text}`,
   };
-  const guesses = rec.guesses.map(id => byId.get(id));
+  const guesses = guessesOf(rec).map(id => byId.get(id));
   return h('section', { class: 'card', 'aria-label': 'The completed sheet' },
     h('p', { class: 'q-k', text: `Title block · ${ROUNDS.filter(k => b[k]?.pass).length}/5` }),
     h('div', { class: 'recap' }, ROUNDS.map(k => [
@@ -360,7 +390,7 @@ function hostOf(u) {
 
 function currentShareText(rec) {
   const answer = view.answer;
-  const rows = rec.guesses.map(id => feedback(byId.get(id), answer));
+  const rows = guessesOf(rec).map(id => feedback(byId.get(id), answer));
   const st = computeStats(state.games, latestIssued());
   const base = CONFIG.shareUrl || (location.protocol.startsWith('http') && !/claudeusercontent|claude\.ai/.test(location.host) ? location.origin + location.pathname : '');
   const url = base && (setMode || view.no !== latestIssued()) ? `${base}#s${sheetLabel(view.no)}` : base;
@@ -414,9 +444,10 @@ let hits = [];
 let active = -1;
 let chosen = null;
 
-function setMsg(text) {
+function setMsg(text, info = false) {
   msg.textContent = text || '';
   msg.hidden = !text;
+  msg.classList.toggle('info', info);
 }
 
 function closeSuggest() {
@@ -434,7 +465,9 @@ function renderSuggest() {
   hits = res.hits;
   const guessed = new Set(recordFor(view.no)?.guesses || []);
   if (!hits.length) {
-    list.replaceChildren(h('li', { class: 'more', 'aria-disabled': 'true', text: 'Not in the register. Try the city or country.' }));
+    closeSuggest();
+    setMsg('Not in the register. Try the city or country.', true);
+    return;
   } else {
     list.replaceChildren(...hits.map(({ b, alias }, i) => h('li', {
       id: `opt-${i}`, role: 'option', 'aria-selected': String(i === active),
@@ -507,7 +540,7 @@ function makeGuess(b) {
   rec.status = statusOf(rec.guesses, view.answer.id);
   if (rec.status !== 'playing') {
     rec.finishedOn = todayKey();
-    rec.onTime = !setMode && !isFuture(view.no) && rec.finishedOn === dateOfPuzzle(CONFIG.startDate, view.no);
+    rec.onTime = !setMode && !isFuture(view.no) && rec.startedOn === dateOfPuzzle(CONFIG.startDate, view.no);
   }
   save();
   input.value = '';
@@ -517,19 +550,22 @@ function makeGuess(b) {
   const f = feedback(b, view.answer);
   if (rec.status === 'playing') {
     announce(`${b.name}: ${formatDistance(f.km, state.settings.units)}, ${f.pct} out of 100. Revision ${REVS[rec.guesses.length]} issued.`);
-  } else input.blur();
+  }
+  if (rec.status !== 'playing' || matchMedia('(pointer: coarse)').matches) input.blur();
   refresh({ newRow: rec.guesses.length - 1 });
 }
 
 // Keep the composer above the on-screen keyboard (iOS doesn't resize the layout viewport).
 const vv = window.visualViewport;
 function placeComposer() {
+  document.documentElement.style.setProperty('--vvh', `${Math.round(vv.height)}px`);
   const offset = window.innerHeight - vv.height - vv.offsetTop;
   $('composer').style.transform = offset > 1 ? `translateY(${-offset}px)` : '';
 }
 if (vv) {
   vv.addEventListener('resize', placeComposer);
   vv.addEventListener('scroll', placeComposer);
+  placeComposer();
 }
 
 // ---------- Panels ----------
@@ -544,7 +580,7 @@ function sampleRow() {
 function showPanel(kind) {
   if (kind === 'help') openPanel('How to play', helpContent({ name: CONFIG.name, exampleRow: sampleRow() }));
   if (kind === 'stats') {
-    const next = issuedNo() + 1;
+    const next = latestIssued() + 1;
     if (setMode) {
       openPanel('Statistics', statsContent({
         games: state.games, latestIssued: latestIssued(), todayNo: view?.no, countdown: null,
@@ -578,7 +614,13 @@ function showPanel(kind) {
         save();
         applyTheme();
         if (view) refresh();
+        const body = $('panel-body');
+        const top = body.scrollTop;
+        const code = $('transfer-code')?.value || '';
         showPanel('settings');
+        body.scrollTop = top;
+        if (code) $('transfer-code').value = code;
+        body.querySelector(`.seg button[aria-pressed="true"]`)?.focus({ preventScroll: true });
       },
       exportCode: async box => {
         const code = btoa(unescape(encodeURIComponent(JSON.stringify({ schema: 1, games: state.games, settings: state.settings }))));
@@ -589,15 +631,21 @@ function showPanel(kind) {
       importCode: raw => {
         try {
           const data = JSON.parse(decodeURIComponent(escape(atob(raw.trim()))));
-          if (data.schema !== 1 || typeof data.games !== 'object') throw new Error('bad');
+          if (data.schema !== 1 || typeof data.games !== 'object' || !data.games) throw new Error('bad');
+          const merged = { ...state.games };
+          let taken = 0;
           for (const [no, g] of Object.entries(data.games)) {
-            if (!Array.isArray(g.guesses) || !['playing', 'won', 'lost'].includes(g.status)) continue;
-            const mine = state.games[no];
-            if (!mine || (mine.status === 'playing' && g.status !== 'playing')) state.games[no] = g;
+            const valid = g && Array.isArray(g.guesses) && g.guesses.length <= MAX_GUESSES
+              && g.guesses.every(id => byId.has(id)) && ['playing', 'won', 'lost'].includes(g.status)
+              && (g.status !== 'won' || g.guesses.length >= 1) && (g.status !== 'lost' || g.guesses.length === MAX_GUESSES);
+            if (!valid || !puzzleByNo.has(Number(no))) continue;
+            const mine = merged[no];
+            if (!mine || (mine.status === 'playing' && g.status !== 'playing')) { merged[no] = g; taken += 1; }
           }
+          state.games = merged;
           save();
           if (view) mount(view.no);
-          toast('Stats loaded');
+          toast(taken ? 'Stats loaded' : 'Nothing new in that code');
           closePanel();
         } catch {
           toast('That code did not load. Check you copied all of it.');
@@ -620,7 +668,10 @@ $('home').addEventListener('click', e => { e.preventDefault(); history.replaceSt
 
 // ---------- Routing and the clock ----------
 function route() {
-  if (location.hash === '#preview') preview = true;
+  if (location.hash === '#preview') {
+    preview = true;
+    try { sessionStorage.setItem('markle:preview', '1'); } catch { /* fine without it */ }
+  }
   const m = /^#s(\d{1,4})$/.exec(location.hash);
   const want = m ? Number(m[1]) : null;
   if (want && puzzleByNo.has(want) && (want <= issuedNo() || preview)) return mount(want);
@@ -636,7 +687,10 @@ setInterval(() => {
   if (issuedNo() !== lastIssued) {
     lastIssued = issuedNo();
     const rec = view && recordFor(view.no);
-    if (!rec || rec.status !== 'playing') route();
+    const busy = rec && (rec.status === 'playing' || (rec.bonus && !rec.bonus.done && (rec.bonus.view || ROUNDS.some(k => rec.bonus[k]))));
+    if (busy) history.replaceState(null, '', `#s${sheetLabel(view.no)}`);
+    else if (rec) refresh();
+    else route();
   }
 }, 1000);
 

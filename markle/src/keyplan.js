@@ -4,6 +4,20 @@ import { s } from './dom.js';
 import { MAP, LAND_PATH } from '../data/worldmap.js';
 import { equalEarth } from './geo.js';
 
+// Guesses in the same city land on top of each other: fan later ones out around the first.
+function spread(pts, r) {
+  const placed = [];
+  return pts.map(([x, y]) => {
+    let p = [x, y];
+    for (let k = 0; placed.some(q => Math.hypot(q[0] - p[0], q[1] - p[1]) < r * 2.1); k += 1) {
+      const a = (k * 60 - 90) * Math.PI / 180;
+      p = [x + Math.cos(a) * r * 2.2 * (1 + Math.floor(k / 6)), y + Math.sin(a) * r * 2.2 * (1 + Math.floor(k / 6))];
+    }
+    placed.push(p);
+    return p;
+  });
+}
+
 export function keyPlan(guesses, answer) {
   const pts = guesses.map(g => equalEarth(g.lon, g.lat, MAP));
   const target = equalEarth(answer.lon, answer.lat, MAP);
@@ -28,7 +42,7 @@ export function keyPlan(guesses, answer) {
       s('path', { d: `M${target[0] - r * 1.6} ${target[1]}h${r * 3.2}M${target[0]} ${target[1] - r * 1.6}v${r * 3.2}` }),
       s('circle', { cx: target[0], cy: target[1], r: r * 0.9 }),
     ),
-    pts.map(([x, y], i) => guesses[i].id === answer.id ? null : s('g', { class: 'g' },
+    spread(pts, r).map(([x, y], i) => guesses[i].id === answer.id ? null : s('g', { class: 'g' },
       s('circle', { cx: x, cy: y, r }),
       s('text', { x, y: y + fs * 0.05, 'font-size': fs, text: String(i + 1) }),
     )),

@@ -46,6 +46,7 @@ export function renderBonus(root, ctx) {
   const settle = pass => {
     result.pass = pass;
     save();
+    ctx.announce?.(`${ROUND_LABELS[key]}: ${pass ? 'correct' : result.skipped ? 'skipped' : 'not this time'}.`);
     renderBonus(root, ctx);
     ctx.onSettled?.(key);
   };
@@ -54,7 +55,17 @@ export function renderBonus(root, ctx) {
     bonus.view = next;
     if (!next) bonus.done = true;
     save();
-    if (next) renderBonus(root, ctx); else onDone();
+    if (!next) onDone();
+    else if (ctx.onAdvance) ctx.onAdvance();
+    else renderBonus(root, ctx);
+  };
+  const confirmSkip = () => {
+    const row = body.querySelector('.skip-row');
+    row.replaceChildren(
+      h('span', { class: 'hint', text: 'Skip every field left? They count as missed.' }),
+      h('button', { type: 'button', class: 'linkish', onclick: skipRest }, 'Yes, skip them'),
+      h('button', { type: 'button', class: 'linkish', onclick: () => renderBonus(root, ctx) }, 'Keep playing'),
+    );
   };
   const skipRest = () => {
     for (const k of ROUNDS) if (!settled(bonus[k])) bonus[k] = { ...(bonus[k] || {}), pass: false, skipped: true };
@@ -67,7 +78,7 @@ export function renderBonus(root, ctx) {
   const body = h('div', { class: 'card', 'aria-live': 'polite' },
     progress(bonus, key),
     h('p', { class: 'q-k', text: `Title block · ${index + 1}/5 · ${ROUND_LABELS[key]}` }),
-    h('h3', { class: 'q', text: PROMPTS[key] }),
+    h('h3', { class: 'q', tabindex: '-1', text: PROMPTS[key] }),
   );
 
   if (key === 'architect') {
@@ -79,7 +90,9 @@ export function renderBonus(root, ctx) {
       const cls = (done && name === answer) || (picked && name === answer) ? 'right' : picked ? 'wrong' : '';
       return h('button', {
         type: 'button', class: `tile ${cls}`, disabled: done || picked,
+        'aria-label': `${name}${cls === 'right' ? ' (correct)' : cls === 'wrong' ? ' (not this one)' : ''}`,
         onclick: () => {
+          ctx.focus = true;
           picks.push(name);
           if (name === answer) settle(true);
           else if (picks.length >= ROUND_TRIES.architect) settle(false);
@@ -199,10 +212,16 @@ export function renderBonus(root, ctx) {
         index < ROUNDS.length - 1 ? `Next: ${ROUND_LABELS[ROUNDS[index + 1]]} →` : 'Finish the sheet →')),
     );
   } else {
-    body.append(h('div', { class: 'btn-row' },
+    body.append(h('div', { class: 'btn-row skip-row' },
       h('button', { type: 'button', class: 'linkish', onclick: () => { result.skipped = true; settle(false); } }, 'Skip this field'),
-      h('button', { type: 'button', class: 'linkish', onclick: skipRest }, 'Skip to results'),
+      h('button', { type: 'button', class: 'linkish', onclick: confirmSkip }, 'Skip to results…'),
     ));
   }
+  const hadFocus = root.contains(document.activeElement);
   root.replaceChildren(body);
+  // Keep keyboard and screen-reader users on the card after it re-renders.
+  if (hadFocus || ctx.focus) {
+    ctx.focus = false;
+    (done ? body.querySelector('.btn-ink') : body.querySelector('h3.q'))?.focus({ preventScroll: true });
+  }
 }

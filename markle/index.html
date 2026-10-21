@@ -6,7 +6,8 @@
 <title>Markle</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="One concrete building a day, drawn, not photographed. Name it in six guesses, then complete the title block.">
-<meta name="theme-color" content="#E7E5E0">
+<meta name="theme-color" content="#E7E5E0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121211" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23B9B6AE'/%3E%3Cpath d='M0 9h32M0 16h32M0 23h32' stroke='%23716E67' stroke-width='1'/%3E%3Ccircle cx='24' cy='12.5' r='2' fill='%23C2331C'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,7 +45,7 @@
     <div class="composer-row">
       <label class="sr-only" for="guess-input">Name a building, city or country</label>
       <input id="guess-input" name="guess" type="text" inputmode="search" enterkeyhint="go"
-        placeholder="Name a building, city or country" autocomplete="off" autocorrect="off"
+        placeholder="Building, city or country" autocomplete="off" autocorrect="off"
         autocapitalize="off" spellcheck="false" role="combobox" aria-expanded="false"
         aria-controls="suggest" aria-autocomplete="list">
       <button type="button" class="btn btn-ink" id="guess-btn">Guess</button>
