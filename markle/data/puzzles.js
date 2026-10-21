@@ -21,7 +21,7 @@ export const PUZZLES = [
         "Paulo Mendes da Rocha",
         "Ruy Ohtake"
       ],
-      "note": "Oscar Niemeyer was in his eighties when he designed the museum. Accounts differ on whether the collector João Sattamini or Niemeyer's daughter Anna Maria first asked the city to take the collection. Bruno Contarini was the structural engineer."
+      "note": "Accounts differ on whether the collector João Sattamini or Niemeyer's daughter Anna Maria first asked the city to take the collection. Bruno Contarini was the structural engineer."
     },
     "year": {
       "value": 1996,
@@ -115,7 +115,7 @@ export const PUZZLES = [
         "Neave Brown",
         "Le Corbusier"
       ],
-      "note": "Ernő Goldfinger designed the tower for the Greater London Council, developing his earlier Balfron Tower in Poplar. Ian Fleming named the Bond villain Auric Goldfinger after him."
+      "note": "Ernő Goldfinger designed the tower for the Greater London Council, as a taller sibling of his Balfron Tower in Poplar. Ian Fleming named the Bond villain Auric Goldfinger after him."
     },
     "year": {
       "value": 1972,
@@ -208,7 +208,7 @@ export const PUZZLES = [
         "Welton Becket",
         "Kallmann McKinnell & Knowles"
       ],
-      "note": "William L. Pereira & Associates was commissioned in June 1965 to design what was then called the Central University Library. In 1993 Gunnar Birkerts added two underground levels that wrap around three sides of it. Louis Kahn's Salk Institute is about 1 km away."
+      "note": "William L. Pereira & Associates designed what was then called the Central University Library. Gunnar Birkerts later added two underground levels that wrap around three sides of it. Louis Kahn's Salk Institute is about 1 km away."
     },
     "year": {
       "value": 1970,
@@ -312,7 +312,7 @@ export const PUZZLES = [
         "Valerio Olgiati",
         "Tadao Ando"
       ],
-      "note": "Hermann-Josef Scheidtweiler and his wife approached Peter Zumthor after he won the competition for Kolumba, the art museum of the Archdiocese of Cologne. The chapel is dedicated to Nicholas of Flüe, the Swiss hermit saint known as Bruder Klaus."
+      "note": "Hermann-Josef Scheidtweiler and his wife asked Peter Zumthor to design the chapel. The chapel is dedicated to Nicholas of Flüe, the Swiss hermit saint known as Bruder Klaus."
     },
     "year": {
       "value": 2007,
@@ -399,7 +399,7 @@ export const PUZZLES = [
         "Fumihiko Maki",
         "Arata Isozaki"
       ],
-      "note": "Tadao Ando designed it with his office, Tadao Ando Architect & Associates. It is often grouped with two other churches he completed in the second half of the 1980s, the Chapel on Mount Rokko and the Church on the Water."
+      "note": "Tadao Ando designed it with his office, Tadao Ando Architect & Associates. It is often grouped with two other churches of his, the Chapel on Mount Rokko and the Church on the Water."
     },
     "year": {
       "value": 1989,
