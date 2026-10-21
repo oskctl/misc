@@ -56,7 +56,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 html, body { min-height: 100%; }
 /* Keep scrolled-to cards clear of the sticky header. */
-html { scroll-padding-top: calc(72px + env(safe-area-inset-top, 0px)); }
+html { scroll-padding-top: calc(72px + env(safe-area-inset-top, 0px)); scroll-padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
 body {
   margin: 0;
   background: var(--paper);
@@ -174,7 +174,6 @@ body::before {
 .row {
   display: grid; grid-template-columns: 1.5rem minmax(0, 1fr); column-gap: 8px;
   padding: 9px 0 10px; border-bottom: var(--rule); min-height: 58px; align-items: center;
-  scroll-margin-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); scroll-margin-top: 80px;
 }
 .row .line { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; grid-column: 2; }
 .row .line + .line { margin-top: 3px; }
@@ -406,7 +405,7 @@ body::before {
 /* ---------- Toast ---------- */
 .toast {
   position: fixed; left: 16px; right: 16px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 20;
-  width: max-content; margin-inline: auto; padding: 10px 14px;
+  width: max-content; margin-inline: auto; padding: 10px 14px; pointer-events: none;
   border: 2px solid var(--redline); background: var(--sheet); color: var(--redline);
   font: 600 .75rem/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase;
   max-width: calc(100vw - 32px);

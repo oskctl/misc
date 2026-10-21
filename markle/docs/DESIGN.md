@@ -89,7 +89,8 @@ textarea, then selects the text for the player.
 **Stats** live in the browser (like Worldle and Wordle) and are recomputed from per-sheet records
 every time, never stored as counters. Played, win %, current and best streak, the 1–6/X
 distribution, and pass rates per title-block field. A streak counts sheets won on the day they
-were issued, by consecutive sheet number; the register (archive) counts towards played and win %
+were issued (a sheet started on its day may finish the day after, so midnight doesn't break a
+game in progress), by consecutive sheet number; the register (archive) counts towards played and win %
 but not streaks. Settings has a copy/paste stats code to move devices.
 
 **The clock.** Sheet *n* is issued at local midnight on `startDate + (n − 1)` days (set in

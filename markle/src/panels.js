@@ -70,14 +70,14 @@ export function statsContent({ games, latestIssued, todayNo, countdownAt, nextLa
       return h('div', {}, h('b', { text: r.played ? `${Math.round((r.passed / r.played) * 100)}%` : '–' }), ROUND_LABELS[k].toUpperCase());
     })),
     h('p', { class: 'countdown' }, nextLabel, countdownAt ? [' ', countdownEl(countdownAt)] : null),
-    h('p', { class: 'hint', text: 'Streaks count sheets won on the day they were issued. Played and win % include the register.' }),
+    h('p', { class: 'hint', text: 'Streaks count sheets won on the day they were issued (or the next day, if started on the day). Played and win % include the register.' }),
   ];
 }
 
 export function settingsContent({ settings, locked, onChange, exportCode, importCode, persistent, resetAll }) {
   const seg = (key, label, options, disabled = false) => h('div', { class: 'opt' },
     h('h3', { text: label }),
-    h('div', { class: 'seg', role: 'group', 'aria-label': label }, options.map(([v, text]) => h('button', {
+    h('div', { class: 'seg', role: 'group', 'aria-label': label, 'data-key': key }, options.map(([v, text]) => h('button', {
       type: 'button', 'aria-pressed': String(settings[key] === v), disabled,
       onclick: () => onChange(key, v),
     }, text))));

@@ -66,6 +66,7 @@ export function renderBonus(root, ctx) {
       h('button', { type: 'button', class: 'linkish', onclick: skipRest }, 'Yes, skip them'),
       h('button', { type: 'button', class: 'linkish', onclick: () => renderBonus(root, ctx) }, 'Keep playing'),
     );
+    row.lastElementChild.focus();
   };
   const skipRest = () => {
     for (const k of ROUNDS) if (!settled(bonus[k])) bonus[k] = { ...(bonus[k] || {}), pass: false, skipped: true };
@@ -222,6 +223,8 @@ export function renderBonus(root, ctx) {
   // Keep keyboard and screen-reader users on the card after it re-renders.
   if (hadFocus || ctx.focus) {
     ctx.focus = false;
-    (done ? body.querySelector('.btn-ink') : body.querySelector('h3.q'))?.focus({ preventScroll: true });
+    // The Next button may sit below the fold on a short phone: let focus bring it into view.
+    if (done) body.querySelector('.btn-ink')?.focus();
+    else body.querySelector('h3.q')?.focus({ preventScroll: true });
   }
 }

@@ -314,7 +314,12 @@ function renderResult(rec, justFinished) {
   if (!bonus.done && started) {
     const slot = h('section', { 'aria-label': 'Title block' });
     parts.push(slot);
-    queueMicrotask(() => renderBonus(slot, bonusContext(rec)));
+    queueMicrotask(() => {
+      const ctx = bonusContext(rec);
+      ctx.focus = focusBonus;
+      focusBonus = false;
+      renderBonus(slot, ctx);
+    });
   }
 
   if (bonus.done) parts.push(summary(rec));
@@ -327,17 +332,20 @@ function renderResult(rec, justFinished) {
   }
 }
 
+// Set when the title-block card had focus before a refresh rebuilt it, so the new card takes it.
+let focusBonus = false;
+
 function bonusContext(rec) {
   return {
     puzzle: view.puzzle, record: rec, specs: SPECS, svgText: DRAWINGS[view.puzzle.drawing],
     save,
     announce,
-    onSettled: () => { refreshTitleBlockOnly(); },
+    onSettled: () => { focusBonus = view.result.contains(document.activeElement); refreshTitleBlockOnly(); },
     onAdvance: () => {
+      focusBonus = true;
       refresh();
-      const slot = view.result.querySelector('section[aria-label="Title block"]');
-      slot?.scrollIntoView({ behavior: smooth(), block: 'start' });
-      setTimeout(() => slot?.querySelector('h3.q')?.focus({ preventScroll: true }), 50);
+      // renderResult fills the title-block slot in a microtask; scroll once it has its content.
+      queueMicrotask(() => view.result.querySelector('section[aria-label="Title block"]')?.scrollIntoView({ behavior: smooth(), block: 'start' }));
     },
     onDone: () => { refresh(); view.result.querySelector('.card + section, .card + .card')?.scrollIntoView({ behavior: smooth(), block: 'start' }); },
   };
@@ -550,7 +558,10 @@ function makeGuess(b) {
   rec.status = statusOf(rec.guesses, view.answer.id);
   if (rec.status !== 'playing') {
     rec.finishedOn = todayKey();
-    rec.onTime = !setMode && !isFuture(view.no) && rec.startedOn === dateOfPuzzle(CONFIG.startDate, view.no);
+    // On time: won on its issue day, or started that day and finished the day after.
+    const issued = dateOfPuzzle(CONFIG.startDate, view.no);
+    rec.onTime = !setMode && !isFuture(view.no) && (rec.finishedOn === issued
+      || (rec.startedOn === issued && rec.finishedOn === dateOfPuzzle(CONFIG.startDate, view.no + 1)));
   }
   save();
   input.value = '';
@@ -612,9 +623,12 @@ function showPanel(kind) {
       persistent: persistent(),
       resetAll: () => {
         state.games = {};
+        delete state.current;
         for (const k of Object.keys(previewGames)) delete previewGames[k];
+        write(PREVIEW_KEY, previewGames);
         save();
         closePanel();
+        setHash('');
         route();
         window.scrollTo({ top: 0 });
         toast('Results cleared');
@@ -630,7 +644,7 @@ function showPanel(kind) {
         showPanel('settings');
         body.scrollTop = top;
         if (code) $('transfer-code').value = code;
-        body.querySelector(`.seg button[aria-pressed="true"]`)?.focus({ preventScroll: true });
+        body.querySelector(`.seg[data-key="${k}"] button[aria-pressed="true"]`)?.focus({ preventScroll: true });
       },
       exportCode: async box => {
         const code = btoa(unescape(encodeURIComponent(JSON.stringify({ schema: 1, games: state.games, settings: state.settings }))));
@@ -655,8 +669,8 @@ function showPanel(kind) {
           state.games = merged;
           save();
           if (view) mount(view.no);
-          toast(taken ? 'Stats loaded' : 'Nothing new in that code');
           closePanel();
+          toast(taken ? 'Stats loaded' : 'Nothing new in that code');
         } catch {
           toast('That code did not load. Check you copied all of it.');
         }
@@ -673,6 +687,7 @@ function showPanel(kind) {
 
 document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => showPanel(b.dataset.open)));
 $('panel-close').addEventListener('click', closePanel);
+$('panel').addEventListener('close', () => { if ($('panel').contains($('toast'))) document.body.append($('toast')); });
 $('panel').addEventListener('click', e => { if (e.target === $('panel')) closePanel(); });
 $('home').addEventListener('click', e => { e.preventDefault(); setHash(''); route(); window.scrollTo({ top: 0 }); });
 
@@ -705,7 +720,7 @@ setInterval(() => {
     const rec = view && recordFor(view.no);
     const busy = rec && (rec.status === 'playing' || (rec.bonus && !rec.bonus.done && (rec.bonus.view || ROUNDS.some(k => rec.bonus[k]))));
     if (busy) setHash(`#s${sheetLabel(view.no)}`);
-    else if (rec) refresh();
+    else if (rec) { if (view.no !== homeNo()) setHash(`#s${sheetLabel(view.no)}`); refresh(); }
     else route();
   }
 }, 1000);
