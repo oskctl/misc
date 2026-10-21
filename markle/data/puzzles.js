@@ -127,9 +127,9 @@ export const PUZZLES = [
       "value": 98,
       "unit": "m",
       "line": [
-        866,
+        334,
         790,
-        866,
+        334,
         55
       ],
       "source": "https://en.wikipedia.org/wiki/Trellick_Tower"
@@ -175,16 +175,16 @@ export const PUZZLES = [
       "https://en.wikipedia.org/wiki/Auric_Goldfinger"
     ],
     "estimated": [
-      "Service tower width 8 m and gap 4 m (no source; the 55.8 m total agrees with the Chisel & Mouse model check of about 56 m)",
-      "Service tower at the right (east) end. The listing puts the access corridors on the north face, so the balcony face is south, but which end the tower stands at is not confirmed; mirror the file if it is at the west end",
+      "Service tower width 8 m and gap 4 m (no source; the 55.8 m total agrees with the Chisel & Mouse model check of about 56 m; Pevsner: the tower was turned 90 degrees to present a slender main front)",
+      "Service tower at the west (Golborne Road) end, drawn at the viewer's left in this elevation of the south (balcony) face. The south face is verified (Dunnett, AJ 1997: the 'principal, south-facing facade'; listing: corridors on the north face). The west end is inferred, not stated by any source: the listing gives the address as 'Golborne Road (East side)', the Golborne Road entrance has the club room above it and Open House places the clubroom in the service tower, and the seven-storey Block B (19 Golborne Road) meets the slab at the service-tower corner of the L",
       "98 m taken as the top of the service tower. 35 storeys x 2.79 m = 97.7 m supports this",
       "Floor-to-floor height 2.79 m (86.5 m / 31)",
       "Bridge levels: UK floors 2, 5 ... 29 (storeys 3, 6 ... 30), 10 bridges, each one storey high with a single mullion. The every-third-floor rhythm is verified; the exact floors are not",
-      "Boiler house placed on UK floors 32-33 (89.3-94.9 m), the same floor numbering as the bridges, with 5 x 2 glazing panels; floor 34 above it (94.9-98 m) drawn as blank concrete. The listing says the boiler house projects; the direction and depth of the projection are not verified",
+      "Boiler house on UK floors 32-33 (89.3-94.9 m), fully glazed (listing), 5 x 2 glazing panels, with floor 34 above it (94.9-98 m) drawn as blank concrete. The projection is drawn 4.6 m to the west, away from the slab along its long axis, with a curved soffit down to 85.3 m. Verified: projecting, cantilevered, fully glazed, on the 32nd and 33rd floors. Not verified: whether it projects along the slab axis or toward the viewer, its depth, the soffit shape (one popular source mentions the building's only curve), and what lies above it. The height band assumes British floor numbering (ground = 0); counting ground as storey 1 would give 86.5-92.1 m",
       "Six equal balcony bays (7.3 m), a balcony on every storey from UK floor 1 to 30 except the maisonette floors 23-24, where the listed break in the balcony pattern is shown by leaving out the balcony fronts (the real form of the break is unknown), a 1.0 m balcony front, one mullion per bay, and a plain ground storey",
       "Service tower slits: one 0.4 x 2.0 m slit per storey in a single central column, UK floors 1-30 (slit windows are verified; their pattern is not)",
       "Timber balcony cladding placed on the balcony fronts (shd band in layer 4)",
-      "Lower 7-storey block (19 Golborne Road, 42 flats) left out because its direction from the tower corner is unknown",
+      "Seven-storey Block B (19 Golborne Road, 42 flats) left out. Its direction from the corner is unverified; one clue (the 2015 condition report pairs the Block A south and Block B east elevations) suggests it runs south, toward the viewer, where its end would hide the lower 7 storeys at the tower end. The partly demolished three-storey garage podium at the base is also left out",
       "Lift lines at every storey on the service tower, bush-hammer stipple, trees (all generic, layers 4-5)"
     ]
   },
@@ -193,7 +193,7 @@ export const PUZZLES = [
     "answer": "geisel-library",
     "drawing": "004",
     "view": "ELEVATION",
-    "pxPerM": 13,
+    "pxPerM": 12.5,
     "typeLabel": "University library",
     "built": "1968–70",
     "credits": "William L. Pereira & Associates, architects; Brandow & Johnston, structural engineers. Underground addition (1993): Gunnar Birkerts.",
@@ -221,9 +221,9 @@ export const PUZZLES = [
       "unit": "m",
       "line": [
         80,
-        838.88,
+        730,
         80,
-        403.38
+        311.25
       ],
       "source": "https://libraries.ucsd.edu/about/geisel-library.html"
     },
@@ -254,6 +254,7 @@ export const PUZZLES = [
       }
     },
     "sources": [
+      "https://exhibits.ucsd.edu/pdfs/id=16-2229",
       "https://libraries.ucsd.edu/about/geisel-library.html",
       "https://en.wikipedia.org/wiki/Geisel_Library",
       "https://www.oceanlight.com/spotlight.php?img=11275",
@@ -275,21 +276,20 @@ export const PUZZLES = [
       "https://www.garykent.com/2018/08/14/geisel-library"
     ],
     "estimated": [
-      "Storey heights: 33.5 m split evenly over 8 levels, 4.19 m each. No per-floor heights were found.",
-      "Datum for the 33.5 m height taken as the level 1 floor. No source says where the 110 ft is measured from, and one gives it as the height above ground.",
-      "Levels 1 and 2 are drawn fully exposed on level ground. ArchDaily describes them as below ground, and since 1993 the Birkerts addition has wrapped three sides of the base underground.",
-      "Floor widths: floor 4 = 44.25 m, floor 5 = 52.6 m, floor 7 = 52.6 m, floor 8 = 44.25 m. Floors 4 to 6 step out 4.19 m per side to follow the 45-degree supports, and floors 7 and 8 mirror floors 5 and 4. Only floor 6 (61 m, 'over 200 ft') and the order of the steps are verified.",
-      "Floor 6 width taken as 61 m (200 ft). Sources give 200 ft, 'over 200 ft', and 210 ft at the widest point above ground.",
-      "Podium width 75.6 m: UCSD's 248 ft 'widest point' was applied to the podium, but UCSD does not say where that figure is measured. The drawn pier tips also span about 75.4 m.",
-      "Podium (2 levels) and forum-level open storey heights",
-      "Core width at forum level (17 m) and its shading. The core exists (V); its size and finish do not.",
-      "Support geometry: inner face runs at 45 degrees through the outer slab corners of floors 4, 5 and 6. Foot on the forum deck at ±17.9 m (inner face); tips cut level with the roof of floor 6, 25.1 m above level 1; band 3 m wide horizontally (about 2.1 m thick). Supports lean outward with the side bents seen in profile (lean direction is E).",
-      "Only the two side bents are drawn, in profile. The piers on the face toward the viewer are left out because their positions are not known.",
+      "Height datum: 33.5 m (110 ft) measured from the ground line at the forum deck (level 3). This is likely, not verified: it rests on the 1971 UCSD fact sheet ('Eight levels rising 110 feet above the ground') and is consistent with the 1968 design release (135 ft from basement to top, read from a search snippet). The forum sits 'slightly above the surrounding ground'; that small offset is ignored.",
+      "Storey heights: forum (level 3) to the level 4 floor taken as 9.14 m (30 ft). UCSD Library says the five-level spheroid was 'raised 30 feet above a plaza level', taken here to mean the forum; 'plaza level' may instead be the surrounding ground, and the 30 ft may run to the underside of level 4. The remaining 24.36 m up to the 33.5 m roof is split evenly over levels 4 to 8, 4.87 m each. No per-floor heights were found; both the 30 ft and the even split are estimates.",
+      "Levels 1 and 2 drawn as a hidden dashed box below the ground line (fact sheet: 'One and two - Below ground'; ArchDaily: 'two submerged floors'). Its depth of 7.62 m is derived from 135 ft basement-to-top minus 110 ft. The 1993 Birkerts underground addition is not drawn.",
+      "Floor widths: floor 4 = floor 8 = 44.5 m and floor 5 = floor 7 = 54.3 m, from stepping 4.87 m per side per floor along the 45-degree pier face. Verified: floor 6 is the widest, and level 4 equals level 8 and level 5 equals level 7 (Docomomo).",
+      "Floor 6 width 64.0 m (210 ft) is likely: UCSD figures read from search snippets, not quoted verbatim. Other figures: 214 ft square (1968 design release), 'over two hundred feet' (ArchDaily), 200 ft (Wikipedia).",
+      "Podium width 75.6 m: the fact sheet's 248 ft 'widest point at ground level', applied to the hidden levels 1 and 2. The drawn tip-to-tip span (79.7 m, 261 ft) exceeds it; the two agree only if the 248 ft is measured at ground level, as the snippet says.",
+      "Core width at forum level (17 m), its 8.24 m visible height and its shading. The core exists (V); its size and finish do not.",
+      "Support geometry: the inner face runs at 45 degrees (V) through the floor-level outer corners of floors 4, 5 and 6 and the bottom edges of their slabs (ArchDaily: the diagonal 'joins the floor plates at their bottom edge'). The piers lean outward (V) and end at level 6 (V: UCSD 'to the sixth level'; ArchDaily 'extend beyond the width of the sixth floor'). Feet on the forum deck at ±13.1 m (inner face) and ±16.1 m (outer face), tips cut level with the roof of floor 6, 23.76 m above the forum, reaching 4.87 m past floor 6: all derived from the estimated storey heights (E). The band is 3 m wide horizontally, about 2.1 m thick (E).",
+      "Only the side piers are drawn, in profile. Sixteen piers is likely (ArchDaily, Docomomo, BJSCE), not verified: UCSD counts four bents in all, 1,500 cubic yards each, tied in opposite pairs, and Atomic Ranch says 'eight legs'. Four piers per face is inferred from 16 / 4 bents. Their positions along each face are unknown, so the near-face and far-face piers are left out; they would show as vertical strips through the open forum storey.",
       "Slab edge bands 0.9 m deep; forum deck fascia 0.9 m",
       "Tie rods drawn as hidden lines at slab mid-depth on levels 5 and 6. Their existence and levels are V; their exact position in the slab is E.",
-      "Mullions on a generic 1.525 m module (layer 4)",
-      "Board-mark spacing 0.7 m on the podium (layer 4). The horizontal board-formed finish is V.",
-      "Eucalyptus tree: generic form, about 31 m tall (layer 5)"
+      "Mullions on a generic 1.525 m module (layer 3)",
+      "Board-mark spacing 0.7 m on the piers and core (layer 4). The horizontal board-formed finish is V.",
+      "Eucalyptus tree: generic form, about 21 m tall, kept clear of the right pier tip (layer 5)"
     ]
   },
   {
@@ -371,11 +371,11 @@ export const PUZZLES = [
       "https://gcatholic.org/churches/europe-west/153443"
     ],
     "estimated": [
-      "L1/L2 projected width of the entrance view: 7.0 m (385 units). Two more searches found no plan dimensions; the only figure is a maximum plan width of a little over 10 m (german-architects PDF). The silhouette therefore does not meet the rule that L1 uses verified dimensions only",
-      "L2 side faces: a face-on view of an irregular pentagonal prism normally shows at least one foreshortened side face. None is drawn because the plan angles are unknown",
-      "L2 hidden tent-shaped cavity: about 4.4 m projected width at the floor, narrowing to about 1.2 m at the oculus, centred. Only its shape (narrowing to an open oculus) is verified",
-      "L3 triangular door: about 3 m high (three secondary sources: SJTU student PDF, a student project page, a visitor account), 1.4 m base (from memory of photos), centred on the face. Its triangular shape and its base on the ground are verified",
-      "Not drawn: the iron cross above the door (presence verified, size and height unknown) and the 350 glass-plugged tie holes (exterior pattern unknown)",
+      "L1/L2 projected width of the entrance view: 7.0 m (385 units), unverified. No measured plan was found. Only one article gives side lengths (Palacios, A x A 6, 2014: 4.6, 5, 7.5, 3.75 and 6.5 m, with the height as 12.5 m), and a student blog gives a different range (3.2-7.8 m). The order of the sides and the corner angles are unpublished; convex pentagons with these sides and a longest plan dimension of about 10 m (german-architects PDF) give projected widths anywhere from about 5 to 9 m. The silhouette does not meet the rule that L1 uses verified dimensions only",
+      "L2 side faces: not drawn. Several secondary accounts put the door on the shortest or narrowest face (archeyes; R. Moody; Design Pendulum, 'narrowest face towards the south-east'), so foreshortened neighbouring faces are probably visible in this view. Their widths, and which side shows more, are unknown",
+      "L3 hidden tent-shaped cavity (deliberately held back to layer 3 as the most iconic feature): about 4.4 m projected width at the floor, narrowing to about 1.2 m at the oculus, centred on the door. Only the shape is verified. One article gives the interior as about 3.75 m wide and 5 m long, but how it is oriented relative to this view is unknown, and so is its centring (the entrance passage curves)",
+      "L3 triangular door: steel (stainless per komoot and Rheinische ART), about 15-20 cm thick, turning on a single point. Drawn 3.0 m high (SJTU student PDF, R. Moody, B. Galilee, PSU blog); ACS Forum gives 3.5 m, so the height is unresolved. The 1.4 m base and the centred position are estimated (no source). The triangular shape and its base on the ground are verified",
+      "L4 cross above the door apex: presence verified (KuLaDig: 'ein hohes spitzes Dreieck, über dem ein Eisenkreuz hängt'). Drawn about 0.7 m tall and 0.35 m wide, 0.22 m above the apex; all three figures are estimated. Not drawn: the 350 glass-plugged tie holes (exterior pattern unknown)",
       "L5 context: low distant wooded skyline, 0.5 to 1.1 m above the ground line, generic"
     ]
   },
