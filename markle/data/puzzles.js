@@ -21,7 +21,7 @@ export const PUZZLES = [
         "Paulo Mendes da Rocha",
         "Ruy Ohtake"
       ],
-      "note": "Oscar Niemeyer was in his eighties when he designed the museum in 1991. Accounts differ on whether the collector João Sattamini or Niemeyer's daughter Anna Maria first asked the city to take the collection. Bruno Contarini was the structural engineer."
+      "note": "Oscar Niemeyer was in his eighties when he designed the museum. Accounts differ on whether the collector João Sattamini or Niemeyer's daughter Anna Maria first asked the city to take the collection. Bruno Contarini was the structural engineer."
     },
     "year": {
       "value": 1996,
@@ -34,9 +34,9 @@ export const PUZZLES = [
       "unit": "m",
       "line": [
         315,
-        502,
+        352,
         965,
-        502
+        352
       ],
       "source": "https://en.wikipedia.org/wiki/Niter%C3%B3i_Contemporary_Art_Museum"
     },
@@ -312,7 +312,7 @@ export const PUZZLES = [
         "Valerio Olgiati",
         "Tadao Ando"
       ],
-      "note": "Peter Zumthor. Hermann-Josef Scheidtweiler and his wife approached him after he won the competition for Kolumba, the art museum of the Archdiocese of Cologne. The chapel is dedicated to Nicholas of Flüe, the Swiss hermit saint known as Bruder Klaus."
+      "note": "Hermann-Josef Scheidtweiler and his wife approached Peter Zumthor after he won the competition for Kolumba, the art museum of the Archdiocese of Cologne. The chapel is dedicated to Nicholas of Flüe, the Swiss hermit saint known as Bruder Klaus."
     },
     "year": {
       "value": 2007,

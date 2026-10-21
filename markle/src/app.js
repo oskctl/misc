@@ -220,7 +220,7 @@ function refresh({ newRow = -1 } = {}) {
     : stage >= 2 ? nominalScale(puzzle.pxPerM) : 'NTS';
   const cells = [
     cell('Drg No.', `MK-${sheetLabel(no)}`),
-    cell('Drawing', puzzle.view),
+    cell('Drawing', puzzle.view === 'INTERIOR ELEVATION' ? 'INT. ELEV.' : puzzle.view),
     cell('Scale', scale),
     cell('Type', hint(3) ? puzzle.typeLabel : null, { track: true, animate }),
     cell('Country', hint(5) ? answer.country : null, { track: true, animate }),

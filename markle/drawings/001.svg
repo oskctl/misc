@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" data-focus="698.5 747.8">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" data-focus="698.5 597.8"><g transform="translate(0 -150)">
 <g data-layer="1">
 <path class="sil" d="M581.5 747.8L581.5 704.9Q581.5 688 566 681.1L362.7 590.3L315 550.2L315 532L965 532L965 550.2L917.3 590.3L714 681.1Q698.5 688 698.5 704.9L698.5 747.8Z"/>
 <path class="gnd" d="M40 740H425.5V747.8H854.5V740H1004"/>
@@ -23,4 +23,4 @@
 <path class="ctx" d="M1004 740L1004 752L1022.2 783.2L1018.3 804.8L1041.7 838.4L1066.4 860"/>
 <path class="wtr" d="M1066.4 860H1160"/>
 </g>
-</svg>
+</g></svg>

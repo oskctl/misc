@@ -7,5 +7,5 @@ export const CONFIG = {
   mode: 'set',
   startDate: '2026-10-22',
   // The link printed at the bottom of shared results. Leave '' to use the page's own address.
-  shareUrl: '',
+  shareUrl: 'https://claude.ai/artifact/2hPY2jJnByfCVm2xus3W9B',
 };
