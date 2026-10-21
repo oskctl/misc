@@ -3,8 +3,8 @@ import { distanceKm, bearingDeg, proximityPct } from './geo.js';
 
 export const MAX_GUESSES = 6;
 export const STAGES = 6;
-// Inside this radius the arrow is noise; Worldle-style "you're on the doorstep".
-export const SAME_CITY_KM = 15;
+// Inside this radius the arrow is noise: the guess is next door.
+export const NEXT_DOOR_KM = 1;
 
 export function feedback(guess, answer) {
   if (guess.id === answer.id) return { correct: true, km: 0, bearing: null, pct: 100 };
@@ -12,8 +12,34 @@ export function feedback(guess, answer) {
   return {
     correct: false,
     km,
-    bearing: km < SAME_CITY_KM ? null : bearingDeg(guess, answer),
+    bearing: km < NEXT_DOOR_KM ? null : bearingDeg(guess, answer),
     pct: proximityPct(km),
+  };
+}
+
+// The lead architect or practice, normalised so "Marcel Breuer with Hamilton P. Smith" and
+// "Marcel Breuer and Herbert Beckhard" both read as one hand.
+export function architectKey(credit) {
+  return credit.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+    .replace(/\(.*?\)/g, '').split(/;| with | and | & |,/)[0]
+    .replace(/\b(architects?|associates|partners|studio)\b/g, '')
+    .replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+export const YEAR_NEAR = 5;
+
+// The second feedback channel: how the guess compares with the answer on era, hand and use.
+// States: 'match' (solid), 'near' (hatched), 'miss' (outline).
+export function attributes(guess, answer) {
+  const delta = answer.year - guess.year;
+  return {
+    year: {
+      value: guess.year,
+      dir: delta > 0 ? 'later' : delta < 0 ? 'earlier' : 'same',
+      state: delta === 0 ? 'match' : Math.abs(delta) <= YEAR_NEAR ? 'near' : 'miss',
+    },
+    architect: architectKey(guess.architect) === architectKey(answer.architect) ? 'match' : 'miss',
+    type: guess.type === answer.type ? 'match' : 'miss',
   };
 }
 

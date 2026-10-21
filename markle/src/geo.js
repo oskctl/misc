@@ -2,8 +2,10 @@
 
 const R_KM = 6371.0088;
 const RAD = Math.PI / 180;
-// Worldle's yardstick: anything half a world away scores 0%.
-export const MAX_KM = 20000;
+// Proximity runs on a log scale: buildings cluster in a few cities, and Worldle's linear
+// 0-20,000 km scale would score every guess in the right continent 90%+. Here every 10x
+// closer adds roughly 30 points: 10 km = 91, 100 km = 68, 1,000 km = 39, 10,000 km = 9.
+const LOG_SPAN = Math.log(2001);
 
 export function distanceKm(a, b) {
   const dLat = (b.lat - a.lat) * RAD;
@@ -32,8 +34,18 @@ export function arrowEmoji(deg) {
   return ARROWS[Math.round(deg / 45) % 8];
 }
 
-export function proximityPct(km) {
-  return Math.floor(Math.max(0, (MAX_KM - km) / MAX_KM) * 100);
+// 100 is reserved for the answer itself, so a wrong guess tops out at 99.
+export function proximityPct(km, correct = false) {
+  if (correct) return 100;
+  const p = Math.floor(100 * (1 - Math.log(1 + km / 10) / LOG_SPAN));
+  return Math.min(99, Math.max(0, p));
+}
+
+// Worldle's five-square encoding: a full square per 20 points, a half square for 10 more.
+export function proximitySquares(pct) {
+  const full = Math.floor(pct / 20);
+  const half = pct - full * 20 >= 10 ? 1 : 0;
+  return { full, half, empty: 5 - full - half };
 }
 
 export function formatDistance(km, units = 'km') {

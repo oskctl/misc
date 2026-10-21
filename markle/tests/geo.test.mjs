@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { distanceKm, bearingDeg, compassPoint, arrowEmoji, proximityPct, formatDistance, equalEarth } from '../src/geo.js';
+import { distanceKm, bearingDeg, compassPoint, arrowEmoji, proximityPct, proximitySquares, formatDistance, equalEarth } from '../src/geo.js';
 
 const london = { lat: 51.5232, lon: -0.2056 };
 const saoPaulo = { lat: -23.5614, lon: -46.6558 };
@@ -25,12 +25,22 @@ test('bearing points the right way', () => {
   assert.equal(arrowEmoji(180), '⬇️');
 });
 
-test('proximity matches Worldle scale', () => {
-  assert.equal(proximityPct(0), 100);
-  assert.equal(proximityPct(20000), 0);
-  assert.equal(proximityPct(25000), 0);
-  assert.equal(proximityPct(10000), 50);
-  assert.equal(proximityPct(1999), 90);
+test('proximity runs on a log scale and saves 100 for the answer', () => {
+  assert.equal(proximityPct(0, true), 100);
+  assert.equal(proximityPct(0), 99);
+  assert.equal(proximityPct(10), 90);
+  assert.equal(proximityPct(100), 68);
+  assert.equal(proximityPct(1000), 39);
+  assert.equal(proximityPct(10000), 9);
+  assert.equal(proximityPct(20015), 0);
+  assert.equal(proximityPct(30000), 0);
+});
+
+test('proximity squares follow Worldle', () => {
+  assert.deepEqual(proximitySquares(100), { full: 5, half: 0, empty: 0 });
+  assert.deepEqual(proximitySquares(92), { full: 4, half: 1, empty: 0 });
+  assert.deepEqual(proximitySquares(39), { full: 1, half: 1, empty: 3 });
+  assert.deepEqual(proximitySquares(9), { full: 0, half: 0, empty: 5 });
 });
 
 test('distance formatting', () => {

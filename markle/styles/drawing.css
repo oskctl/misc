@@ -26,12 +26,17 @@
 .dwg .ln3 { stroke-width: 0.5px; stroke: var(--dw-hair); }
 .dwg .gnd { stroke-width: 2.4px; }
 .dwg .ctx { stroke-width: 0.7px; stroke: var(--dw-ctx); }
+.dwg .hid { fill: none; stroke: var(--dw-ink); stroke-width: 0.8px; stroke-dasharray: 5 3; vector-effect: non-scaling-stroke; }
+.dwg .fig { fill: none; stroke: var(--dw-ink); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.dwg .wtr { fill: none; stroke: var(--dw-ctx); stroke-width: 0.7px; stroke-dasharray: 14 8; vector-effect: non-scaling-stroke; }
 
 .dwg .void { fill: var(--dw-void); stroke: none; }
 .dwg .glz  { fill: var(--dw-glaze); stroke: none; }
 .dwg .shd  { fill: var(--dw-shade); stroke: none; }
 .dwg .lit  { fill: var(--dw-light); stroke: none; }
 .dwg .acc  { fill: var(--dw-accent); stroke: none; }
+.dwg .dot  { fill: var(--dw-hair); stroke: none; }
+.dwg .ink  { fill: var(--dw-ink); stroke: none; }
 .dwg .acc-ln { fill: none; stroke: var(--dw-accent); stroke-width: 1.6px; vector-effect: non-scaling-stroke; }
 .dwg .dim  { fill: none; stroke: var(--dw-ink); stroke-width: 0.7px; vector-effect: non-scaling-stroke; }
 .dwg .lbl  { fill: var(--dw-ink); font: 500 22px/1 var(--font-mono, ui-monospace, monospace); letter-spacing: .04em; }
