@@ -49,7 +49,7 @@ export function helpContent({ name, exampleRow }) {
   ];
 }
 
-export function statsContent({ games, latestIssued, todayNo, countdown, nextLabel }) {
+export function statsContent({ games, latestIssued, todayNo, countdownAt, nextLabel }) {
   const st = computeStats(games, latestIssued);
   const max = Math.max(1, ...Object.values(st.distribution));
   const today = games[todayNo];
@@ -69,7 +69,7 @@ export function statsContent({ games, latestIssued, todayNo, countdown, nextLabe
       const r = st.bonus[k];
       return h('div', {}, h('b', { text: r.played ? `${Math.round((r.passed / r.played) * 100)}%` : '–' }), ROUND_LABELS[k].toUpperCase());
     })),
-    h('p', { class: 'countdown' }, nextLabel, countdown ? [' ', h('b', { 'data-countdown': '', text: countdown })] : null),
+    h('p', { class: 'countdown' }, nextLabel, countdownAt ? [' ', countdownEl(countdownAt)] : null),
     h('p', { class: 'hint', text: 'Streaks count sheets won on the day they were issued. Played and win % include the register.' }),
   ];
 }
@@ -146,6 +146,11 @@ export function registerContent({ puzzles, drawings, issuedNo, preview, games, p
   ];
 }
 
-export function tickCountdowns(ms) {
-  for (const el of document.querySelectorAll('[data-countdown]')) el.textContent = formatCountdown(ms);
+// A live countdown to an epoch-ms moment; tickCountdowns keeps every one of them current.
+export function countdownEl(at) {
+  return h('b', { 'data-countdown': String(at), text: formatCountdown(at - Date.now()) });
+}
+
+export function tickCountdowns(now = Date.now()) {
+  for (const el of document.querySelectorAll('[data-countdown]')) el.textContent = formatCountdown(Number(el.dataset.countdown) - now);
 }

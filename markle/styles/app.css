@@ -405,10 +405,10 @@ body::before {
 
 /* ---------- Toast ---------- */
 .toast {
-  position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 20;
-  transform: translateX(-50%); padding: 10px 14px;
+  position: fixed; left: 16px; right: 16px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 20;
+  width: max-content; margin-inline: auto; padding: 10px 14px;
   border: 2px solid var(--redline); background: var(--sheet); color: var(--redline);
-  font: 600 .75rem/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase;
+  font: 600 .75rem/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase;
   max-width: calc(100vw - 32px);
 }
 

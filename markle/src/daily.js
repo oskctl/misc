@@ -30,8 +30,16 @@ export function msUntilMidnight(now) {
   return next - now;
 }
 
+// Epoch ms of local midnight at the start of a 'YYYY-MM-DD' day.
+export function localMidnight(key) {
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d).getTime();
+}
+
 export function formatCountdown(ms) {
   const s = Math.max(0, Math.floor(ms / 1000));
   const p = n => String(n).padStart(2, '0');
-  return `${p(Math.floor(s / 3600))}:${p(Math.floor(s / 60) % 60)}:${p(s % 60)}`;
+  const days = Math.floor(s / 86400);
+  const hms = `${p(Math.floor(s / 3600) % 24)}:${p(Math.floor(s / 60) % 60)}:${p(s % 60)}`;
+  return days ? `${days}d ${hms}` : hms;
 }

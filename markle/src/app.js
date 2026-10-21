@@ -6,7 +6,7 @@ import { DRAWINGS } from '../data/drawings.js';
 import { SPECS } from '../data/specs.js';
 import { h } from './dom.js';
 import { read, write, persistent } from './store.js';
-import { dateKey, puzzleNumberOn, dateOfPuzzle, msUntilMidnight, formatCountdown } from './daily.js';
+import { dateKey, puzzleNumberOn, dateOfPuzzle, msUntilMidnight, localMidnight } from './daily.js';
 import { buildIndex, search, fold } from './search.js';
 import { feedback, attributes, statusOf, stageFor, MAX_GUESSES } from './game.js';
 import { formatDistance, compassPoint } from './geo.js';
@@ -17,7 +17,7 @@ import { keyPlan } from './keyplan.js';
 import { renderBonus } from './bonus.js';
 import { ROUNDS, ROUND_LABELS, settled, formatMetres } from './rounds.js';
 import {
-  openPanel, closePanel, helpContent, statsContent, settingsContent, registerContent, tickCountdowns,
+  openPanel, closePanel, helpContent, statsContent, settingsContent, registerContent, tickCountdowns, countdownEl,
 } from './panels.js';
 
 const KEY = 'markle:v1';
@@ -81,6 +81,9 @@ function recordFor(no, create = false) {
 let toastTimer;
 function toast(text) {
   const t = $('toast');
+  // A modal panel sits in the top layer and makes the page inert, so show the toast inside it.
+  const panel = $('panel');
+  (panel.open ? panel : document.body).append(t);
   t.textContent = text;
   t.hidden = false;
   clearTimeout(toastTimer);
@@ -194,6 +197,13 @@ function mount(no) {
   refresh();
 }
 
+// When the next sheet issues: local midnight tonight, or the launch date's midnight before launch.
+function nextIssueAt() {
+  if (issuedNo() < 1) return localMidnight(CONFIG.startDate);
+  const now = new Date();
+  return now.getTime() + msUntilMidnight(now);
+}
+
 function mountEmpty() {
   view = null;
   $('composer').hidden = true;
@@ -201,7 +211,7 @@ function mountEmpty() {
   app.replaceChildren(h('div', { class: 'card' },
     h('p', { class: 'verdict', text: first ? 'Not issued yet' : 'On the drawing board' }),
     h('h2', { class: 'answer-name', text: `No. ${sheetLabel(Math.max(1, issuedNo()))}` }),
-    h('p', { class: 'countdown' }, first ? 'Issues in ' : 'Check back in ', h('b', { 'data-countdown': '', text: formatCountdown(msUntilMidnight(new Date())) })),
+    h('p', { class: 'countdown' }, first ? 'Issues in ' : 'Check back in ', countdownEl(nextIssueAt())),
   ));
 }
 
@@ -431,7 +441,7 @@ function shareBlock(rec) {
       : setMode ? h('p', { class: 'countdown', text: 'That is the launch set. Daily sheets start soon.' })
       : h('p', { class: 'countdown' },
         hasNext ? `No. ${sheetLabel(next)} issues in ` : `No. ${sheetLabel(next)} is on the drawing board. `,
-        hasNext ? h('b', { 'data-countdown': '', text: formatCountdown(msUntilMidnight(new Date())) }) : null),
+        hasNext ? countdownEl(nextIssueAt()) : null),
     h('button', { type: 'button', class: 'linkish', onclick: () => showPanel('register') }, 'Open the register'),
   );
 }
@@ -583,14 +593,14 @@ function showPanel(kind) {
     const next = latestIssued() + 1;
     if (setMode) {
       openPanel('Statistics', statsContent({
-        games: state.games, latestIssued: latestIssued(), todayNo: view?.no, countdown: null,
+        games: state.games, latestIssued: latestIssued(), todayNo: view?.no, countdownAt: null,
         nextLabel: 'Launch set: streaks start when the daily sheets do.',
       }));
       return;
     }
     openPanel('Statistics', statsContent({
       games: state.games, latestIssued: latestIssued(), todayNo: latestIssued(),
-      countdown: puzzleByNo.has(next) ? formatCountdown(msUntilMidnight(new Date())) : null,
+      countdownAt: puzzleByNo.has(next) ? nextIssueAt() : null,
       nextLabel: puzzleByNo.has(next) ? `No. ${sheetLabel(next)} issues in` : `No. ${sheetLabel(next)} is on the drawing board.`,
     }));
   }
@@ -689,7 +699,7 @@ function route() {
 
 let lastIssued = issuedNo();
 setInterval(() => {
-  tickCountdowns(msUntilMidnight(new Date()));
+  tickCountdowns();
   if (issuedNo() !== lastIssued) {
     lastIssued = issuedNo();
     const rec = view && recordFor(view.no);
