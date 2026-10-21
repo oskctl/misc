@@ -17,34 +17,6 @@ export function feedback(guess, answer) {
   };
 }
 
-// The lead architect or practice, normalised so "Marcel Breuer with Hamilton P. Smith" and
-// "Marcel Breuer and Herbert Beckhard" both read as one hand.
-export function architectKey(credit) {
-  return credit.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
-    .replace(/\(.*?\)/g, '').split(/;| with | and | & |,/)[0]
-    .replace(/\b(architects?|associates|partners|studio)\b/g, '')
-    .replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim();
-}
-
-// Pool years can be a year or two out, so 'match' means within 2 years and 'near' within 10.
-export const YEAR_MATCH = 2;
-export const YEAR_NEAR = 10;
-
-// The second feedback channel: how the guess compares with the answer on era, hand and use.
-// States: 'match' (solid), 'near' (hatched), 'miss' (outline).
-export function attributes(guess, answer) {
-  const delta = answer.year - guess.year;
-  return {
-    year: {
-      value: guess.year,
-      dir: delta > 0 ? 'later' : delta < 0 ? 'earlier' : 'same',
-      state: Math.abs(delta) <= YEAR_MATCH ? 'match' : Math.abs(delta) <= YEAR_NEAR ? 'near' : 'miss',
-    },
-    architect: architectKey(guess.architect) === architectKey(answer.architect) ? 'match' : 'miss',
-    type: guess.type === answer.type ? 'match' : 'miss',
-  };
-}
-
 export function statusOf(guessIds, answerId) {
   if (guessIds.includes(answerId)) return 'won';
   if (guessIds.length >= MAX_GUESSES) return 'lost';

@@ -1,6 +1,6 @@
 // Autocomplete matching: accent-insensitive, matches the start of any word in the building's
-// name, aliases, city or country, and last of all the architect (so a player who sees ARCH
-// light up can look for that architect's other buildings).
+// name, aliases, city or country. Architect names never match: knowing who designed it is the
+// title block's first question, not a way to find the building.
 
 const SPECIAL = { æ: 'ae', ø: 'o', ł: 'l', đ: 'd', ß: 'ss', œ: 'oe', ð: 'd', þ: 'th', ı: 'i' };
 
@@ -16,7 +16,6 @@ export function buildIndex(buildings) {
     name: fold(b.name),
     aka: (b.aka || []).map(a => [a, fold(a)]),
     place: [fold(b.city), fold(b.country)],
-    architect: fold(b.architect || ''),
   }));
 }
 
@@ -29,7 +28,6 @@ function score(e, q) {
   for (const [raw, folded] of e.aka) if (startsWord(folded, q)) return [3, raw];
   if (e.place.some(p => startsWord(p, q))) return [4];
   if (q.length >= 4 && e.name.includes(q)) return [5];
-  if (q.length >= 3 && startsWord(e.architect, q)) return [6, null, true];
   return null;
 }
 
@@ -40,8 +38,8 @@ export function search(index, query, { limit = 8 } = {}) {
   const hits = [];
   for (const e of index) {
     const s = score(e, q);
-    if (s) hits.push({ s: s[0], b: e.b, alias: s[1], byArchitect: Boolean(s[2]) });
+    if (s) hits.push({ s: s[0], b: e.b, alias: s[1] });
   }
   hits.sort((x, y) => x.s - y.s || x.b.name.localeCompare(y.b.name));
-  return { hits: hits.slice(0, limit).map(({ b, alias, byArchitect }) => ({ b, alias, byArchitect })), more: Math.max(0, hits.length - limit) };
+  return { hits: hits.slice(0, limit).map(({ b, alias }) => ({ b, alias })), more: Math.max(0, hits.length - limit) };
 }

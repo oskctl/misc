@@ -33,15 +33,18 @@ photographs. Photos could be added later as a reveal-screen extra.
 |---|---|
 | Guesses | 6 |
 | Input | Type a building, city or country; pick from the list. Architect names never match (knowing who designed it is part of the test). The list shows name, city and country, never architect, year or a picture. |
-| Feedback, channel 1 | Distance (km or miles), an arrow rotated to the exact bearing, proximity out of 100 |
-| Feedback, channel 2 | Three chips: YEAR (the guess's completion year, ▲ answer newer / ▼ older, hatched within 5 years), ARCH (same architect or practice), TYPE (same kind of building). Chips are coded by fill (solid / hatched / outline), never by colour alone. |
-| Reveal ladder | Rev 0 silhouette → A structure + 1.75 m figure + scale bar → B openings + TYPE hint → C surface → D context + COUNTRY hint → E CITY hint |
+| Feedback | Distance (km or miles), an arrow rotated to the exact bearing, proximity out of 100. Each row also names the guessed building's city and country. Nothing about the answer's age, architect or size. |
+| Reveal ladder | Rev 0 silhouette → A structure + 1.75 m figure → B openings + TYPE hint → C surface → D context + COUNTRY hint → E CITY hint. The scale bar appears only once the Dimension round is settled. |
 | End | Win: the sheet is stamped APPROVED. Loss: SUPERSEDED, and the answer is shown. Either way the title-block round opens. |
 
-**Why two feedback channels.** Buildings cluster in a few cities, and two London buildings are
-both "close" on any world-scale measure. Worldle's distance feedback alone cannot tell them apart.
-The YEAR, ARCH and TYPE chips are free (the pool already holds the data) and give every wrong guess
-something to teach, the way Poeltl's attribute grid does.
+**Why only one feedback channel.** The main round must not answer the title block. An earlier
+build added YEAR, ARCH and TYPE chips to every guess (the way Poeltl's attribute grid does), but
+after a few guesses the ▲/▼ year marks had narrowed the completion year, and a lit ARCH chip had
+given away the architect, before either question was asked. Distance, direction and proximity say
+where the building is and nothing else. For the same reason architect names never match in the
+guess list, and the scale bar stays off the sheet until the Dimension round is done; the 1.75 m
+figure is the only measure before then. Close calls between buildings in one city are carried by
+the log-scale proximity below and by the drawing itself.
 
 **Why log-scale proximity.** Worldle scores proximity linearly over 20,000 km, so any guess on the
 right continent reads 90%+. Markle uses `100 × (1 − ln(1 + d/10 km) / ln 2001)`: every 10× closer

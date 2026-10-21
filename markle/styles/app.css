@@ -182,7 +182,6 @@ body::before {
 .row .where { min-width: 0; font-size: .75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .row .metrics { flex: none; display: flex; align-items: center; gap: 8px; font: 500 .8125rem/1 var(--font-mono); font-variant-numeric: tabular-nums; }
 .row .pct { min-width: 2.2em; text-align: right; }
-.row .chips { flex: none; display: flex; gap: 6px; flex-wrap: nowrap; }
 .row.empty { min-height: 40px; padding: 0; }
 .row.empty .n { color: var(--hair); padding-top: 0; grid-row: auto; align-self: center; }
 .row .coach { grid-column: 2; font-size: .8125rem; color: var(--muted); }
@@ -197,15 +196,6 @@ body::before {
 .north circle { fill: none; stroke: var(--ink); stroke-width: 1; }
 .north.none path { display: none; }
 .row.hit .north path { fill: var(--on-ink); }
-
-.chip {
-  display: inline-flex; align-items: center; gap: 4px;
-  font: 500 .6875rem/1 var(--font-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--ink);
-  white-space: nowrap;
-}
-.sw { width: 9px; height: 9px; border: 1px solid var(--ink); flex: none; }
-.sw.match { background: var(--ink); }
-.sw.near { background: repeating-linear-gradient(135deg, var(--ink) 0 1.5px, transparent 1.5px 3.5px); }
 
 /* ---------- Composer (bottom, thumb reach) ---------- */
 .composer {

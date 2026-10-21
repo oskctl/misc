@@ -8,7 +8,7 @@ import { h } from './dom.js';
 import { read, write, persistent } from './store.js';
 import { dateKey, puzzleNumberOn, dateOfPuzzle, msUntilMidnight, localMidnight } from './daily.js';
 import { buildIndex, search, fold } from './search.js';
-import { feedback, attributes, statusOf, stageFor, MAX_GUESSES } from './game.js';
+import { feedback, statusOf, stageFor, MAX_GUESSES } from './game.js';
 import { formatDistance, compassPoint } from './geo.js';
 import { shareText, sheetLabel } from './share.js';
 import { computeStats } from './stats.js';
@@ -26,11 +26,6 @@ const DEFAULTS = { theme: 'system', units: 'km', mode: 'standard', contrast: fal
 const REVS = ['0', 'A', 'B', 'C', 'D', 'E'];
 // The result headline, by guess count: concrete's own vocabulary of a good pour.
 const HEADLINES = ['Monolithic', 'Cast in one pour', 'Fair-faced', 'Well cured', 'Load-bearing', 'Just set'];
-const TYPE_LABELS = {
-  housing: 'Housing', civic: 'Civic', cultural: 'Culture', education: 'Education', religious: 'Sacred',
-  commercial: 'Retail', office: 'Office', transport: 'Transport', health: 'Health', sport: 'Sport',
-  hotel: 'Hotel', monument: 'Monument', infrastructure: 'Infra', mixed: 'Mixed',
-};
 
 const byId = new Map(BUILDINGS.map(b => [b.id, b]));
 const index = buildIndex(BUILDINGS);
@@ -128,24 +123,16 @@ function northArrow(bearing) {
   return svg;
 }
 
-// "São Paulo, Brazil", or "São Paulo · same country" once the guess is in the right place.
-function whereLine(g, answer, correct) {
-  const tag = correct ? '' : fold(g.city) === fold(answer.city) ? 'same city' : g.country === answer.country ? 'same country' : '';
-  return `${g.city}${tag ? ` · ${tag}` : `, ${g.country}`}${g.status === 'demolished' ? ' · demolished' : ''}`;
-}
-
-const chip = (state_, label, aria) => h('span', { class: 'chip', title: aria }, h('i', { class: `sw ${state_}`, 'aria-hidden': 'true' }), label);
+// Where the guessed building is. Nothing here describes the answer: the main round gives only
+// distance, direction and proximity, so the title-block questions are still open afterwards.
+const whereLine = g => `${g.city}, ${g.country}${g.status === 'demolished' ? ' · demolished' : ''}`;
 
 function guessRow(g, answer, i, isNew) {
   const f = feedback(g, answer);
-  const a = attributes(g, answer);
   const dist = formatDistance(f.km, state.settings.units);
-  const yearMark = a.year.dir === 'later' ? '▲' : a.year.dir === 'earlier' ? '▼' : '=';
   const label = f.correct
     ? `Guess ${i + 1}: ${g.name}. Correct.`
-    : `Guess ${i + 1}: ${g.name}, ${g.city}. ${dist} ${f.bearing == null ? 'away, next door' : `to the ${compassPoint(f.bearing)}`}. ${f.pct} out of 100. `
-      + `Finished ${g.year}, the answer is ${a.year.dir === 'same' ? 'the same year' : a.year.dir === 'later' ? 'newer' : 'older'}. `
-      + `${a.architect === 'match' ? 'Same architect. ' : ''}${a.type === 'match' ? 'Same type.' : ''}`;
+    : `Guess ${i + 1}: ${g.name}, ${g.city}. ${dist} ${f.bearing == null ? 'away, next door' : `to the ${compassPoint(f.bearing)}`}. ${f.pct} out of 100.`;
   return h('li', { class: `row${f.correct ? ' hit' : ''}${isNew ? ' new' : ''}`, 'aria-label': label },
     h('span', { class: 'n', text: String(i + 1) }),
     h('span', { class: 'line' },
@@ -156,14 +143,7 @@ function guessRow(g, answer, i, isNew) {
         h('span', { class: 'pct', text: String(f.pct) }),
       ),
     ),
-    h('span', { class: 'line' },
-      h('span', { class: 'where', text: whereLine(g, answer, f.correct) }),
-      f.correct ? null : h('span', { class: 'chips' },
-        chip(a.year.state, `${g.year} ${yearMark}`, `Year: ${a.year.state}`),
-        chip(a.architect, 'Arch', `Architect: ${a.architect}`),
-        chip(a.type, TYPE_LABELS[g.type] || g.type, `Type: ${a.type}`),
-      ),
-    ),
+    h('span', { class: 'line' }, h('span', { class: 'where', text: whereLine(g) })),
   );
 }
 
@@ -235,10 +215,12 @@ function refresh({ newRow = -1 } = {}) {
   const stage = closeup ? 6 : stageFor(guesses, answer.id);
   const animate = newRow >= 0;
 
-  // While the Dimension round is open, the main sheet loses its scale too.
-  const measuring = rec.bonus?.view === 'dimension' && !settled(rec.bonus.dimension);
+  // The scale bar would answer the Dimension round, so it only appears once that round is
+  // settled. Until then the 1.75 m figure is the only measure on the sheet.
+  const measured = settled(rec.bonus?.dimension) || Boolean(rec.bonus?.done);
+  const measuring = rec.bonus?.view === 'dimension' && !measured;
   sheet.setStage(stage);
-  sheet.showScaleBar(!measuring);
+  sheet.showScaleBar(measured);
   sheet.setZoom(closeup && !finished ? CLOSEUP_FRACTIONS[guesses.length] : null);
   sheet.showDimension(finished && settled(rec.bonus?.dimension) ? 'answer' : null);
   sheet.stamp(finished ? (status === 'won' ? 'Approved' : 'Superseded') : null,
@@ -496,7 +478,6 @@ function renderSuggest() {
       h('span', { class: 's-name', text: b.name }),
       h('span', { class: 's-where', text: guessed.has(b.id) ? 'Already on the sheet' : `${b.city}, ${b.country}` }),
       alias ? h('span', { class: 's-alias', text: `also: ${alias}` }) : null,
-      hits[i].byArchitect ? h('span', { class: 's-alias', text: `by ${b.architect}` }) : null,
     )), res.more ? h('li', { class: 'more', 'aria-disabled': 'true', text: `+${res.more} more. Keep typing.` }) : null);
   }
   list.hidden = false;

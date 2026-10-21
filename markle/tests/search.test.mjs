@@ -33,11 +33,9 @@ test('country search lists the buildings there', () => {
   assert.equal(search(index, 'united king').hits.length, 4);
 });
 
-test('architect names match last, flagged as such', () => {
-  const r = search(index, 'goldfinger');
-  assert.deepEqual(ids(r), ['balfron', 'trellick']);
-  assert.ok(r.hits.every(h => h.byArchitect));
-  assert.equal(search(index, 'trellick').hits[0].byArchitect, false);
+test('architect names never match: the architect is a title-block question', () => {
+  assert.deepEqual(ids(search(index, 'goldfinger')), []);
+  assert.deepEqual(ids(search(index, 'le corbusier')), []);
 });
 
 test('letters NFD cannot split still fold', () => {

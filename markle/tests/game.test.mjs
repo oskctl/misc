@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { feedback, statusOf, stageFor, architectKey, attributes, MAX_GUESSES } from '../src/game.js';
+import { feedback, statusOf, stageFor, MAX_GUESSES } from '../src/game.js';
 
 const trellick = { id: 'trellick', lat: 51.5233, lon: -0.2055 };
 const balfron = { id: 'balfron', lat: 51.5122, lon: -0.0129 };
@@ -24,24 +24,6 @@ test('same-city guess keeps an exact bearing; next door drops it', () => {
   assert.ok(f.bearing > 90 && f.bearing < 135, `bearing ${f.bearing}`);
   const g = feedback({ id: 'x', lat: 51.5202, lon: -0.0935 }, barbican);
   assert.equal(g.bearing, null);
-});
-
-test('architect keys merge collaborators and firm suffixes', () => {
-  assert.equal(architectKey('Marcel Breuer with Hamilton P. Smith'), architectKey('Marcel Breuer and Herbert Beckhard (with Nolen-Swinburne)'));
-  assert.equal(architectKey('Zaha Hadid Architects'), architectKey('Zaha Hadid (with Mayer Bährle)'));
-  assert.equal(architectKey('Ernő Goldfinger'), 'erno goldfinger');
-  assert.notEqual(architectKey('Araldo Cossutta (I. M. Pei & Partners)'), architectKey('I. M. Pei & Partners'));
-});
-
-test('attribute chips compare era, hand and use', () => {
-  const answer = { year: 1972, architect: 'Ernő Goldfinger', type: 'housing' };
-  assert.deepEqual(attributes({ year: 1967, architect: 'Ernő Goldfinger', type: 'housing' }, answer),
-    { year: { value: 1967, dir: 'later', state: 'near' }, architect: 'match', type: 'match' });
-  assert.equal(attributes({ year: 1970, architect: 'x', type: 'y' }, answer).year.state, 'match');
-  assert.equal(attributes({ year: 1961, architect: 'x', type: 'y' }, answer).year.state, 'miss');
-  assert.deepEqual(attributes({ year: 1989, architect: 'Tadao Ando', type: 'religious' }, answer),
-    { year: { value: 1989, dir: 'earlier', state: 'miss' }, architect: 'miss', type: 'miss' });
-  assert.equal(attributes({ year: 1972, architect: 'x', type: 'y' }, answer).year.state, 'match');
 });
 
 test('status and stage progression', () => {

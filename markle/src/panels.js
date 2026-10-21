@@ -23,8 +23,6 @@ export function closePanel() {
   if (dlg.open) dlg.close();
 }
 
-const swatch = state => h('i', { class: `sw ${state}`, 'aria-hidden': 'true' });
-
 export function helpContent({ name, exampleRow }) {
   return [
     h('p', {}, h('strong', { text: `Name today's concrete building in six guesses.` }),
@@ -34,11 +32,6 @@ export function helpContent({ name, exampleRow }) {
     h('div', { class: 'legend' },
       h('div', {}, h('b', { class: 'mono', text: '7.7 km' }), ' how far the answer is, with an arrow pointing to it'),
       h('div', {}, h('b', { class: 'mono', text: '92' }), ' how close you are, out of 100 (100 is on the spot)'),
-      h('div', {}, h('b', { class: 'mono', text: '1976 ▼' }), ' your guess was finished in 1976; ▼ the answer is older, ▲ newer'),
-      h('div', {}, h('b', { class: 'mono', text: 'same city' }), ' your guess is in the right city (or country)'),
-      h('div', {}, h('b', { class: 'mono', text: 'ARCH' }), ' same architect or practice'),
-      h('div', {}, h('b', { class: 'mono', text: 'TYPE' }), ' same kind of building'),
-      h('div', {}, swatch('match'), ' match ', swatch('near'), ' close (year within 10) ', swatch('miss'), ' no'),
     ),
     exampleRow ? h('div', { class: 'example' }, exampleRow) : null,
     h('h3', { text: 'Then complete the title block' }),
