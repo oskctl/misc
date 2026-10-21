@@ -189,8 +189,8 @@ function mount(no) {
   view = { no, puzzle, answer, sheet, tb, revs, rows, result, revealed: new Set() };
   if (setMode && state.current !== no && !isFuture(no)) { state.current = no; write(KEY, state); }
   const hash = `#s${sheetLabel(no)}`;
-  if (no !== homeNo() && location.hash !== hash) history.replaceState(null, '', hash);
-  if (no === homeNo() && /^#s\d+$/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
+  if (no !== homeNo() && location.hash !== hash) setHash(hash);
+  if (no === homeNo() && /^#s\d+$/.test(location.hash)) setHash('');
   refresh();
 }
 
@@ -664,9 +664,15 @@ function showPanel(kind) {
 document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => showPanel(b.dataset.open)));
 $('panel-close').addEventListener('click', closePanel);
 $('panel').addEventListener('click', e => { if (e.target === $('panel')) closePanel(); });
-$('home').addEventListener('click', e => { e.preventDefault(); history.replaceState(null, '', location.pathname + location.search); route(); window.scrollTo({ top: 0 }); });
+$('home').addEventListener('click', e => { e.preventDefault(); setHash(''); route(); window.scrollTo({ top: 0 }); });
 
 // ---------- Routing and the clock ----------
+// Rewrite the hash without a navigation. Built from location.href because in an about:srcdoc
+// frame a relative URL resolves against the parent page and replaceState throws.
+function setHash(hash) {
+  try { history.replaceState(null, '', location.href.split('#')[0] + hash); } catch { /* the URL just doesn't follow */ }
+}
+
 function route() {
   if (location.hash === '#preview') {
     preview = true;
@@ -688,7 +694,7 @@ setInterval(() => {
     lastIssued = issuedNo();
     const rec = view && recordFor(view.no);
     const busy = rec && (rec.status === 'playing' || (rec.bonus && !rec.bonus.done && (rec.bonus.view || ROUNDS.some(k => rec.bonus[k]))));
-    if (busy) history.replaceState(null, '', `#s${sheetLabel(view.no)}`);
+    if (busy) setHash(`#s${sheetLabel(view.no)}`);
     else if (rec) refresh();
     else route();
   }
