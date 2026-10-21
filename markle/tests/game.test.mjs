@@ -37,6 +37,8 @@ test('attribute chips compare era, hand and use', () => {
   const answer = { year: 1972, architect: 'Ernő Goldfinger', type: 'housing' };
   assert.deepEqual(attributes({ year: 1967, architect: 'Ernő Goldfinger', type: 'housing' }, answer),
     { year: { value: 1967, dir: 'later', state: 'near' }, architect: 'match', type: 'match' });
+  assert.equal(attributes({ year: 1970, architect: 'x', type: 'y' }, answer).year.state, 'match');
+  assert.equal(attributes({ year: 1961, architect: 'x', type: 'y' }, answer).year.state, 'miss');
   assert.deepEqual(attributes({ year: 1989, architect: 'Tadao Ando', type: 'religious' }, answer),
     { year: { value: 1989, dir: 'earlier', state: 'miss' }, architect: 'miss', type: 'miss' });
   assert.equal(attributes({ year: 1972, architect: 'x', type: 'y' }, answer).year.state, 'match');

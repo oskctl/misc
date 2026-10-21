@@ -35,15 +35,16 @@ export function helpContent({ name, exampleRow }) {
       h('div', {}, h('b', { class: 'mono', text: '7.7 km' }), ' how far the answer is, with an arrow pointing to it'),
       h('div', {}, h('b', { class: 'mono', text: '92' }), ' how close you are, out of 100 (100 is on the spot)'),
       h('div', {}, h('b', { class: 'mono', text: '1976 ▼' }), ' your guess was finished in 1976; ▼ the answer is older, ▲ newer'),
+      h('div', {}, h('b', { class: 'mono', text: 'same city' }), ' your guess is in the right city (or country)'),
       h('div', {}, h('b', { class: 'mono', text: 'ARCH' }), ' same architect or practice'),
       h('div', {}, h('b', { class: 'mono', text: 'TYPE' }), ' same kind of building'),
-      h('div', {}, swatch('match'), ' match ', swatch('near'), ' close (within 5 years) ', swatch('miss'), ' no'),
+      h('div', {}, swatch('match'), ' match ', swatch('near'), ' close (year within 10) ', swatch('miss'), ' no'),
     ),
     exampleRow ? h('div', { class: 'example' }, exampleRow) : null,
     h('h3', { text: 'Then complete the title block' }),
     h('p', { text: 'Win or lose, five quick questions finish the sheet: the architect, the year it was completed, one dimension, how the concrete was made, and a lie to strike out.' }),
     h('h3', { text: 'Close-up mode' }),
-    h('p', { text: 'For experts: start zoomed into a detail at 1:20 and step out one scale per miss, with no title-block hints. Turn it on in Settings before your first guess. It shows as * in your result.' }),
+    h('p', { text: 'For experts: start zoomed tight into a detail of the finished drawing and step out with each miss, with no title-block hints. Turn it on in Settings before your first guess. It shows as * in your result.' }),
     h('p', { class: 'hint', text: `A new sheet is issued at midnight, your time. ${name} is named for Mark, and for the marks timber formwork leaves in concrete.` }),
   ];
 }

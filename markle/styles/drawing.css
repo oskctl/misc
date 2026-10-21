@@ -41,6 +41,11 @@
 .dwg .dim  { fill: none; stroke: var(--dw-ink); stroke-width: 0.7px; vector-effect: non-scaling-stroke; }
 .dwg .lbl  { fill: var(--dw-ink); font: 500 22px/1 var(--font-mono, ui-monospace, monospace); letter-spacing: .04em; }
 
+.dwg [data-layer] * { transition: stroke 1.2s ease, fill 1.2s ease; }
+.dwg [data-layer].issued * { stroke: var(--dw-accent); transition: none; }
+.dwg [data-layer].issued .sil, .dwg [data-layer].issued .glz, .dwg [data-layer].issued .void,
+.dwg [data-layer].issued .shd, .dwg [data-layer].issued .dot, .dwg [data-layer].issued .ink { fill: var(--dw-accent); }
+
 @media (prefers-reduced-motion: reduce) {
-  .dwg [data-layer], .dwg .sil { transition: none; }
+  .dwg [data-layer], .dwg .sil, .dwg [data-layer] * { transition: none; }
 }

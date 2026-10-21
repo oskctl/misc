@@ -1,10 +1,13 @@
 // Autocomplete matching: accent-insensitive, matches the start of any word in the building's
-// name, aliases, city or country. Never matches the architect: knowing who designed it is part
-// of the test. Ranking: name prefix, then a word in the name, then an alias, then place.
+// name, aliases, city or country, and last of all the architect (so a player who sees ARCH
+// light up can look for that architect's other buildings).
+
+const SPECIAL = { æ: 'ae', ø: 'o', ł: 'l', đ: 'd', ß: 'ss', œ: 'oe', ð: 'd', þ: 'th', ı: 'i' };
 
 export function fold(s) {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .toLowerCase().replace(/[’'`]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  return s.toLowerCase().replace(/[æøłđßœðþı]/g, ch => SPECIAL[ch])
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[’'`]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
 export function buildIndex(buildings) {
@@ -13,6 +16,7 @@ export function buildIndex(buildings) {
     name: fold(b.name),
     aka: (b.aka || []).map(a => [a, fold(a)]),
     place: [fold(b.city), fold(b.country)],
+    architect: fold(b.architect || ''),
   }));
 }
 
@@ -25,6 +29,7 @@ function score(e, q) {
   for (const [raw, folded] of e.aka) if (startsWord(folded, q)) return [3, raw];
   if (e.place.some(p => startsWord(p, q))) return [4];
   if (q.length >= 4 && e.name.includes(q)) return [5];
+  if (q.length >= 3 && startsWord(e.architect, q)) return [6, null, true];
   return null;
 }
 
@@ -35,8 +40,8 @@ export function search(index, query, { limit = 8 } = {}) {
   const hits = [];
   for (const e of index) {
     const s = score(e, q);
-    if (s) hits.push({ s: s[0], b: e.b, alias: s[1] });
+    if (s) hits.push({ s: s[0], b: e.b, alias: s[1], byArchitect: Boolean(s[2]) });
   }
   hits.sort((x, y) => x.s - y.s || x.b.name.localeCompare(y.b.name));
-  return { hits: hits.slice(0, limit).map(({ b, alias }) => ({ b, alias })), more: Math.max(0, hits.length - limit) };
+  return { hits: hits.slice(0, limit).map(({ b, alias, byArchitect }) => ({ b, alias, byArchitect })), more: Math.max(0, hits.length - limit) };
 }

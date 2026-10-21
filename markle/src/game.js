@@ -26,7 +26,9 @@ export function architectKey(credit) {
     .replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-export const YEAR_NEAR = 5;
+// Pool years can be a year or two out, so 'match' means within 2 years and 'near' within 10.
+export const YEAR_MATCH = 2;
+export const YEAR_NEAR = 10;
 
 // The second feedback channel: how the guess compares with the answer on era, hand and use.
 // States: 'match' (solid), 'near' (hatched), 'miss' (outline).
@@ -36,7 +38,7 @@ export function attributes(guess, answer) {
     year: {
       value: guess.year,
       dir: delta > 0 ? 'later' : delta < 0 ? 'earlier' : 'same',
-      state: delta === 0 ? 'match' : Math.abs(delta) <= YEAR_NEAR ? 'near' : 'miss',
+      state: Math.abs(delta) <= YEAR_MATCH ? 'match' : Math.abs(delta) <= YEAR_NEAR ? 'near' : 'miss',
     },
     architect: architectKey(guess.architect) === architectKey(answer.architect) ? 'match' : 'miss',
     type: guess.type === answer.type ? 'match' : 'miss',

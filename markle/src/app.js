@@ -12,7 +12,7 @@ import { feedback, attributes, statusOf, stageFor, MAX_GUESSES } from './game.js
 import { formatDistance, compassPoint } from './geo.js';
 import { shareText, sheetLabel } from './share.js';
 import { computeStats } from './stats.js';
-import { buildSheet, nominalScale, CLOSEUP_METRES, CLOSEUP_LABELS } from './sheet.js';
+import { buildSheet, nominalScale, CLOSEUP_FRACTIONS } from './sheet.js';
 import { keyPlan } from './keyplan.js';
 import { renderBonus } from './bonus.js';
 import { ROUNDS, ROUND_LABELS, settled, formatMetres } from './rounds.js';
@@ -24,6 +24,8 @@ const KEY = 'markle:v1';
 const PREVIEW_KEY = 'markle:preview:v1';
 const DEFAULTS = { theme: 'system', units: 'km', mode: 'standard', contrast: false };
 const REVS = ['0', 'A', 'B', 'C', 'D', 'E'];
+// The result headline, by guess count: concrete's own vocabulary of a good pour.
+const HEADLINES = ['Monolithic', 'Cast in one pour', 'Fair-faced', 'Well cured', 'Load-bearing', 'Just set'];
 const TYPE_LABELS = {
   housing: 'Housing', civic: 'Civic', cultural: 'Culture', education: 'Education', religious: 'Sacred',
   commercial: 'Retail', office: 'Office', transport: 'Transport', health: 'Health', sport: 'Sport',
@@ -47,11 +49,18 @@ let preview = false;
 
 const save = () => { write(KEY, state); write(PREVIEW_KEY, previewGames); };
 const todayKey = () => dateKey(new Date());
-const issuedNo = () => puzzleNumberOn(CONFIG.startDate, todayKey());
+const setMode = CONFIG.mode !== 'daily';
+const issuedNo = () => (setMode ? PUZZLES.length : puzzleNumberOn(CONFIG.startDate, todayKey()));
 const latestIssued = () => Math.min(PUZZLES.length, Math.max(0, issuedNo()));
 const isFuture = no => no > issuedNo();
-const dateOf = no => new Date(dateOfPuzzle(CONFIG.startDate, no) + 'T12:00:00')
-  .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+const dateOf = no => (setMode ? 'Launch set' : new Date(dateOfPuzzle(CONFIG.startDate, no) + 'T12:00:00')
+  .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
+// The sheet to open by default: today's in daily mode; the first unfinished one in the launch set.
+const homeNo = () => {
+  if (!setMode) return latestIssued();
+  const open = PUZZLES.find(p => !['won', 'lost'].includes(state.games[p.no]?.status));
+  return open ? open.no : PUZZLES.length;
+};
 
 function recordFor(no, create = false) {
   const bag = isFuture(no) ? previewGames : state.games;
@@ -103,6 +112,12 @@ function northArrow(bearing) {
   return svg;
 }
 
+// "São Paulo, Brazil", or "São Paulo · same country" once the guess is in the right place.
+function whereLine(g, answer, correct) {
+  const tag = correct ? '' : fold(g.city) === fold(answer.city) ? 'same city' : g.country === answer.country ? 'same country' : '';
+  return `${g.city}${tag ? ` · ${tag}` : `, ${g.country}`}${g.status === 'demolished' ? ' · demolished' : ''}`;
+}
+
 const chip = (state_, label, aria) => h('span', { class: 'chip', title: aria }, h('i', { class: `sw ${state_}`, 'aria-hidden': 'true' }), label);
 
 function guessRow(g, answer, i, isNew) {
@@ -123,7 +138,7 @@ function guessRow(g, answer, i, isNew) {
       f.correct ? null : northArrow(f.bearing),
       h('span', { class: 'pct', text: String(f.pct) }),
     ),
-    h('span', { class: 'where', text: `${g.city}, ${g.country}${g.status === 'demolished' ? ' · demolished' : ''}` }),
+    h('span', { class: 'where', text: whereLine(g, answer, f.correct) }),
     f.correct ? h('span') : h('span', { class: 'chips' },
       chip(a.year.state, `${g.year} ${yearMark}`, `Year: ${a.year.state}`),
       chip(a.architect, 'Arch', `Architect: ${a.architect}`),
@@ -156,8 +171,8 @@ function mount(no) {
   app.replaceChildren(h('section', { class: 'sheet', 'aria-label': `Sheet ${sheetLabel(no)}` }, sheet.frame, tb, revs), rows, result);
   view = { no, puzzle, answer, sheet, tb, revs, rows, result, revealed: new Set() };
   const hash = `#s${sheetLabel(no)}`;
-  if (no !== latestIssued() && location.hash !== hash) history.replaceState(null, '', hash);
-  if (no === latestIssued() && /^#s\d+$/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
+  if (no !== homeNo() && location.hash !== hash) history.replaceState(null, '', hash);
+  if (no === homeNo() && /^#s\d+$/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
   refresh();
 }
 
@@ -193,14 +208,15 @@ function refresh({ newRow = -1 } = {}) {
   const animate = newRow >= 0;
 
   sheet.setStage(stage);
-  sheet.setZoom(closeup && !finished ? CLOSEUP_METRES[guesses.length] : null);
+  sheet.setZoom(closeup && !finished ? CLOSEUP_FRACTIONS[guesses.length] : null);
   sheet.showDimension(finished && settled(rec.bonus?.dimension) ? 'answer' : null);
   sheet.stamp(finished ? (status === 'won' ? 'Approved' : 'Superseded') : null,
     finished ? (status === 'won' ? `${guesses.length}/6` : 'X/6') : null);
 
   // Title block. Hints are withheld in close-up mode until the game is over.
   const hint = s => finished || (!closeup && stage >= s);
-  const scale = closeup && !finished ? CLOSEUP_LABELS[Math.min(guesses.length, 5)]
+  const zoomF = CLOSEUP_FRACTIONS[guesses.length];
+  const scale = closeup && !finished ? (zoomF ? nominalScale(puzzle.pxPerM / zoomF) : 'FIT')
     : stage >= 2 ? nominalScale(puzzle.pxPerM) : 'NTS';
   const cells = [
     cell('Drg No.', `MK-${sheetLabel(no)}`),
@@ -234,7 +250,9 @@ function refresh({ newRow = -1 } = {}) {
     const id = guesses[i];
     if (id) return guessRow(byId.get(id), answer, i, i === newRow);
     if (finished) return null;
-    return h('li', { class: 'row empty', 'aria-hidden': 'true' }, h('span', { class: 'n', text: String(i + 1) }));
+    const coach = i === 0 && !guesses.length
+      ? h('span', { class: 'coach', text: 'No idea? Type a country. The distance will steer you.' }) : null;
+    return h('li', { class: 'row empty', 'aria-hidden': coach ? null : 'true' }, h('span', { class: 'n', text: String(i + 1) }), coach);
   }).filter(Boolean));
 
   $('composer').hidden = finished;
@@ -251,7 +269,7 @@ function renderResult(rec, justFinished) {
   const parts = [];
 
   parts.push(h('section', { class: 'card', 'aria-label': 'Answer' },
-    h('p', { class: 'verdict', text: won ? `Identified in ${rec.guesses.length}/6` : 'Not identified. It was…' }),
+    h('p', { class: 'verdict', text: won ? `${HEADLINES[rec.guesses.length - 1]} · ${rec.guesses.length}/6` : 'Still curing · it was…' }),
     h('h2', { class: 'answer-name', text: answer.name }),
     h('p', { class: 'answer-where', text: `${answer.city}, ${answer.country}${answer.status === 'demolished' ? ' · demolished' : ''}` }),
     !bonus.done && !started ? [
@@ -344,10 +362,11 @@ function currentShareText(rec) {
   const answer = view.answer;
   const rows = rec.guesses.map(id => feedback(byId.get(id), answer));
   const st = computeStats(state.games, latestIssued());
-  const url = CONFIG.shareUrl || (location.protocol.startsWith('http') && !/claudeusercontent|claude\.ai/.test(location.host) ? location.origin + location.pathname : '');
+  const base = CONFIG.shareUrl || (location.protocol.startsWith('http') && !/claudeusercontent|claude\.ai/.test(location.host) ? location.origin + location.pathname : '');
+  const url = base && (setMode || view.no !== latestIssued()) ? `${base}#s${sheetLabel(view.no)}` : base;
   return shareText({
     name: CONFIG.name, no: view.no, rows, won: rec.status === 'won',
-    closeup: rec.mode === 'closeup', bonus: rec.bonus, streak: isFuture(view.no) ? 0 : st.current,
+    closeup: rec.mode === 'closeup', bonus: rec.bonus, streak: isFuture(view.no) || setMode ? 0 : st.current,
     url, contrast: state.settings.contrast,
   });
 }
@@ -378,7 +397,8 @@ function shareBlock(rec) {
       h('button', { type: 'button', class: 'btn', onclick: () => showPanel('stats') }, 'Stats'),
     ),
     next <= issuedNo() && hasNext
-      ? h('p', { class: 'countdown' }, h('button', { type: 'button', class: 'linkish', onclick: () => mount(next) }, `Play No. ${sheetLabel(next)} →`))
+      ? h('div', { class: 'btn-row' }, h('button', { type: 'button', class: 'btn', onclick: () => { mount(next); window.scrollTo({ top: 0 }); } }, `Play No. ${sheetLabel(next)} →`))
+      : setMode ? h('p', { class: 'countdown', text: 'That is the launch set. Daily sheets start soon.' })
       : h('p', { class: 'countdown' },
         hasNext ? `No. ${sheetLabel(next)} issues in ` : `No. ${sheetLabel(next)} is on the drawing board. `,
         hasNext ? h('b', { 'data-countdown': '', text: formatCountdown(msUntilMidnight(new Date())) }) : null),
@@ -425,6 +445,7 @@ function renderSuggest() {
       h('span', { class: 's-name', text: b.name }),
       h('span', { class: 's-where', text: guessed.has(b.id) ? 'Already on the sheet' : `${b.city}, ${b.country}` }),
       alias ? h('span', { class: 's-alias', text: `also: ${alias}` }) : null,
+      hits[i].byArchitect ? h('span', { class: 's-alias', text: `by ${b.architect}` }) : null,
     )), res.more ? h('li', { class: 'more', 'aria-disabled': 'true', text: `+${res.more} more. Keep typing.` }) : null);
   }
   list.hidden = false;
@@ -483,7 +504,7 @@ function makeGuess(b) {
   rec.status = statusOf(rec.guesses, view.answer.id);
   if (rec.status !== 'playing') {
     rec.finishedOn = todayKey();
-    rec.onTime = !isFuture(view.no) && rec.finishedOn === dateOfPuzzle(CONFIG.startDate, view.no);
+    rec.onTime = !setMode && !isFuture(view.no) && rec.finishedOn === dateOfPuzzle(CONFIG.startDate, view.no);
   }
   save();
   input.value = '';
@@ -521,6 +542,13 @@ function showPanel(kind) {
   if (kind === 'help') openPanel('How to play', helpContent({ name: CONFIG.name, exampleRow: sampleRow() }));
   if (kind === 'stats') {
     const next = issuedNo() + 1;
+    if (setMode) {
+      openPanel('Statistics', statsContent({
+        games: state.games, latestIssued: latestIssued(), todayNo: view?.no, countdown: null,
+        nextLabel: 'Launch set: streaks start when the daily sheets do.',
+      }));
+      return;
+    }
     openPanel('Statistics', statsContent({
       games: state.games, latestIssued: latestIssued(), todayNo: latestIssued(),
       countdown: puzzleByNo.has(next) ? formatCountdown(msUntilMidnight(new Date())) : null,
@@ -585,7 +613,7 @@ function route() {
   const want = m ? Number(m[1]) : null;
   if (want && puzzleByNo.has(want) && (want <= issuedNo() || preview)) return mount(want);
   const latest = latestIssued();
-  if (latest >= 1) return mount(latest);
+  if (latest >= 1) return mount(homeNo());
   if (preview && PUZZLES.length) return mount(1);
   return mountEmpty();
 }
@@ -601,6 +629,16 @@ setInterval(() => {
 }, 1000);
 
 window.addEventListener('hashchange', route);
+// Another tab finished a guess: pick up its state rather than overwrite it.
+window.addEventListener('storage', e => {
+  if (e.key !== KEY || !e.newValue) return;
+  try {
+    const next = JSON.parse(e.newValue);
+    if (next?.schema === 1) { state = { ...next, settings: { ...DEFAULTS, ...next.settings } }; applyTheme(); if (view) refresh(); }
+  } catch { /* ignore a partial write */ }
+});
+document.title = CONFIG.name;
+$('home').textContent = CONFIG.name.toUpperCase();
 applyTheme();
 $('composer').hidden = false;
 route();

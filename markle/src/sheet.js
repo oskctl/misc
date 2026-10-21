@@ -5,14 +5,14 @@ import { formatMetres } from './rounds.js';
 
 const W = 1200, H = 900;
 const BARS = [1, 2, 5, 10, 20, 50, 100];
-// Close-up mode: the crop widens one drawing scale per miss, then shows the whole sheet.
-export const CLOSEUP_METRES = [2, 5, 10, 20, 50];
-export const CLOSEUP_LABELS = ['1:20', '1:50', '1:100', '1:200', '1:500', 'FIT'];
+// Close-up mode: the crop starts at a fifth of the sheet and widens with each miss, then shows
+// the whole sheet. Labels are the nominal print scale of each crop.
+export const CLOSEUP_FRACTIONS = [0.2, 0.3, 0.45, 0.65, 0.85];
 
 // Nominal print scale if the sheet were A3 landscape (420 mm wide), rounded to a standard ratio.
 export function nominalScale(pxPerM) {
   const ratio = (W / pxPerM) / 0.42;
-  const std = [50, 100, 200, 250, 500, 1000, 1250, 2500];
+  const std = [20, 50, 100, 200, 250, 500, 1000, 1250, 2500];
   return '1:' + std.reduce((a, b) => (Math.abs(b - ratio) < Math.abs(a - ratio) ? b : a));
 }
 
@@ -58,16 +58,26 @@ export function buildSheet(puzzle, svgText) {
   const stampSlot = h('div');
   const frame = h('div', { class: 'frame', role: 'img', 'aria-label': `Sheet ${puzzle.no}, ${puzzle.view.toLowerCase()}` }, zoom, stampSlot);
 
+  let current = 0;
   return {
     frame,
     setStage(stage) {
+      // A newly issued layer draws in redline, then settles to ink: the reviewer's mark-up.
+      if (current && stage > current && stage <= 5) {
+        const layer = drawing.querySelector(`[data-layer="${stage}"]`);
+        if (layer) {
+          layer.classList.add('issued');
+          setTimeout(() => layer.classList.remove('issued'), 1400);
+        }
+      }
+      current = stage;
       drawing.setAttribute('data-stage', String(stage));
       bar.style.opacity = stage >= 2 ? '1' : '0';
       frame.setAttribute('aria-label', `Sheet ${puzzle.no}, ${puzzle.view.toLowerCase()}, revision ${stage} of 6`);
     },
-    setZoom(metres) {
-      if (!metres || focus.length !== 2 || focus.some(Number.isNaN)) { zoom.style.transform = ''; return; }
-      const cw = Math.min(W, metres * puzzle.pxPerM), ch = cw * 0.75;
+    setZoom(fraction) {
+      if (!fraction || focus.length !== 2 || focus.some(Number.isNaN)) { zoom.style.transform = ''; return; }
+      const cw = W * fraction, ch = cw * 0.75;
       const x0 = Math.min(Math.max(focus[0] - cw / 2, 0), W - cw);
       const y0 = Math.min(Math.max(focus[1] - ch / 2, 0), H - ch);
       zoom.style.transform = `scale(${W / cw}) translate(${(-x0 / W) * 100}%, ${(-y0 / H) * 100}%)`;

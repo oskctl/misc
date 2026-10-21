@@ -33,9 +33,17 @@ test('country search lists the buildings there', () => {
   assert.equal(search(index, 'united king').hits.length, 4);
 });
 
-test('architect names never match', () => {
-  assert.deepEqual(ids(search(index, 'goldfinger')), []);
-  assert.deepEqual(ids(search(index, 'lasdun')), []);
+test('architect names match last, flagged as such', () => {
+  const r = search(index, 'goldfinger');
+  assert.deepEqual(ids(r), ['balfron', 'trellick']);
+  assert.ok(r.hits.every(h => h.byArchitect));
+  assert.equal(search(index, 'trellick').hits[0].byArchitect, false);
+});
+
+test('letters NFD cannot split still fold', () => {
+  assert.equal(fold('Bagsværd'), 'bagsvaerd');
+  assert.equal(fold('Jørn Utzon'), 'jorn utzon');
+  assert.equal(fold('Łódź'), 'lodz');
 });
 
 test('limit and overflow count; empty query returns nothing', () => {

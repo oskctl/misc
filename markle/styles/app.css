@@ -180,6 +180,7 @@ body::before {
 .row .chips { display: flex; gap: 6px; justify-self: end; flex-wrap: nowrap; }
 .row.empty { min-height: 40px; padding: 0; }
 .row.empty .n { color: var(--hair); padding-top: 0; grid-row: auto; align-self: center; }
+.row .coach { grid-column: 2 / -1; font-size: .8125rem; color: var(--muted); }
 .row.hit { background: var(--ink); color: var(--on-ink); border-bottom-color: var(--ink); padding-inline: 8px; margin-inline: -8px; }
 .row.hit .n, .row.hit .where { color: var(--on-ink); opacity: .75; }
 .row.hit .name { font-family: var(--font-display); font-stretch: 112%; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; }
