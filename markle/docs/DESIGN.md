@@ -120,9 +120,9 @@ no typing. Light and dark themes follow the system or a setting.
 |---|---|---|---|---|---|
 | 001 | Niterói Contemporary Art Museum | Oscar Niemeyer | 1996 | Brazil | Elevation |
 | 002 | Trellick Tower | Ernő Goldfinger | 1972 | UK | Elevation |
-| 003 | Church of the Light | Tadao Ando | 1989 | Japan | Interior elevation |
-| 004 | Geisel Library | William L. Pereira | 1970 | USA | Elevation |
-| 005 | Bruder Klaus Field Chapel | Peter Zumthor | 2007 | Germany | Elevation |
+| 003 | Geisel Library | William L. Pereira | 1970 | USA | Elevation |
+| 004 | Bruder Klaus Field Chapel | Peter Zumthor | 2007 | Germany | Elevation |
+| 005 | Church of the Light | Tadao Ando | 1989 | Japan | Section |
 
 Considered and held back: Álvaro Siza's Portugal Pavilion (portico dimensions could not be
 verified) and the Ministry of Highways, Tbilisi (the bar arrangement could not be verified). For
