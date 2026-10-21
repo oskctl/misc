@@ -383,7 +383,7 @@ export const PUZZLES = [
     "no": 5,
     "answer": "church-of-the-light",
     "drawing": "003",
-    "view": "INTERIOR ELEVATION",
+    "view": "SECTION",
     "pxPerM": 100,
     "typeLabel": "Protestant chapel",
     "built": "1988–89",
@@ -399,12 +399,12 @@ export const PUZZLES = [
         "Fumihiko Maki",
         "Arata Isozaki"
       ],
-      "note": "Tadao Ando designed it with his office, Tadao Ando Architect & Associates. It is one of his three churches, with the Chapel on Mount Rokko and the Church on the Water."
+      "note": "Tadao Ando designed it with his office, Tadao Ando Architect & Associates. It is often grouped with two other churches he completed in the second half of the 1980s, the Chapel on Mount Rokko and the Church on the Water."
     },
     "year": {
       "value": 1989,
       "tolerance": 2,
-      "note": "Ando designed the chapel in 1987–88. It was built in 1988–89 and completed in 1989. He added a Sunday school building on the same site in 1999."
+      "note": "Ando designed the chapel in 1987–88. Construction was under way in 1988, and the chapel was completed in 1989. He added a Sunday school building on the same site in 1999."
     },
     "dimension": {
       "label": "Width of each of the chapel's three cubes",
@@ -440,7 +440,7 @@ export const PUZZLES = [
       ],
       "lie": {
         "text": "The cross has always been open to the air, with no glass in the slits.",
-        "correction": "The slits are glazed. Ando wanted the cross left open, but the congregation asked for glass. Only his full-size 2017 copy in Tokyo left it open.",
+        "correction": "The slits are glazed. Ando had proposed leaving the cross open, and the church that commissioned it wanted glass. His full-size copy for a 2017 exhibition in Tokyo had no glass.",
         "source": "https://www.dezeen.com/?p=1146690"
       }
     },
@@ -451,25 +451,32 @@ export const PUZZLES = [
       "https://www.mooponto.com/?p=8548",
       "https://travel.sygic.com/en/poi/church-of-light-poi:22819",
       "https://www.urbipedia.org/hoja/Iglesia_de_la_Luz",
+      "https://www.archiweb.cz/en/b/church-of-light",
       "https://www.dezeen.com/?p=1146690",
       "https://www.museum.or.jp/report/990",
       "https://www.architecturelab.net/church-of-the-light-tadao-ando-architect-associates/",
+      "https://www.metalocus.es/en/news/shaping-light-church-light-tadao-ando",
+      "https://artsandculture.google.com/story/2QVRGQpQrOQ8sQ",
+      "https://bdt.degruyter.com/?p=18971",
+      "https://www.studiomatrx.org/guides/church-of-the-light",
       "https://detail.de/de_en/sensory-masterpiece-church-of-the-light-by-tadao-ando-in-ibaraki-1991",
       "https://www.tarahunt.com/blog/2023/7/7/tadao-andos-church-of-light-commentary-on-jin-baeks-analysis",
       "https://www.christiantoday.co.jp/articles/24507/20170929/tadao-ando-exhibition.htm"
     ],
     "estimated": [
-      "Wall thickness 0.38 m in L1/L2. Wikipedia gives it with 'citation needed'; it is consistent with 5.9 + 0.38 = 6.28",
+      "Wall thickness 0.38 m in L1/L2. Wikipedia gives it with 'citation needed'; it is consistent with 5.9 + 0.38 = 6.28 (outer box 18 x 6.28 x 6.28 m per De Gruyter)",
       "Roof slab 0.38 m thick",
       "Floor level drawn at exterior ground level. Floor flat at the cut. No floor slab or footings drawn",
+      "Clear height at the altar wall drawn as 5.9 m (6.28 m outer box less the roof). DETAIL gives 7 m, and most sources say the floor steps down toward the altar, so the true clear height at this end may be greater (C)",
       "Horizontal arm of the cross 3.60-3.85 m above the floor (crossing at 0.63 of clear height, from photos)",
-      "Cross centred on the wall width",
+      "Cross centred on the wall width (photos; one source says the vertical arm runs down the centre)",
       "Formwork panels 1.8 x 0.9 m laid horizontally, set out from the slit edges. This leaves 0.835 m filler panels at the side walls and a 0.25 m strip under the roof",
       "Tie holes 6 per panel (3 across x 2 high, 0.6 x 0.45 m pitch, 0.3 / 0.225 m insets). Drawn r = 0.025 m, slightly enlarged to stay legible",
       "Dark altar-wall tone (shd)",
       "Two generic trees and earth hatch in L5",
       "Scale figure position (x 467.5, standing between two tie-hole columns)",
-      "Dimension line placed between wall centrelines: reading the published 5.9 m cube size as a centreline grid is an inference, so the label names the cube rather than claiming centre-to-centre"
+      "Dimension line placed between wall centrelines: reading the published 5.9 m cube size as a centreline grid is an inference (Studio Matrx calls 5.9 m the interior width), so the label names the cube rather than claiming centre-to-centre",
+      "Coordinates come from two listings that may share one upstream source and were not checked against a map"
     ]
   }
 ];

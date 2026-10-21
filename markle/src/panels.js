@@ -74,7 +74,7 @@ export function statsContent({ games, latestIssued, todayNo, countdown, nextLabe
   ];
 }
 
-export function settingsContent({ settings, locked, onChange, exportCode, importCode, persistent }) {
+export function settingsContent({ settings, locked, onChange, exportCode, importCode, persistent, resetAll }) {
   const seg = (key, label, options, disabled = false) => h('div', { class: 'opt' },
     h('h3', { text: label }),
     h('div', { class: 'seg', role: 'group', 'aria-label': label }, options.map(([v, text]) => h('button', {
@@ -99,8 +99,26 @@ export function settingsContent({ settings, locked, onChange, exportCode, import
         h('button', { type: 'button', class: 'btn', onclick: () => importCode(codeBox.value) }, 'Load code'),
       ),
     ),
+    resetBlock(resetAll),
     h('p', { class: 'hint' }, 'Drawings are original, simplified elevations drawn from published dimensions. Map: Natural Earth. Type: Archivo and IBM Plex Mono.'),
   ];
+}
+
+// Clearing results asks twice, in the page itself (the host frame blocks confirm()).
+function resetBlock(resetAll) {
+  const box = h('div', { class: 'opt' }, h('h3', { text: 'Start over' }));
+  const ask = () => box.replaceChildren(
+    h('h3', { text: 'Start over' }),
+    h('p', { class: 'hint', text: 'This deletes every result and streak in this browser. Your settings stay.' }),
+    h('div', { class: 'btn-row' },
+      h('button', { type: 'button', class: 'btn btn-red', onclick: resetAll }, 'Delete my results'),
+      h('button', { type: 'button', class: 'btn', onclick: idle }, 'Keep them'),
+    ));
+  const idle = () => box.replaceChildren(
+    h('h3', { text: 'Start over' }),
+    h('button', { type: 'button', class: 'btn', onclick: ask }, 'Clear my results…'));
+  idle();
+  return box;
 }
 
 export function registerContent({ puzzles, drawings, issuedNo, preview, games, previewGames, dateOf, onOpen }) {

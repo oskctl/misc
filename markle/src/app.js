@@ -561,6 +561,15 @@ function showPanel(kind) {
       settings: state.settings,
       locked: Boolean(rec && rec.guesses.length && rec.status === 'playing'),
       persistent: persistent(),
+      resetAll: () => {
+        state.games = {};
+        for (const k of Object.keys(previewGames)) delete previewGames[k];
+        save();
+        closePanel();
+        route();
+        window.scrollTo({ top: 0 });
+        toast('Results cleared');
+      },
       onChange: (k, v) => {
         state.settings[k] = v;
         save();
