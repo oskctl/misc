@@ -89,7 +89,7 @@ export function buildSheet(puzzle, svgText) {
       dim?.remove();
       dim = null;
       if (!state) return;
-      const label = state === 'ask' ? '?' : formatMetres(puzzle.dimension.value, puzzle.dimension.unit);
+      const label = state === 'ask' ? '?' : formatMetres(puzzle.dimension.value, puzzle.dimension.unit, { exact: true });
       dim = dimensionLine(puzzle.dimension.line, label);
       over.append(dim);
     },

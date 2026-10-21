@@ -40,6 +40,8 @@ test('notes hold exactly one lie', () => {
 test('metres formatting', () => {
   assert.equal(formatMetres(98), '98 m');
   assert.equal(formatMetres(24.5), '25 m');
+  assert.equal(formatMetres(33.5, 'm', { exact: true }), '33.5 m');
+  assert.equal(formatMetres(98, 'm', { exact: true }), '98 m');
   assert.equal(formatMetres(5.9), '5.9 m');
   assert.equal(formatMetres(1.475), '1.5 m');
 });

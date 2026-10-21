@@ -372,7 +372,7 @@ function summary(rec) {
   const val = {
     architect: puzzle.architect.answer,
     year: String(puzzle.year.value),
-    dimension: `${puzzle.dimension.label}: ${formatMetres(puzzle.dimension.value, puzzle.dimension.unit)}`,
+    dimension: `${puzzle.dimension.label}: ${formatMetres(puzzle.dimension.value, puzzle.dimension.unit, { exact: true })}`,
     spec: SPECS[puzzle.spec.answer] || puzzle.spec.answer,
     notes: `Lie: ${puzzle.notes.lie.text}`,
   };

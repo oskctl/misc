@@ -177,7 +177,7 @@ export function renderBonus(root, ctx) {
         }, formatMetres(v, puzzle.dimension.unit));
       })),
     );
-    if (done) body.append(h('p', { class: 'explain' }, `${puzzle.dimension.label}: ${formatMetres(puzzle.dimension.value, puzzle.dimension.unit)}. `, source(puzzle.dimension.source)));
+    if (done) body.append(h('p', { class: 'explain' }, `${puzzle.dimension.label}: ${formatMetres(puzzle.dimension.value, puzzle.dimension.unit, { exact: true })}. `, source(puzzle.dimension.source)));
   }
 
   if (key === 'spec') {

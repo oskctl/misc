@@ -54,8 +54,10 @@ export function dimensionOptions(puzzle) {
   return [v, ...others].sort((a, b) => a - b);
 }
 
-export function formatMetres(v, unit = 'm') {
-  const n = v >= 10 ? Math.round(v) : Math.round(v * 10) / 10;
+// Option tiles round to whole metres above 10 m; the revealed answer (exact) keeps one decimal
+// so it quotes the sourced figure.
+export function formatMetres(v, unit = 'm', { exact = false } = {}) {
+  const n = v >= 10 && !exact ? Math.round(v) : Math.round(v * 10) / 10;
   return `${n.toLocaleString('en-GB')} ${unit}`;
 }
 
