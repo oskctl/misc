@@ -476,16 +476,19 @@ input.addEventListener('keydown', e => {
     active = (active + (e.key === 'ArrowDown' ? 1 : -1) + hits.length) % hits.length;
     renderSuggest();
     $(`opt-${active}`)?.scrollIntoView({ block: 'nearest' });
-  } else if (e.key === 'Enter' && !list.hidden && active >= 0) {
+  } else if (e.key === 'Enter') {
     e.preventDefault();
-    choose(active);
+    if (!list.hidden && active >= 0) choose(active);
+    else submitGuess();
   } else if (e.key === 'Escape') {
     closeSuggest();
   }
 });
 
-$('composer').addEventListener('submit', e => {
-  e.preventDefault();
+// Guessing never relies on form submission: sandboxed frames without allow-forms drop it.
+$('composer').addEventListener('submit', e => e.preventDefault());
+$('guess-btn').addEventListener('click', submitGuess);
+function submitGuess() {
   if (!view) return;
   let b = chosen;
   if (!b) {
@@ -494,7 +497,7 @@ $('composer').addEventListener('submit', e => {
   }
   if (!b) { setMsg(input.value.trim() ? 'Pick a building from the list.' : 'Type a building, city or country.'); renderSuggest(); return; }
   makeGuess(b);
-});
+}
 
 function makeGuess(b) {
   const rec = recordFor(view.no, true);
