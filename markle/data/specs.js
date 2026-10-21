@@ -6,6 +6,7 @@ export const SPECS = {
   'pick-hammered': 'Pick-hammered in-situ concrete, the face tooled by hand',
   'fair-faced-ties': 'Smooth fair-faced in-situ concrete with a grid of tie holes',
   'smooth-insitu': 'Smooth cast-in-place concrete frame left exposed',
+  'painted-insitu': 'Smooth cast-in-place reinforced concrete, painted white',
   'painted-shell': 'Reinforced-concrete shell, painted white',
   'rammed-burnt': 'Rammed concrete poured in layers around a timber tent later burned out',
   'precast-aggregate': 'Precast panels with exposed aggregate',
