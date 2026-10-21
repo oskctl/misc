@@ -12,6 +12,8 @@ A grab bag of small, single-file Python utilities at the root, plus the `hdsi/` 
 
 The `hdsi/` subproject (Household Debt Stress Index) has its own orientation doc at `hdsi/docs/CLAUDE.md` — read that before working on it.
 
+The `markle/` subproject is a daily concrete-architecture guessing game (static web app, Node for tooling and tests). Start from `markle/README.md`; the game design is in `markle/docs/DESIGN.md` and the drawing rules in `markle/docs/DRAWINGS.md`.
+
 ## Tool conventions
 
 Every script at the root follows the same shape:
@@ -43,4 +45,4 @@ python -m src.analyse                     # 8 diagnostic analyses
 
 ## Architecture
 
-There isn't one. The repo is intentionally flat. The only cross-file contracts are the script shape and the `selftest` smoke check. The `hdsi/` subproject is self-contained — read its local docs before changing it.
+There isn't one. The repo is intentionally flat. The only cross-file contracts are the script shape and the `selftest` smoke check. The `hdsi/` and `markle/` subprojects are self-contained — read their local docs before changing them.
