@@ -1,6 +1,8 @@
 // Stats are derived from the per-sheet game records every time, never kept as counters,
 // so they can always be rebuilt (and survive a schema change).
 
+import { totalPoints } from './score.js';
+
 export const BONUS_KEYS = ['architect', 'year', 'dimension', 'spec', 'notes'];
 
 // games: { [no]: { status, guesses, onTime, bonus } }
@@ -44,7 +46,13 @@ export function computeStats(games, latestIssued) {
     }
   }
 
+  const points = finished.map(g => ({ no: g.no, points: totalPoints(g), category: g.category || 'building', won: g.status === 'won', guesses: g.guesses.length }));
+  const total = points.reduce((s, p) => s + p.points, 0);
   return {
+    points,
+    totalPoints: total,
+    averagePoints: played ? total / played : 0,
+    bestPoints: points.reduce((m, p) => Math.max(m, p.points), 0),
     played,
     wins,
     winPct: played ? Math.round((wins / played) * 100) : 0,

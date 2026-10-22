@@ -431,3 +431,21 @@ body::before {
 .composer .kinds { margin-bottom: 8px; }
 .composer .kinds button { min-height: 40px; }
 .composer input { min-height: 52px; font-size: 1.0625rem; border-width: 2px; }
+
+/* ---------- Category pick, score, leaderboard ---------- */
+.pick { display: grid; gap: 10px; }
+.pick-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.pick-btn { display: grid; gap: 6px; justify-items: center; text-align: center; min-height: 84px; border-width: 2px; }
+.pick-name { font: 700 1rem/1.1 var(--font-display); }
+.pick-x { font: 500 .75rem/1 var(--font-mono); color: var(--muted); }
+.score-big { font: 800 2rem/1 var(--font-display); color: var(--ok); }
+.board h3 { margin: 0 0 6px; font: 500 .6875rem/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.board-list { margin: 0; padding: 0; list-style: none; border-top: var(--rule); }
+.board-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto 3em; gap: 10px; padding: 8px 0; border-bottom: var(--rule); font-size: .9375rem; }
+.board-list li.me { font-weight: 700; }
+.board-list .how { color: var(--muted); font: 500 .75rem/1.6 var(--font-mono); }
+.board-list .pts { text-align: right; font: 600 .875rem/1.4 var(--font-mono); }
+.frame.measure .dwg .fig { stroke: var(--redline); stroke-width: 3px; }
+.frame.measure .dwg circle.fig { fill: var(--redline); }
+.fig-key { color: var(--redline); }
+.fig-ring { fill: none; stroke: var(--redline); stroke-width: 2px; vector-effect: non-scaling-stroke; }

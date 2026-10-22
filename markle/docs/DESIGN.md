@@ -31,16 +31,17 @@ photographs. Photos could be added later as a reveal-screen extra.
 
 | | |
 |---|---|
-| Lives | 6 guesses, shown as dots. Any guess costs one. |
-| What to guess | Switch above the input: **Building**, **Architect** or **City**. Naming the building wins. |
-| Building or city guess | Distance (km or miles), an arrow to the exact bearing, proximity out of 100, measured from the guessed building or the middle of the guessed city. A right city fills in City (and Country). |
-| Architect guess | Right or wrong, no clue. A right architect fills in Architect and counts as the first bonus question. |
+| The choice | Each day, before the first guess: **City** (×1 points), **Architect** (×1.5) or **Building** (×2). That is the day's game. |
+| Guesses | 6, shown as dots. |
+| City or building guess | Distance (km or miles), an arrow to the exact bearing, proximity out of 100, from the guessed city's middle or the guessed building. |
+| Architect guess | Right or wrong, no clue. |
 | Drawing | Each guess adds a layer: silhouette, structure + 1.75 m figure, openings, surface, setting. |
-| Hints | Type after 3 wrong guesses, Country after 4, City after 5. |
-| End | Win: "Solved in N of 6". Loss: "Out of guesses", and the answer is shown. Either way the bonus questions open. |
+| Hints | Type after 3 guesses, country after 4, city after 5 (not in the City category). |
+| Points | Found in N guesses: multiplier × (7 − N). Not found: 0. |
+| End | Then the bonus questions. The building's name is held back until the building question (or the end). |
 
-Nothing is special-cased per building: a near miss (Rio for Niterói, Paris for Saint-Denis) simply
-reads as a few kilometres away with a high score.
+Nothing is special-cased per building: a near miss (Rio for Niterói) simply reads as a few
+kilometres away with a high score.
 
 **Why only one feedback channel.** The main round must not answer the title block. An earlier
 build added YEAR, ARCH and TYPE chips to every guess (the way Poeltl's attribute grid does), but
@@ -57,25 +58,16 @@ adds about 30 points (10 km = 91, 100 km = 68, 1,000 km = 39, 10,000 km = 9). Th
 tells a story: wrong continent → right country → right city → solved. 100 is reserved for the
 answer itself.
 
-## 3. Complete the title block (bonus rounds)
+## 3. Bonus questions
 
-Five quick rounds after the main guess, win or lose, each filling a field on the drawing's title
-block. Fixed order, option order seeded by sheet number so friends see the same layout.
+The two categories the player didn't pick, then year, size, concrete and one false fact. Each is a
+pick from four options (three for the false fact), **two tries**: 1 point on the first try, 0.5 on
+the second. Building and city options are the answer's nearest neighbours in the pool, so a near
+miss stays tempting. The size question rings the 1.75 m person in red.
 
-| Field | Prompt | Options | Tries |
-|---|---|---|---|
-| ✏️ Architect | Who designed it? | 4 names | 1 |
-| 📅 Year | When was it finished? | 4 years, 10 years apart | 1 |
-| 📏 Size | How big is it? | 4 sizes ×2 apart; the drawing with a "?" dimension line and the 1.75 m figure, no scale bar | 1 |
-| 🏗️ Concrete | How was the concrete made? | 4 techniques from a shared vocabulary | 1 |
-| 📜 Lie | Which one is false? | 3 statements, one false | 1 |
-
-Every bonus question is one pick from four options (three for the lie), like Worldle's follow-up rounds.
-
-Design rules that keep this honest: the ±2-year tolerance absorbs source disagreements about
-completion; the ×2 spacing means a 10% disagreement about a dimension can never flip the answer;
-the lie is always a falsified version of a verified fact, never an invention that might
-accidentally be true.
+**Sharing and the leaderboard.** The share text is one plain line, e.g. `Markle 003 · Building in
+3/6 · 14.5 points`, plus the link. On claude.ai the page keeps a shared leaderboard per sheet in the
+artifact's database (each player writes only their own scores); elsewhere it is simply hidden.
 
 ## 4. Sharing, stats, the daily clock
 

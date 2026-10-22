@@ -10,7 +10,7 @@ export const PUZZLES = [
     "typeLabel": "Art museum",
     "built": "1991–96",
     "credits": "Oscar Niemeyer, architect; Bruno Contarini, structural engineer; City of Niterói, client",
-    "why": "Niemeyer conceived the MAC as one reinforced-concrete form in which structure and outline are the same thing. The building is 16 m high. Its saucer, 50 m across, rests on a single central cylinder and cantilevers about 20 m from it on every side. Niemeyer described the idea as a central support with the architecture rising around it like a flower. Bruno Contarini was the structural engineer. The museum stands on a headland above Guanabara Bay, and its main exhibition hall has no columns.",
+    "why": "Niemeyer made the MAC one reinforced-concrete form: the structure is the shape. The building is 16 m high. Its saucer, 50 m across, sits on one central cylinder and overhangs it by about 20 m on every side. Niemeyer said the architecture rises from the central support like a flower. The museum stands on a headland above Guanabara Bay, and its main exhibition hall has no columns.",
     "readMore": "https://en.wikipedia.org/wiki/Niter%C3%B3i_Contemporary_Art_Museum",
     "architect": {
       "answer": "Oscar Niemeyer",
@@ -21,15 +21,15 @@ export const PUZZLES = [
         "Paulo Mendes da Rocha",
         "Ruy Ohtake"
       ],
-      "note": "Accounts differ on whether the collector João Sattamini or Niemeyer's daughter Anna Maria first asked the city to take the collection. Bruno Contarini was the structural engineer."
+      "note": "Bruno Contarini was the structural engineer. Sources disagree on who first asked the city to take João Sattamini's art collection: Sattamini himself or Niemeyer's daughter, Anna Maria."
     },
     "year": {
       "value": 1996,
       "tolerance": 2,
-      "note": "The city of Niterói invited Niemeyer to design the museum in 1991, after agreeing to house João Sattamini's collection. It opened on 2 September 1996."
+      "note": "Niterói asked Niemeyer to design the museum in 1991, after agreeing to house João Sattamini's collection. It opened on 2 September 1996."
     },
     "dimension": {
-      "label": "Saucer diameter",
+      "label": "Width of the saucer",
       "value": 50,
       "unit": "m",
       "line": [
@@ -47,7 +47,7 @@ export const PUZZLES = [
         "bush-hammered",
         "hypar-shell"
       ],
-      "explain": "The MAC is cast-in-place reinforced concrete. A single central cylinder carries the saucer, which cantilevers about 20 m from it, and the smooth concrete is painted white."
+      "explain": "The MAC is smooth reinforced concrete, cast on site and painted white. One central cylinder holds up the saucer, which overhangs it by about 20 m."
     },
     "notes": {
       "truths": [
@@ -56,13 +56,13 @@ export const PUZZLES = [
           "source": "https://en.wikipedia.org/wiki/Niter%C3%B3i_Contemporary_Art_Museum"
         },
         {
-          "text": "A continuous band of windows runs around the saucer, with the glass set at a 40-degree angle.",
+          "text": "A band of windows runs all the way round the saucer, with the glass tilted at 40 degrees.",
           "source": "https://www.archdaily.com/417751/ad-classics-niteroi-contemporary-art-museum-oscar-niemeyer"
         }
       ],
       "lie": {
         "text": "The museum was built to house João Sattamini's collection, which he gave to the city outright.",
-        "correction": "Sattamini lent his 1,217 works to the museum on a long-term loan; he did not give them away.",
+        "correction": "Sattamini lent his 1,217 works to the museum long-term. He did not give them away.",
         "source": "https://periodicos.usp.br/geoliterart/article/download/185618/178384/531970"
       }
     },
@@ -104,7 +104,7 @@ export const PUZZLES = [
     "typeLabel": "Council housing",
     "built": "1968–72",
     "credits": "Architect Ernő Goldfinger for the Greater London Council; contractor F G Minter & Sons",
-    "why": "Trellick Tower shows how Ernő Goldfinger organised a council housing tower in concrete. Lifts, stairs and refuse chutes sit in a separate slim service tower, joined to the 31-storey slab by bridges at every third floor. Corridors run only on those floors, and two-bedroom flats above and below are reached from them by internal stairs. Goldfinger developed the scheme from his Balfron Tower in Poplar. The in-situ concrete is bush-hammered and the balconies are clad in timber. It was listed Grade II* in 1998.",
+    "why": "Ernő Goldfinger split his council tower in two. Lifts, stairs and rubbish chutes sit in a slim separate service tower, joined to the 31-storey main block by bridges on every third floor. Only those floors have corridors. Two-bedroom flats above and below are reached from them by stairs inside the flats. Goldfinger developed the design from his Balfron Tower in Poplar. The concrete was cast on site and bush-hammered (hammered rough), and the balconies are clad in timber. It was listed Grade II* in 1998.",
     "readMore": "https://en.wikipedia.org/wiki/Trellick_Tower",
     "architect": {
       "answer": "Ernő Goldfinger",
@@ -115,15 +115,15 @@ export const PUZZLES = [
         "Neave Brown",
         "Le Corbusier"
       ],
-      "note": "Ernő Goldfinger designed the tower for the Greater London Council, as a taller sibling of his Balfron Tower in Poplar. Ian Fleming named the Bond villain Auric Goldfinger after him."
+      "note": "Ernő Goldfinger designed it as a taller sibling of an earlier council tower of his. Ian Fleming named the Bond villain Goldfinger after him."
     },
     "year": {
       "value": 1972,
       "tolerance": 2,
-      "note": "The Greater London Council commissioned the tower in 1966. It was built from 1968 to 1972 and officially opened on 28 June 1972."
+      "note": "The Greater London Council commissioned it in 1966. It was built from 1968 to 1972 and officially opened on 28 June 1972."
     },
     "dimension": {
-      "label": "Overall height",
+      "label": "Height",
       "value": 98,
       "unit": "m",
       "line": [
@@ -141,12 +141,12 @@ export const PUZZLES = [
         "precast-modules",
         "fair-faced-ties"
       ],
-      "explain": "The reinforced concrete was cast in place and bush-hammered, with some precast pebble-finished panels and timber cladding on the balconies. Precast panels mark the access corridors on the north face."
+      "explain": "The concrete was cast on site, then bush-hammered: roughened with hammers to show the stones. Some panels are precast with a pebble finish, and the balconies are clad in timber. On the north face, precast panels mark the corridor floors."
     },
     "notes": {
       "truths": [
         {
-          "text": "Flats above and below each corridor floor are reached from it by internal stairs.",
+          "text": "Flats above and below each corridor floor are reached from it by stairs inside the flats.",
           "source": "https://historicengland.org.uk/listing/the-list/list-entry/1246688"
         },
         {
@@ -155,7 +155,7 @@ export const PUZZLES = [
         }
       ],
       "lie": {
-        "text": "It was listed Grade I in 1998.",
+        "text": "In 1998 it was listed as a historic building at Grade I.",
         "correction": "It was listed Grade II* in 1998, one grade below Grade I.",
         "source": "https://historicengland.org.uk/listing/the-list/list-entry/1246688"
       }
@@ -197,7 +197,7 @@ export const PUZZLES = [
     "typeLabel": "University library",
     "built": "1968–70",
     "credits": "William L. Pereira & Associates, architects; Brandow & Johnston, structural engineers. Underground addition (1993): Gunnar Birkerts.",
-    "why": "The library was first designed in steel and switched to reinforced concrete when steel prices rose in the 1960s. Exposed concrete also saved the cost of fireproofing and plastering steel. Sixteen angled cast-in-place piers rise at 45 degrees from the open forum deck to the sixth floor, the widest. They were first planned inside the building and moved outside to free floor space. About 300 steel rods at levels 5 and 6 tie each pier to the one opposite. The concrete carries the horizontal marks of rough form boards.",
+    "why": "The library was first designed in steel. It switched to reinforced concrete when steel prices rose in the 1960s, and bare concrete also saved the cost of fireproofing and plastering steel. Sixteen angled concrete columns, cast on site, rise at 45 degrees from the open forum level to the sixth floor, the widest. They were first planned inside the building and moved outside to free floor space. About 300 steel rods at levels 5 and 6 tie each column to the one opposite. The concrete shows the horizontal marks of the rough boards it was cast against.",
     "readMore": "https://en.wikipedia.org/wiki/Geisel_Library",
     "architect": {
       "answer": "William L. Pereira",
@@ -208,15 +208,15 @@ export const PUZZLES = [
         "Welton Becket",
         "Kallmann McKinnell & Knowles"
       ],
-      "note": "William L. Pereira & Associates designed what was then called the Central University Library. Gunnar Birkerts later added two underground levels that wrap around three sides of it. Louis Kahn's Salk Institute is about 1 km away."
+      "note": "William L. Pereira & Associates designed it, as the Central University Library. Gunnar Birkerts later added two underground floors around three sides of it."
     },
     "year": {
       "value": 1970,
       "tolerance": 2,
-      "note": "Pereira's firm was commissioned in June 1965, and groundbreaking was set for 1 July 1968. The first books were moved in at the end of June 1970, students used the library from the fall 1970 quarter, and it was formally dedicated in 1971."
+      "note": "Pereira's firm was hired in June 1965, and ground-breaking was set for 1 July 1968. The first books moved in at the end of June 1970. Students used it from fall 1970, and it was formally dedicated in 1971."
     },
     "dimension": {
-      "label": "Overall height",
+      "label": "Height",
       "value": 33.5,
       "unit": "m",
       "line": [
@@ -234,7 +234,7 @@ export const PUZZLES = [
         "precast-modules",
         "hypar-shell"
       ],
-      "explain": "The cast-in-place concrete was poured against rough form boards and left exposed, so it shows their horizontal pattern."
+      "explain": "The concrete was cast on site against rough timber boards and left bare, so it shows their horizontal pattern."
     },
     "notes": {
       "truths": [
@@ -243,13 +243,13 @@ export const PUZZLES = [
           "source": "https://libraries.ucsd.edu/about/geisel-library.html"
         },
         {
-          "text": "Before construction began, a half-scale model of one of the outer columns was built and tested.",
+          "text": "Before building began, a half-size model of one of the outer columns was built and tested.",
           "source": "https://en.wikipedia.org/wiki/Geisel_Library"
         }
       ],
       "lie": {
-        "text": "Level 3 was left as an empty floor because the designers had not allowed for the weight of the books.",
-        "correction": "Level 3 is the open outdoor forum, and the stairwell landings on that level open onto it. The story that the floor was left empty because of the weight of the books is a campus legend.",
+        "text": "Level 3 was left empty because the designers had not allowed for the weight of the books.",
+        "correction": "Level 3 is the open outdoor forum, and the stair landings on that level open onto it. The book-weight story is a campus legend.",
         "source": "https://sandiegomagazine.com/guides/inside-the-icon-geisel-library"
       }
     },
@@ -301,7 +301,7 @@ export const PUZZLES = [
     "typeLabel": "Chapel",
     "built": "2005–07",
     "credits": "Peter Zumthor, architect; Jürg Buchli and Claus Jung, structural engineers; Hermann-Josef Scheidtweiler and his wife, clients and builders; Hans Josephsohn, bronze of the saint",
-    "why": "The chapel's walls record how they were made. A tent of 112 spruce trunks was leaned together and an outer formwork set up on a pentagonal plan. Volunteers working with craftsmen rammed concrete between the two in 24 layers of about 50 cm. A smouldering fire then charred the trunks so they could be pulled out. Outside, the result is a plain 12 m block. Inside, it is a black cavity printed with the trunks and open to the sky.",
+    "why": "The walls show how they were made. 112 spruce trunks were leaned together into a tent, and an outer mould was set up around them on a five-sided plan. Volunteers and craftsmen rammed concrete between the two in 24 layers of about 50 cm. A smouldering fire then charred the trunks so they could be pulled out. Outside, it is a plain 12 m block. Inside, it is a black hollow printed with the trunks and open to the sky.",
     "readMore": "https://nrw-skulptur.net/en/skulptur/bruder-klaus-feldkapelle/",
     "architect": {
       "answer": "Peter Zumthor",
@@ -312,15 +312,15 @@ export const PUZZLES = [
         "Valerio Olgiati",
         "Tadao Ando"
       ],
-      "note": "Hermann-Josef Scheidtweiler and his wife asked Peter Zumthor to design the chapel. The chapel is dedicated to Nicholas of Flüe, the Swiss hermit saint known as Bruder Klaus."
+      "note": "Hermann-Josef Scheidtweiler and his wife asked Peter Zumthor to design it. It is dedicated to Nicholas of Flüe, the Swiss hermit saint known as Bruder Klaus."
     },
     "year": {
       "value": 2007,
       "tolerance": 2,
-      "note": "The clients first contacted Zumthor in about 1998. Construction began in 2005, and Auxiliary Bishop Heiner Koch of Cologne consecrated the chapel on 19 May 2007."
+      "note": "The clients first contacted Zumthor in about 1998. Building began in 2005, and the chapel was consecrated on 19 May 2007."
     },
     "dimension": {
-      "label": "Overall height",
+      "label": "Height",
       "value": 12,
       "unit": "m",
       "line": [
@@ -338,12 +338,12 @@ export const PUZZLES = [
         "slipformed",
         "precast-modules"
       ],
-      "explain": "Concrete was rammed in layers between an outer formwork and a tent of 112 spruce trunks, and a smouldering fire then charred the trunks so they could be pulled out."
+      "explain": "Concrete was rammed in layers between an outer mould and a tent of 112 spruce trunks. A smouldering fire then charred the trunks so they could be pulled out."
     },
     "notes": {
       "truths": [
         {
-          "text": "350 mouth-blown glass plugs seal the holes left in the walls by the formwork ties.",
+          "text": "350 mouth-blown glass plugs fill the holes left in the walls by the mould's tie rods.",
           "source": "https://nrw-skulptur.net/en/skulptur/bruder-klaus-feldkapelle/"
         },
         {
@@ -353,7 +353,7 @@ export const PUZZLES = [
       ],
       "lie": {
         "text": "The floor is polished concrete, cast together with the walls.",
-        "correction": "The floor is a tin-lead alloy that was melted and spread on site.",
+        "correction": "The floor is a tin-lead alloy, melted and spread on site.",
         "source": "https://archi-vr.ti.bfh.ch/Scene/Index/11"
       }
     },
@@ -388,7 +388,7 @@ export const PUZZLES = [
     "typeLabel": "Protestant chapel",
     "built": "1988–89",
     "credits": "Tadao Ando Architect & Associates; structural engineer Ascoral Engineering Associates; contractor Tatsumi Construction",
-    "why": "The chapel is a plain box of smooth in-situ concrete, left bare inside and out. The walls were cast against plywood panels the size of a tatami mat, and the tie holes stay visible in a regular grid. Behind the altar, two glazed slits run the full height and width of the wall to form a cross that lines up with the formwork joints. The budget was small, and the benches are scaffolding planks. It shows what precise fair-faced concrete and daylight can do with very little else.",
+    "why": "The chapel is a plain box of smooth concrete, cast on site and left bare inside and out. The walls were cast against plywood panels the size of a tatami mat, and the tie holes still show in a regular grid. Behind the altar, two glazed slits run the full height and width of the wall. They form a cross that lines up with the panel joints. The budget was small, and the benches are scaffolding planks. It shows what precise, bare concrete and daylight can do with very little else.",
     "readMore": "https://en.wikipedia.org/wiki/Church_of_the_Light",
     "architect": {
       "answer": "Tadao Ando",
@@ -399,15 +399,15 @@ export const PUZZLES = [
         "Fumihiko Maki",
         "Arata Isozaki"
       ],
-      "note": "Tadao Ando designed it with his office, Tadao Ando Architect & Associates. It is often grouped with two other churches of his, the Chapel on Mount Rokko and the Church on the Water."
+      "note": "Tadao Ando designed it with his office. It is often grouped with two of his other churches: the Chapel on Mount Rokko and the Church on the Water."
     },
     "year": {
       "value": 1989,
       "tolerance": 2,
-      "note": "Ando designed the chapel in 1987–88. Construction was under way in 1988, and the chapel was completed in 1989. He added a Sunday school building on the same site in 1999."
+      "note": "Ando designed it in 1987–88. Building was under way in 1988, and it was finished in 1989. He added a Sunday school on the same site in 1999."
     },
     "dimension": {
-      "label": "Width of each of the chapel's three cubes",
+      "label": "Width of one of its three cubes",
       "value": 5.9,
       "unit": "m",
       "line": [
@@ -425,7 +425,7 @@ export const PUZZLES = [
         "bush-hammered",
         "precast-modules"
       ],
-      "explain": "The walls were cast in place against smooth plywood panels about 90 by 180 cm, the size of a tatami mat, and the round recesses left by the form ties stay exposed in a regular grid."
+      "explain": "The walls were cast on site against smooth plywood panels about 90 by 180 cm, the size of a tatami mat. The round holes left by the ties that held the panels stay exposed in a regular grid."
     },
     "notes": {
       "truths": [
@@ -440,7 +440,7 @@ export const PUZZLES = [
       ],
       "lie": {
         "text": "The cross has always been open to the air, with no glass in the slits.",
-        "correction": "The slits are glazed. Ando had proposed leaving the cross open, and the church that commissioned it wanted glass. His full-size copy for a 2017 exhibition in Tokyo had no glass.",
+        "correction": "The slits are glazed. Ando proposed leaving the cross open, but the church wanted glass. His full-size copy for a 2017 exhibition in Tokyo had no glass.",
         "source": "https://www.dezeen.com/?p=1146690"
       }
     },

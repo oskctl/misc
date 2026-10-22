@@ -1,7 +1,6 @@
 // The bottom-sheet panels: how to play, stats and settings.
 import { h } from './dom.js';
-import { computeStats, BONUS_KEYS } from './stats.js';
-import { ROUND_LABELS } from './rounds.js';
+import { computeStats } from './stats.js';
 import { sheetLabel } from './share.js';
 import { formatCountdown } from './daily.js';
 
@@ -24,35 +23,29 @@ export function closePanel() {
 
 export function helpContent({ name }) {
   return [
-    h('p', {}, h('strong', { text: 'Name the concrete building. You have six guesses.' })),
-    h('p', { text: 'Guess the building, its architect or its city. A wrong building or city shows how far away the answer is and which way. Each wrong guess adds detail to the drawing.' }),
-    h('p', { text: 'Then five quick bonus questions: architect, year, size, concrete, and spot the lie.' }),
+    h('p', {}, h('strong', { text: 'One concrete building a day.' })),
+    h('p', { text: 'Pick what to guess: its city (×1 points), architect (×1.5) or the building itself (×2). You get six guesses. A wrong city or building shows how far away the answer is and which way. Each wrong guess adds detail to the drawing.' }),
+    h('p', { text: 'Then bonus questions, two tries each: the categories you didn\'t pick, the year, the size, the concrete, and one false fact.' }),
     h('p', { class: 'hint', text: `A new building every day at midnight. ${name} is named for Mark.` }),
   ];
 }
 
-export function statsContent({ games, latestIssued, todayNo, countdownAt, nextLabel }) {
+export function statsContent({ games, latestIssued, countdownAt, nextLabel, leaderboard = null }) {
   const st = computeStats(games, latestIssued);
-  const max = Math.max(1, ...Object.values(st.distribution));
-  const today = games[todayNo];
-  const todayKey = today && today.status !== 'playing' ? (today.status === 'won' ? String(today.guesses.length) : 'X') : null;
+  const fmt = n => (Number.isInteger(n) ? String(n) : n.toFixed(1));
+  const label = { city: 'City', architect: 'Architect', building: 'Building' };
   return [
     h('div', { class: 'bignums' },
-      [[st.played, 'Played'], [st.winPct, 'Win %'], [st.current, 'Streak'], [st.best, 'Best']].map(([v, k]) =>
+      [[st.played, 'Played'], [fmt(st.totalPoints), 'Points'], [fmt(Math.round(st.averagePoints * 10) / 10), 'Average'], [st.current, 'Streak']].map(([v, k]) =>
         h('div', {}, h('b', { text: String(v) }), h('span', { text: k })))),
-    h('h3', { text: 'Guess distribution' }),
-    h('div', { class: 'dist' }, Object.entries(st.distribution).map(([k, v]) =>
-      h('div', {}, h('span', { text: k }), h('i', {
-        class: [v ? '' : 'zero', k === todayKey ? 'today' : ''].join(' ').trim(),
-        style: `width: ${Math.max(8, (v / max) * 100)}%`,
-      }, String(v))))),
-    h('h3', { text: `Bonus questions · average ${st.bonusAverage.toFixed(1)} / 5` }),
-    h('div', { class: 'passrates' }, BONUS_KEYS.map(k => {
-      const r = st.bonus[k];
-      return h('div', {}, h('b', { text: r.played ? `${Math.round((r.passed / r.played) * 100)}%` : '–' }), ROUND_LABELS[k].toUpperCase());
-    })),
+    st.points.length ? h('h3', { text: 'Your days' }) : null,
+    st.points.length ? h('div', { class: 'recap' }, st.points.slice().reverse().map(p => [
+      h('span', { class: 'k', text: `No. ${sheetLabel(p.no)}` }),
+      h('span', { text: p.won ? `${label[p.category]} in ${p.guesses}/6` : `${label[p.category]} X/6` }),
+      h('span', { class: 'ok', text: fmt(p.points) }),
+    ])) : null,
+    leaderboard,
     h('p', { class: 'countdown' }, nextLabel, countdownAt ? [' ', countdownEl(countdownAt)] : null),
-    h('p', { class: 'hint', text: 'Streaks count sheets won on the day they were issued (or the next day, if started on the day).' }),
   ];
 }
 

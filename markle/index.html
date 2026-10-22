@@ -32,18 +32,13 @@
 </header>
 
 <main id="app" class="page">
-  <p class="loading label">Issuing today's drawing…</p>
+  <p class="loading label">Loading today's drawing…</p>
 </main>
 
 <form class="composer" id="composer" autocomplete="off" hidden>
   <div class="composer-inner">
     <ul class="suggest" id="suggest" role="listbox" aria-label="Suggestions" hidden></ul>
     <p class="composer-msg" id="composer-msg" role="status" hidden></p>
-    <div class="seg kinds" role="group" aria-label="What to guess">
-      <button type="button" data-kind="building" aria-pressed="true">Building</button>
-      <button type="button" data-kind="architect" aria-pressed="false">Architect</button>
-      <button type="button" data-kind="city" aria-pressed="false">City</button>
-    </div>
     <div class="composer-row">
       <label class="sr-only" for="guess-input">Your guess</label>
       <input id="guess-input" name="guess" type="text" inputmode="search" enterkeyhint="go"

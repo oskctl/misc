@@ -15,9 +15,11 @@ import { computeStats } from './stats.js';
 import { buildSheet, CLOSEUP_FRACTIONS } from './sheet.js';
 import { keyPlan } from './keyplan.js';
 import { renderBonus } from './bonus.js';
-import { ROUNDS, ROUND_LABELS, settled, formatMetres } from './rounds.js';
+import { postScore, leaderboard } from './board.js';
+import { ROUNDS, ROUND_LABELS, CATEGORIES, roundsFor, settled, formatMetres } from './rounds.js';
+import { MULTIPLIER, CATEGORY_LABELS, mainPoints, questionPoints, totalPoints, formatPoints } from './score.js';
 import {
-  KIND_LABELS, architectList, cityList, searchArchitects, searchCities, kindOf, cityFeedback, architectCorrect,
+  KIND_LABELS, architectList, cityList, cityKey, searchArchitects, searchCities, kindOf, cityFeedback, architectCorrect,
 } from './targets.js';
 import {
   openPanel, closePanel, helpContent, statsContent, settingsContent, tickCountdowns, countdownEl,
@@ -69,6 +71,8 @@ const homeNo = () => {
 const known = code => (kindOf(code) === 'architect' ? archByKey.has(code.slice(2))
   : kindOf(code) === 'city' ? cityByKey.has(code.slice(2)) : byId.has(code));
 const guessesOf = rec => (rec?.guesses || []).filter(known);
+
+const categoryOf = rec => rec?.category || (rec?.guesses?.length ? 'building' : null);
 
 function recordFor(no, create = false) {
   const bag = isFuture(no) ? previewGames : state.games;
@@ -229,7 +233,8 @@ function refresh({ newRow = -1 } = {}) {
   const status = rec.status;
   const finished = status !== 'playing';
   const closeup = (rec.mode ?? state.settings.mode) === 'closeup';
-  const stage = closeup ? 6 : stageFor(guesses, answer.id);
+  const stage = closeup || finished ? 6 : Math.min(6, guesses.length + 1);
+  const category = categoryOf(rec);
   const animate = newRow >= 0;
 
   // The scale bar would answer the Dimension round, so it only appears once that round is
@@ -240,29 +245,54 @@ function refresh({ newRow = -1 } = {}) {
   sheet.showSurface(settled(rec.bonus?.spec) || Boolean(rec.bonus?.done));
   sheet.setZoom(closeup && !finished ? CLOSEUP_FRACTIONS[guesses.length] : null);
   sheet.showDimension(finished && settled(rec.bonus?.dimension) ? 'answer' : null);
-  // Hints: what the player has pinned down, then the type and country as lives run low.
-  const found = kind => guesses.some(c => kindOf(c) === kind && guessIsRight(c));
+  // Hints: facts the player has pinned down, plus type and country as guesses run low. Nothing
+  // that a bonus question still asks is shown.
+  const b = rec.bonus || {};
+  const won = status === 'won';
+  const cityKnown = (category === 'city' && won) || settled(b.city);
+  const archKnown = (category === 'architect' && won) || settled(b.architect);
+  const late = n => !finished && !closeup && guesses.length >= n;
   const hint = (k, v, open) => h('span', { class: `hint-chip${open ? ' on' : ''}` },
     h('span', { class: 'k', text: k }), h('span', { class: 'v', text: open ? v : '?' }));
-  const wrong = guesses.filter(c => !guessIsRight(c)).length;
   view.hints.replaceChildren(
-    hint('Type', puzzle.typeLabel, finished || (!closeup && wrong >= 3)),
-    hint('Country', answer.country, finished || found('city') || (!closeup && wrong >= 4)),
-    hint('City', answer.city, finished || found('city') || (!closeup && wrong >= 5)),
-    hint('Architect', puzzle.architect.answer, found('architect') || (finished && settled(rec.bonus?.architect))),
+    hint('Type', puzzle.typeLabel, finished || late(3)),
+    hint('Country', answer.country, cityKnown || late(4)),
+    ...(category === 'city' ? [] : [hint('City', answer.city, cityKnown || late(5))]),
+    hint('Architect', puzzle.architect.answer, archKnown),
   );
   const left = MAX_GUESSES - guesses.length;
-  view.lives.replaceChildren(...(finished ? [] : [
-    h('span', { class: 'lives-k', text: `${left} ${left === 1 ? 'guess' : 'guesses'} left` }),
+  view.lives.replaceChildren(...(finished || !category ? [] : [
+    h('span', { class: 'lives-k', text: `${CATEGORY_LABELS[category]} · ${left} ${left === 1 ? 'guess' : 'guesses'} left` }),
     h('span', { class: 'dots', 'aria-hidden': 'true' }, Array.from({ length: MAX_GUESSES }, (_, i) => h('i', { class: i < left ? 'on' : '' }))),
   ]));
   view.rows.replaceChildren(...guesses.map((c, i) => guessRow(c, i, i === newRow)));
 
-  $('composer').hidden = finished;
-  document.body.classList.toggle('playing', !finished);
-  if (finished) renderResult(rec, animate); else view.result.replaceChildren();
+  $('composer').hidden = finished || !category;
+  if (category && kind !== category) setKind(category);
+  document.body.classList.toggle('playing', !finished && Boolean(category));
+  if (finished) renderResult(rec, animate);
+  else if (!category) view.result.replaceChildren(pickCard());
+  else view.result.replaceChildren();
   // Bring the newest feedback row into view above the guess box.
   if (animate && !finished) view.rows.children[newRow]?.scrollIntoView({ block: 'nearest', behavior: smooth() });
+}
+
+// The day's choice: one category, six guesses. Harder categories score more.
+function pickCard() {
+  const pick = c => {
+    const rec = recordFor(view.no, true);
+    rec.category = c;
+    save();
+    refresh();
+    input.focus();
+  };
+  return h('section', { class: 'card pick', 'aria-label': 'Pick a category' },
+    h('h2', { class: 'q', text: 'Pick a category to guess today.' }),
+    h('p', { class: 'hint', text: 'You get six guesses. The ones you don\'t pick come back as bonus questions.' }),
+    h('div', { class: 'pick-row' }, CATEGORIES.map(c => h('button', { type: 'button', class: 'tile pick-btn', onclick: () => pick(c) },
+      h('span', { class: 'pick-name', text: CATEGORY_LABELS[c] }),
+      h('span', { class: 'pick-x', text: `×${MULTIPLIER[c]}` })))),
+  );
 }
 
 // ---------- Result sheet ----------
@@ -273,10 +303,15 @@ function renderResult(rec, justFinished) {
   const started = ROUNDS.some(k => bonus[k]) || bonus.view;
   const parts = [];
 
-  parts.push(h('section', { class: 'card', 'aria-label': 'Answer' },
-    h('p', { class: `verdict${won ? ' ok' : ''}`, text: won ? `Solved in ${guessesOf(rec).length} of 6` : 'Out of guesses. It was…' }),
-    h('h2', { class: 'answer-name', text: answer.name }),
-    h('p', { class: 'answer-where', text: `${answer.city}, ${answer.country}${answer.status === 'demolished' ? ' · demolished' : ''}` }),
+  const category = categoryOf(rec);
+  const nameKnown = (category === 'building' && won) || settled(bonus.building) || bonus.done;
+  const n = guessesOf(rec).length;
+  parts.push(h('section', { class: 'card', 'aria-label': 'Result' },
+    h('p', { class: `verdict${won ? ' ok' : ''}`, text: won ? `${CATEGORY_LABELS[category]} found in ${n} of 6 · +${formatPoints(mainPoints(rec))} points` : `Out of guesses · 0 points` }),
+    nameKnown ? [
+      h('h2', { class: 'answer-name', text: answer.name }),
+      h('p', { class: 'answer-where', text: `${answer.city}, ${answer.country}${answer.status === 'demolished' ? ' · demolished' : ''}` }),
+    ] : h('p', { class: 'lede', text: 'Now the bonus questions. The answer comes after.' }),
     !bonus.done && !started ? [
       h('div', { class: 'btn-row' }, h('button', { type: 'button', class: 'btn btn-ink', onclick: startBonus }, 'Bonus questions →')),
     ] : null,
@@ -293,12 +328,13 @@ function renderResult(rec, justFinished) {
     });
   }
 
-  if (bonus.done) parts.push(summary(rec));
+  if (bonus.done) parts.push(summary(rec), leaderboard(no));
+  if (!isFuture(no)) postScore(no, { points: totalPoints(rec), category, guesses: guessesOf(rec).length, won, done: Boolean(bonus.done) });
   parts.push(shareBlock(rec));
   result.replaceChildren(...parts);
 
   if (justFinished) {
-    announce(won ? `Correct. It's ${answer.name}.` : `Out of guesses. It was ${answer.name}.`);
+    announce(won ? 'Correct.' : 'Out of guesses.');
     setTimeout(() => result.firstElementChild?.scrollIntoView({ behavior: smooth(), block: 'start' }), 900);
   }
 }
@@ -309,6 +345,8 @@ let focusBonus = false;
 function bonusContext(rec) {
   return {
     puzzle: view.puzzle, record: rec, specs: SPECS, svgText: DRAWINGS[view.puzzle.drawing],
+    answer: view.answer, buildings: BUILDINGS, cities,
+    answerCity: cityByKey.get(cityKey(view.answer.city, view.answer.country)),
     save,
     announce,
     onSettled: () => { focusBonus = view.result.contains(document.activeElement); refreshTitleBlockOnly(); },
@@ -329,15 +367,9 @@ function refreshTitleBlockOnly() {
 }
 
 function startBonus() {
-  // An architect found in the main round counts as the first bonus question.
-  const rec0 = recordFor(view.no);
-  if (rec0 && guessesOf(rec0).some(c => kindOf(c) === 'architect' && guessIsRight(c))) {
-    rec0.bonus ||= {};
-    rec0.bonus.architect ||= { pass: true, pick: view.puzzle.architect.answer, found: true };
-  }
   const rec = recordFor(view.no);
   rec.bonus ||= {};
-  rec.bonus.view = 'architect';
+  rec.bonus.view = roundsFor(categoryOf(rec))[0];
   save();
   refresh();
   view.result.querySelector('section[aria-label="Title block"]')?.scrollIntoView({ behavior: smooth(), block: 'start' });
@@ -346,37 +378,33 @@ function startBonus() {
 function summary(rec) {
   const { puzzle, answer } = view;
   const b = rec.bonus;
+  const category = categoryOf(rec);
   const val = {
+    building: answer.name,
+    city: `${answer.city}, ${answer.country}`,
     architect: puzzle.architect.answer,
     year: String(puzzle.year.value),
     dimension: `${puzzle.dimension.label}: ${formatMetres(puzzle.dimension.value, puzzle.dimension.unit, { exact: true })}`,
     spec: SPECS[puzzle.spec.answer] || puzzle.spec.answer,
-    notes: `Lie: ${puzzle.notes.lie.text}`,
+    notes: puzzle.notes.lie.text,
   };
-  const guesses = guessesOf(rec).filter(c => kindOf(c) !== 'architect')
-    .map(c => (kindOf(c) === 'city' ? cityByKey.get(c.slice(2)) : byId.get(c)));
-  return h('section', { class: 'card', 'aria-label': 'The completed sheet' },
-    h('p', { class: 'q-k', text: `Bonus · ${ROUNDS.filter(k => b[k]?.pass).length}/5` }),
-    h('div', { class: 'recap' }, ROUNDS.map(k => [
-      h('span', { class: 'k', text: ROUND_LABELS[k] }),
-      h('span', { text: val[k] }),
-      h('span', { class: `ok${b[k]?.pass ? '' : ' no'}`, text: b[k]?.pass ? '✓' : '✗' }),
-    ])),
-    h('p', { class: 'q-k', text: 'Why it matters' }),
+  return h('section', { class: 'card', 'aria-label': 'Score' },
+    h('p', { class: 'score-big', text: `${formatPoints(totalPoints(rec))} points` }),
+    h('div', { class: 'recap' },
+      h('span', { class: 'k', text: CATEGORY_LABELS[category] }),
+      h('span', { text: rec.status === 'won' ? `Found in ${guessesOf(rec).length} of 6` : 'Not found' }),
+      h('span', { class: `ok${rec.status === 'won' ? '' : ' no'}`, text: `+${formatPoints(mainPoints(rec))}` }),
+      roundsFor(category).map(k => [
+        h('span', { class: 'k', text: ROUND_LABELS[k] }),
+        h('span', { text: val[k] }),
+        h('span', { class: `ok${b[k]?.pass ? '' : ' no'}`, text: `+${formatPoints(questionPoints(b[k]))}` }),
+      ])),
     h('p', { class: 'lede', text: puzzle.why }),
-    h('ul', { class: 'notes' },
-      puzzle.notes.truths.map(t => h('li', { text: t.text })),
-      h('li', {}, `Not true: ${puzzle.notes.lie.text.replace(/\.$/, '')}. ${puzzle.notes.lie.correction}`),
-    ),
-    h('p', { class: 'hint', text: `${puzzle.credits}. Built ${puzzle.built}.` }),
-    h('p', { class: 'q-k', text: 'Key plan' }),
-    h('div', { class: 'keyplan' }, keyPlan(guesses, answer)),
     h('div', { class: 'btn-row' },
       h('a', { class: 'btn', href: puzzle.readMore, target: '_blank', rel: 'noopener' }, 'Read more ↗'),
       h('a', { class: 'btn', href: `https://www.openstreetmap.org/?mlat=${answer.lat}&mlon=${answer.lon}#map=17/${answer.lat}/${answer.lon}`, target: '_blank', rel: 'noopener' }, 'Map ↗'),
     ),
-    h('p', { class: 'sources' }, 'Sources: ', puzzle.sources.flatMap((u, i) => [i ? ' · ' : '', h('a', { href: u, target: '_blank', rel: 'noopener' }, hostOf(u))])),
-    h('p', { class: 'hint', text: 'Drawn from published dimensions; details simplified.' }),
+    h('p', { class: 'sources' }, `${puzzle.credits}. Sources: `, puzzle.sources.flatMap((u, i) => [i ? ' · ' : '', h('a', { href: u, target: '_blank', rel: 'noopener' }, hostOf(u))])),
   );
 }
 
@@ -385,16 +413,11 @@ function hostOf(u) {
 }
 
 function currentShareText(rec) {
-  const answer = view.answer;
-  const rows = guessesOf(rec).map(c => (kindOf(c) === 'architect' ? { architect: true, correct: guessIsRight(c), pct: 0 }
-    : kindOf(c) === 'city' ? cityFeedback(cityByKey.get(c.slice(2)), answer) : feedback(byId.get(c), answer)));
-  const st = computeStats(state.games, latestIssued());
   const base = CONFIG.shareUrl || (location.protocol.startsWith('http') && !/claudeusercontent|claude\.ai/.test(location.host) ? location.origin + location.pathname : '');
   const url = base && (setMode || view.no !== latestIssued()) ? `${base}#s${sheetLabel(view.no)}` : base;
   return shareText({
-    name: CONFIG.name, no: view.no, rows, won: rec.status === 'won',
-    closeup: rec.mode === 'closeup', bonus: rec.bonus, streak: isFuture(view.no) || setMode ? 0 : st.current,
-    url, contrast: state.settings.contrast,
+    name: CONFIG.name, no: view.no, category: categoryOf(rec), won: rec.status === 'won',
+    guesses: guessesOf(rec).length, points: totalPoints(rec), done: Boolean(rec.bonus?.done), url,
   });
 }
 
@@ -404,7 +427,7 @@ function shareBlock(rec) {
   const next = view.no + 1;
   const hasNext = puzzleByNo.has(next);
   return h('section', { class: 'card', 'aria-label': 'Share' },
-    h('p', { class: 'q-k', text: 'Your result, spoiler-free' }),
+    h('p', { class: 'q-k', text: 'Share your score' }),
     pre,
     h('div', { class: 'btn-row' },
       h('button', {
@@ -574,7 +597,7 @@ function makeGuess(code, label) {
   if (rec.status !== 'playing') return;
   if (rec.guesses.includes(code)) { setMsg('Already guessed.'); return; }
   rec.guesses.push(code);
-  rec.status = statusOf(rec.guesses, view.answer.id);
+  rec.status = rec.guesses.some(guessIsRight) ? 'won' : rec.guesses.length >= MAX_GUESSES ? 'lost' : 'playing';
   if (rec.status !== 'playing') {
     rec.finishedOn = todayKey();
     // On time: won on its issue day, or started that day and finished the day after.
@@ -615,13 +638,13 @@ function showPanel(kind) {
     const next = latestIssued() + 1;
     if (setMode) {
       openPanel('Statistics', statsContent({
-        games: state.games, latestIssued: latestIssued(), todayNo: view?.no, countdownAt: null,
-        nextLabel: 'Launch set: streaks start when the daily sheets do.',
+        games: state.games, latestIssued: latestIssued(), countdownAt: null,
+        nextLabel: 'Launch set: streaks start when the daily sheets do.', leaderboard: view ? leaderboard(view.no) : null,
       }));
       return;
     }
     openPanel('Statistics', statsContent({
-      games: state.games, latestIssued: latestIssued(), todayNo: latestIssued(),
+      games: state.games, latestIssued: latestIssued(), leaderboard: leaderboard(latestIssued()),
       countdownAt: puzzleByNo.has(next) ? nextIssueAt() : null,
       nextLabel: puzzleByNo.has(next) ? `No. ${sheetLabel(next)} issues in` : `No. ${sheetLabel(next)} is on the drawing board.`,
     }));

@@ -1,10 +1,21 @@
 // Bonus questions: the rules, kept free of DOM. Every question is one pick from four options;
 // option order is seeded by sheet number so everyone sees the same layout.
 
-export const ROUNDS = ['architect', 'year', 'dimension', 'spec', 'notes'];
+import { distanceKm } from './geo.js';
+
+// The categories a player can pick for the main round; the two they don't pick come back as
+// bonus questions, followed by the four fixed ones.
+export const CATEGORIES = ['city', 'architect', 'building'];
+const FIXED = ['year', 'dimension', 'spec', 'notes'];
+export const ROUNDS = ['building', 'architect', 'city', ...FIXED];
 export const ROUND_LABELS = {
-  architect: 'Architect', year: 'Year', dimension: 'Size', spec: 'Concrete', notes: 'Lie',
+  building: 'Building', architect: 'Architect', city: 'City', year: 'Year', dimension: 'Size', spec: 'Concrete', notes: 'False fact',
 };
+export const TRIES = 2;
+
+export function roundsFor(category = 'building') {
+  return [...['building', 'architect', 'city'].filter(k => k !== category), ...FIXED];
+}
 
 export function rng(seed) {
   let a = seed >>> 0;
@@ -72,6 +83,19 @@ export function settled(result) {
   return typeof result?.pass === 'boolean';
 }
 
-export function nextRound(bonus) {
-  return ROUNDS.find(k => !settled(bonus?.[k])) ?? null;
+export function nextRound(bonus, rounds = roundsFor()) {
+  return rounds.find(k => !settled(bonus?.[k])) ?? null;
+}
+
+// The answer among its three nearest neighbours in the pool, so a near miss stays tempting.
+export function buildingOptions(puzzle, answer, buildings) {
+  const near = buildings.filter(b => b.id !== answer.id && b.lat != null)
+    .sort((a, b) => distanceKm(a, answer) - distanceKm(b, answer)).slice(0, 3);
+  return shuffled([answer, ...near], seedFor(puzzle.no, 'building'));
+}
+
+export function cityOptions(puzzle, answerCity, cities) {
+  const near = cities.filter(c => c.key !== answerCity.key)
+    .sort((a, b) => distanceKm(a, answerCity) - distanceKm(b, answerCity)).slice(0, 3);
+  return shuffled([answerCity, ...near], seedFor(puzzle.no, 'city'));
 }

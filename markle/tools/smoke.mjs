@@ -49,6 +49,8 @@ for (const p of PUZZLES) {
   await page.goto(`${url}#s${String(p.no).padStart(3, '0')}`);
   await page.waitForTimeout(400);
   if (await page.locator('#panel[open]').count()) await page.click('#panel-close');
+  await page.click('button.pick-btn:has-text("Building")');
+  await page.waitForTimeout(200);
   const decoy = BUILDINGS.find(b => b.id !== p.answer && b.country !== answer.country);
   await pick(decoy.name);
   await shot(`${p.no}-1-after-miss`);
@@ -57,17 +59,19 @@ for (const p of PUZZLES) {
   const verdict = await page.locator('.verdict').first().textContent();
   if (!/2 of 6/.test(verdict)) { console.error(`  ✗ sheet ${p.no}: expected a 2/6 win, saw "${verdict}"`); failures += 1; }
   await page.click('button:has-text("Bonus questions")');
-  for (let round = 0; round < 5; round += 1) {
+  for (let round = 0; round < 6; round += 1) {
     await page.waitForTimeout(250);
-    await page.locator('button.tile:not([disabled])').first().click();
-    await page.waitForTimeout(150);
+    for (let t = 0; t < 2 && !(await page.locator('button:has-text("Next →"), button:has-text("See results")').count()); t += 1) {
+      await page.locator('section[aria-label="Title block"] button.tile:not([disabled])').first().click();
+      await page.waitForTimeout(150);
+    }
     await shot(`${p.no}-2-round-${round + 1}`);
     await page.click('button:has-text("Next →"), button:has-text("See results")');
   }
   await page.waitForTimeout(600);
   await shot(`${p.no}-3-summary`);
   const share = await page.locator('.share-pre').textContent();
-  if (!share.includes(`#Markle ${String(p.no).padStart(3, '0')} · 2/6`) || !/ \d\/5/.test(share)) {
+  if (!share.includes(`Markle ${String(p.no).padStart(3, '0')} · Building in 2/6 · `) || !/points/.test(share)) {
     console.error(`  ✗ sheet ${p.no}: unexpected share text:\n${share}`);
     failures += 1;
   } else console.log(`  ✓ sheet ${String(p.no).padStart(3, '0')} ${answer.name}`);

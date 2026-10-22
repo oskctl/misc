@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { shuffled, architectOptions, yearOptions, dimensionOptions, noteOptions, formatMetres, nextRound } from '../src/rounds.js';
+import { shuffled, architectOptions, yearOptions, dimensionOptions, noteOptions, formatMetres, nextRound, roundsFor } from '../src/rounds.js';
+import { mainPoints, questionPoints, totalPoints } from '../src/score.js';
 
 const puzzle = {
   no: 3,
@@ -56,10 +57,23 @@ test('year options: four, ten-year steps, never in the future', () => {
   assert.ok(yearOptions({ ...puzzle, year: { value: 2007 } }, 2026).every(v => v <= 2026));
 });
 
-test('next unsettled round', () => {
-  assert.equal(nextRound({}), 'architect');
-  assert.equal(nextRound({ architect: { pass: false }, year: { tries: [1980] } }), 'year');
-  assert.equal(nextRound({ architect: { pass: 1 } }), 'architect');
-  const all = { architect: { pass: true }, year: { pass: true }, dimension: { pass: false }, spec: { pass: true }, notes: { pass: true } };
-  assert.equal(nextRound(all), null);
+test('rounds follow the category: the two not picked, then the four fixed ones', () => {
+  assert.deepEqual(roundsFor('city'), ['building', 'architect', 'year', 'dimension', 'spec', 'notes']);
+  assert.deepEqual(roundsFor('building'), ['architect', 'city', 'year', 'dimension', 'spec', 'notes']);
+  const r = roundsFor('architect');
+  assert.equal(nextRound({}, r), 'building');
+  assert.equal(nextRound({ building: { pass: false }, city: { picks: ['x'] } }, r), 'city');
+  assert.equal(nextRound(Object.fromEntries(r.map(k => [k, { pass: true }])), r), null);
 });
+
+test('points: category multiplier on the main round, 1 or 0.5 per bonus question', () => {
+  assert.equal(mainPoints({ status: 'won', category: 'building', guesses: ['a', 'b'] }), 10);
+  assert.equal(mainPoints({ status: 'won', category: 'architect', guesses: ['a'] }), 9);
+  assert.equal(mainPoints({ status: 'lost', category: 'city', guesses: [1, 2, 3, 4, 5, 6] }), 0);
+  assert.equal(questionPoints({ pass: true, picks: ['a'] }), 1);
+  assert.equal(questionPoints({ pass: true, picks: ['b', 'a'] }), 0.5);
+  assert.equal(questionPoints({ pass: false, picks: ['b', 'c'] }), 0);
+  const rec = { status: 'won', category: 'city', guesses: ['c:x'], bonus: { building: { pass: true, picks: ['a'] }, year: { pass: true, picks: ['x', 'y'] } } };
+  assert.equal(totalPoints(rec), 6 + 1 + 0.5);
+});
+
