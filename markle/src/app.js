@@ -17,7 +17,7 @@ import { keyPlan } from './keyplan.js';
 import { renderBonus } from './bonus.js';
 import { ROUNDS, ROUND_LABELS, settled, formatMetres } from './rounds.js';
 import {
-  openPanel, closePanel, helpContent, statsContent, settingsContent, registerContent, tickCountdowns, countdownEl,
+  openPanel, closePanel, helpContent, statsContent, settingsContent, tickCountdowns, countdownEl,
 } from './panels.js';
 
 const KEY = 'markle:v1';
@@ -53,8 +53,6 @@ const setMode = CONFIG.mode !== 'daily';
 const issuedNo = () => (setMode ? PUZZLES.length : puzzleNumberOn(CONFIG.startDate, todayKey()));
 const latestIssued = () => Math.min(PUZZLES.length, Math.max(0, issuedNo()));
 const isFuture = no => no > issuedNo();
-const dateOf = no => (setMode ? 'Launch set' : new Date(dateOfPuzzle(CONFIG.startDate, no) + 'T12:00:00')
-  .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
 // The sheet to open by default: today's in daily mode; the first unfinished one in the launch set.
 const homeNo = () => {
   if (!setMode) return latestIssued();
@@ -432,7 +430,6 @@ function shareBlock(rec) {
       : h('p', { class: 'countdown' },
         hasNext ? `No. ${sheetLabel(next)} issues in ` : `No. ${sheetLabel(next)} is on the drawing board. `,
         hasNext ? countdownEl(nextIssueAt()) : null),
-    h('button', { type: 'button', class: 'linkish', onclick: () => showPanel('register') }, 'Open the register'),
   );
 }
 
@@ -466,7 +463,7 @@ function renderSuggest() {
   const guessed = new Set(recordFor(view.no)?.guesses || []);
   if (!hits.length) {
     closeSuggest();
-    setMsg('Not in the register. Try the city or country.', true);
+    setMsg('Not on the list. Try the city or country.', true);
     return;
   } else {
     list.replaceChildren(...hits.map(({ b, alias }, i) => h('li', {
@@ -656,12 +653,6 @@ function showPanel(kind) {
           toast('That code did not load. Check you copied all of it.');
         }
       },
-    }));
-  }
-  if (kind === 'register') {
-    openPanel('Drawing register', registerContent({
-      puzzles: PUZZLES, drawings: DRAWINGS, issuedNo: issuedNo(), preview, games: state.games, previewGames,
-      dateOf, onOpen: no => { closePanel(); mount(no); window.scrollTo({ top: 0 }); },
     }));
   }
 }

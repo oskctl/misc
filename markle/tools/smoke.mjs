@@ -72,7 +72,7 @@ for (const p of PUZZLES) {
     failures += 1;
   } else console.log(`  ✓ sheet ${String(p.no).padStart(3, '0')} ${answer.name}`);
 }
-for (const panel of ['stats', 'register', 'settings', 'help']) {
+for (const panel of ['stats', 'settings', 'help']) {
   await page.click(`button[data-open=${panel}]`);
   await page.waitForTimeout(300);
   await shot(`panel-${panel}`);

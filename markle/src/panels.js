@@ -1,8 +1,7 @@
-// The four bottom-sheet panels: how to play, stats, settings, and the drawing register.
+// The bottom-sheet panels: how to play, stats and settings.
 import { h } from './dom.js';
 import { computeStats, BONUS_KEYS } from './stats.js';
 import { ROUND_LABELS } from './rounds.js';
-import { thumbnail } from './sheet.js';
 import { sheetLabel } from './share.js';
 import { formatCountdown } from './daily.js';
 
@@ -54,7 +53,7 @@ export function statsContent({ games, latestIssued, todayNo, countdownAt, nextLa
       return h('div', {}, h('b', { text: r.played ? `${Math.round((r.passed / r.played) * 100)}%` : '–' }), ROUND_LABELS[k].toUpperCase());
     })),
     h('p', { class: 'countdown' }, nextLabel, countdownAt ? [' ', countdownEl(countdownAt)] : null),
-    h('p', { class: 'hint', text: 'Streaks count sheets won on the day they were issued (or the next day, if started on the day). Played and win % include the register.' }),
+    h('p', { class: 'hint', text: 'Streaks count sheets won on the day they were issued (or the next day, if started on the day).' }),
   ];
 }
 
@@ -105,32 +104,6 @@ function resetBlock(resetAll) {
   return box;
 }
 
-export function registerContent({ puzzles, drawings, issuedNo, preview, games, previewGames, dateOf, onOpen }) {
-  const rows = puzzles.filter(p => preview || p.no <= issuedNo).slice().reverse();
-  if (!rows.length) return [h('p', { text: 'No sheets have been issued yet.' })];
-  return [
-    preview ? h('p', { class: 'hint', text: 'Preview mode: unissued sheets are open for checking. Results on them are kept apart and never counted.' }) : null,
-    h('ul', { class: 'register' }, rows.map(p => {
-      const future = p.no > issuedNo;
-      const g = future ? previewGames[p.no] : games[p.no];
-      const finished = g && g.status !== 'playing';
-      const result = !g ? 'Issued' : g.status === 'playing' ? 'In progress' : g.status === 'won' ? `${g.guesses.length}/6` : 'X/6';
-      return h('li', {}, h('a', {
-        href: `#s${sheetLabel(p.no)}`,
-        onclick: e => { e.preventDefault(); onOpen(p.no); },
-      },
-        h('span', { class: 'thumb' }, drawings[p.drawing] ? thumbnail(drawings[p.drawing], finished ? 6 : 1, { surface: Boolean(g?.bonus?.done || typeof g?.bonus?.spec?.pass === 'boolean') }) : null),
-        h('span', {},
-          h('span', { class: 'no', text: `No. ${sheetLabel(p.no)}` }),
-          h('span', { class: 'meta', text: `${future ? 'Preview · ' : ''}${dateOf(p.no)}` }),
-        ),
-        h('span', { class: `res ${g?.status === 'lost' ? 'lost' : ''}`, text: future && !g ? 'Preview' : result }),
-      ));
-    })),
-  ];
-}
-
-// A live countdown to an epoch-ms moment; tickCountdowns keeps every one of them current.
 export function countdownEl(at) {
   return h('b', { 'data-countdown': String(at), text: formatCountdown(at - Date.now()) });
 }

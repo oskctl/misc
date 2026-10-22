@@ -100,13 +100,3 @@ export function buildSheet(puzzle, svgText) {
     },
   };
 }
-
-// A static thumbnail of a drawing at a given stage, for the register.
-export function thumbnail(svgText, stage, { surface = true } = {}) {
-  const svg = parseSvg(svgText);
-  svg.classList.add('dwg');
-  svg.setAttribute('data-stage', String(stage));
-  svg.toggleAttribute('data-nosurface', !surface);
-  svg.setAttribute('aria-hidden', 'true');
-  return svg;
-}

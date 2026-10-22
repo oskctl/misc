@@ -95,8 +95,8 @@ textarea, then selects the text for the player.
 every time, never stored as counters. Played, win %, current and best streak, the 1–6/X
 distribution, and pass rates per title-block field. A streak counts sheets won on the day they
 were issued (a sheet started on its day may finish the day after, so midnight doesn't break a
-game in progress), by consecutive sheet number; the register (archive) counts towards played and win %
-but not streaks. Settings has a copy/paste stats code to move devices.
+game in progress), by consecutive sheet number. There is no archive of past sheets: a browsable
+list of drawings gave the upcoming puzzles away. Settings has a copy/paste stats code to move devices.
 
 **The clock.** Sheet *n* is issued at local midnight on `startDate + (n − 1)` days (set in
 `data/config.js`). With `startDate` four days before launch, all five launch sheets are open on
@@ -165,7 +165,7 @@ languages, population and currency, cities, area), each adding an emoji to the s
 midnight reset, stats in the browser, streak in the share text since 2026, archive and sync behind
 a paid tier. Players love the shared daily puzzle, the spoiler-free share and learning something;
 they complain about ads, obscure territories, a 45°-accurate arrow, centre-to-centre distances and
-the paywalled archive. Markle answers those: no ads, a free register, an exact-bearing arrow in the
+the paywalled archive. Markle answers those: no ads, an exact-bearing arrow in the
 game, point buildings instead of country centroids.
 
 **Lessons applied**: two feedback channels; progressive reveal for a drawing-based clue; optional,
