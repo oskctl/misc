@@ -119,7 +119,7 @@ export function registerContent({ puzzles, drawings, issuedNo, preview, games, p
         href: `#s${sheetLabel(p.no)}`,
         onclick: e => { e.preventDefault(); onOpen(p.no); },
       },
-        h('span', { class: 'thumb' }, drawings[p.drawing] ? thumbnail(drawings[p.drawing], finished ? 6 : 1) : null),
+        h('span', { class: 'thumb' }, drawings[p.drawing] ? thumbnail(drawings[p.drawing], finished ? 6 : 1, { surface: Boolean(g?.bonus?.done || typeof g?.bonus?.spec?.pass === 'boolean') }) : null),
         h('span', {},
           h('span', { class: 'no', text: `No. ${sheetLabel(p.no)}` }),
           h('span', { class: 'meta', text: `${future ? 'Preview · ' : ''}${dateOf(p.no)}` }),
