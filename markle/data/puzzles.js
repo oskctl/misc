@@ -52,8 +52,8 @@ export const PUZZLES = [
     "notes": {
       "truths": [
         {
-          "text": "The museum was built to house the collection of João Sattamini, who lent it 1,217 works on a long-term loan.",
-          "source": "https://periodicos.usp.br/geoliterart/article/download/185618/178384/531970"
+          "text": "Oscar Niemeyer was in his eighties when he designed the museum.",
+          "source": "https://en.wikipedia.org/wiki/Niter%C3%B3i_Contemporary_Art_Museum"
         },
         {
           "text": "A continuous band of windows runs around the saucer, with the glass set at a 40-degree angle.",
@@ -61,9 +61,9 @@ export const PUZZLES = [
         }
       ],
       "lie": {
-        "text": "The circular reflecting pool beneath the saucer covers 817 square metres and is 6 metres deep.",
-        "correction": "The pool covers 817 m² but is only 60 cm deep.",
-        "source": "https://www.archdaily.com/417751/ad-classics-niteroi-contemporary-art-museum-oscar-niemeyer"
+        "text": "The museum was built to house João Sattamini's collection, which he gave to the city outright.",
+        "correction": "Sattamini lent his 1,217 works to the museum on a long-term loan; he did not give them away.",
+        "source": "https://periodicos.usp.br/geoliterart/article/download/185618/178384/531970"
       }
     },
     "sources": [
@@ -146,7 +146,7 @@ export const PUZZLES = [
     "notes": {
       "truths": [
         {
-          "text": "The fully glazed boiler house projects from the service tower on the 32nd and 33rd floors.",
+          "text": "Flats above and below each corridor floor are reached from it by internal stairs.",
           "source": "https://historicengland.org.uk/listing/the-list/list-entry/1246688"
         },
         {
@@ -155,8 +155,8 @@ export const PUZZLES = [
         }
       ],
       "lie": {
-        "text": "Corridors run on every second floor, each linked to the service tower by a glazed bridge.",
-        "correction": "The corridors and their glazed bridges to the service tower are on every third floor.",
+        "text": "It was listed Grade I in 1998.",
+        "correction": "It was listed Grade II* in 1998, one grade below Grade I.",
         "source": "https://historicengland.org.uk/listing/the-list/list-entry/1246688"
       }
     },
@@ -347,13 +347,13 @@ export const PUZZLES = [
           "source": "https://nrw-skulptur.net/en/skulptur/bruder-klaus-feldkapelle/"
         },
         {
-          "text": "The floor is a tin-lead alloy that was melted and spread on site.",
-          "source": "https://www.archiweb.cz/en/b/polni-kaple-bruder-klaus"
+          "text": "A bronze of Bruder Klaus by the sculptor Hans Josephsohn stands inside.",
+          "source": "https://nrw-skulptur.net/en/skulptur/bruder-klaus-feldkapelle/"
         }
       ],
       "lie": {
-        "text": "The walls were rammed in 12 layers, each about one metre high.",
-        "correction": "There are 24 layers of about 50 cm each, which add up to the 12 m height.",
+        "text": "The floor is polished concrete, cast together with the walls.",
+        "correction": "The floor is a tin-lead alloy that was melted and spread on site.",
         "source": "https://archi-vr.ti.bfh.ch/Scene/Index/11"
       }
     },

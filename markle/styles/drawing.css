@@ -49,3 +49,6 @@
 @media (prefers-reduced-motion: reduce) {
   .dwg [data-layer], .dwg .sil, .dwg [data-layer] * { transition: none; }
 }
+
+/* Hidden until the concrete question is answered (see sheet.showSurface). */
+.dwg[data-nosurface] [data-layer="4"] :is(.ln3, .dot) { visibility: hidden; }

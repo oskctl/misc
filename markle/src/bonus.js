@@ -106,6 +106,7 @@ export function renderBonus(root, ctx) {
     const mini = buildSheet(puzzle, svgText);
     mini.setStage(6);
     mini.showScaleBar(done);
+    mini.showSurface(false);
     mini.showDimension(done ? 'answer' : 'ask');
     const opts = dimensionOptions(puzzle);
     body.append(

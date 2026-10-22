@@ -84,6 +84,8 @@ export function buildSheet(puzzle, svgText) {
       zoom.style.transform = `scale(${W / cw}) translate(${(-x0 / W) * 100}%, ${(-y0 / H) * 100}%)`;
     },
     showScaleBar(on) { bar.style.visibility = on ? 'visible' : 'hidden'; },
+    // Surface texture shows how the concrete was made, so it stays off until that question is done.
+    showSurface(on) { drawing.toggleAttribute('data-nosurface', !on); },
     // state: null (none), 'ask' (with "?"), or 'answer'
     showDimension(state) {
       dim?.remove();

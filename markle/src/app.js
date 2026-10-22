@@ -221,6 +221,7 @@ function refresh({ newRow = -1 } = {}) {
   const measuring = rec.bonus?.view === 'dimension' && !measured;
   sheet.setStage(stage);
   sheet.showScaleBar(measured);
+  sheet.showSurface(settled(rec.bonus?.spec) || Boolean(rec.bonus?.done));
   sheet.setZoom(closeup && !finished ? CLOSEUP_FRACTIONS[guesses.length] : null);
   sheet.showDimension(finished && settled(rec.bonus?.dimension) ? 'answer' : null);
   sheet.stamp(finished ? (status === 'won' ? 'Approved' : 'Superseded') : null,
