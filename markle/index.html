@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<title>Markle</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="One concrete building a day, drawn, not photographed. Name it in six guesses, then complete the title block.">
+<meta name="theme-color" content="#E7E5E0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121211" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23B9B6AE'/%3E%3Cpath d='M0 9h32M0 16h32M0 23h32' stroke='%23716E67' stroke-width='1'/%3E%3Ccircle cx='24' cy='12.5' r='2' fill='%23C2331C'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="styles/app.css">
+<link rel="stylesheet" href="styles/drawing.css">
+</head>
+<body>
+<header class="bar">
+  <a class="wordmark" href="#" id="home" aria-label="Markle, today's sheet">MARKLE</a>
+  <nav class="tools" aria-label="Menu">
+    <button type="button" class="icon" data-open="stats" aria-label="Statistics">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M6.5 20v-6M11 20V6M15.5 20v-9M20 20v-4"/></svg>
+    </button>
+    <button type="button" class="icon" data-open="settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><path d="M14 4.5v5h4v-5zM6 14.5v5h4v-5z"/></svg>
+    </button>
+    <button type="button" class="icon" data-open="help" aria-label="How to play">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 9a2.9 2.9 0 1 1 4.3 2.5c-.9.5-1.5 1.2-1.5 2.2v.8"/><path d="M12 17.6v.4"/><path d="M3.5 3.5h17v17h-17z"/></svg>
+    </button>
+  </nav>
+</header>
+
+<main id="app" class="page">
+  <p class="loading label">Loading today's drawing…</p>
+</main>
+
+<form class="composer" id="composer" autocomplete="off" hidden>
+  <div class="composer-inner">
+    <ul class="suggest" id="suggest" role="listbox" aria-label="Suggestions" hidden></ul>
+    <p class="composer-msg" id="composer-msg" role="status" hidden></p>
+    <div class="composer-row">
+      <label class="sr-only" for="guess-input">Your guess</label>
+      <input id="guess-input" name="guess" type="text" inputmode="search" enterkeyhint="go"
+        placeholder="Type a building" autocomplete="off" autocorrect="off"
+        autocapitalize="off" spellcheck="false" role="combobox" aria-expanded="false"
+        aria-controls="suggest" aria-autocomplete="list">
+      <button type="button" class="btn btn-ink" id="guess-btn">Guess</button>
+    </div>
+  </div>
+</form>
+
+<dialog class="panel" id="panel" aria-labelledby="panel-title">
+  <div class="panel-head">
+    <h2 class="panel-title" id="panel-title"></h2>
+    <button type="button" class="icon" id="panel-close" aria-label="Close">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<p class="sr-only" id="announce" aria-live="polite"></p>
+
+<script type="module" src="src/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+/* Drawing vocabulary shared by every elevation in drawings/*.svg.
+   Drawings carry class names only; colour comes from these tokens so both themes work.
+   Stage N shows layers 1..N. Stage 1 is the pure silhouette in ink; from stage 2 the
+   silhouette pales to a concrete poché and the linework draws over it. */
+
+.dwg { display: block; width: 100%; height: auto; overflow: visible; }
+
+.dwg [data-layer] { transition: opacity .6s ease; }
+.dwg[data-stage="1"] [data-layer]:not([data-layer="1"]),
+.dwg[data-stage="2"] [data-layer="3"], .dwg[data-stage="2"] [data-layer="4"],
+.dwg[data-stage="2"] [data-layer="5"], .dwg[data-stage="2"] [data-layer="6"],
+.dwg[data-stage="3"] [data-layer="4"], .dwg[data-stage="3"] [data-layer="5"],
+.dwg[data-stage="3"] [data-layer="6"],
+.dwg[data-stage="4"] [data-layer="5"], .dwg[data-stage="4"] [data-layer="6"],
+.dwg[data-stage="5"] [data-layer="6"] { opacity: 0; }
+
+.dwg .sil { fill: var(--dw-poche); stroke: none; transition: fill .6s ease; }
+.dwg[data-stage="1"] .sil { fill: var(--dw-ink); }
+
+.dwg .ln, .dwg .ln2, .dwg .ln3, .dwg .gnd, .dwg .ctx {
+  fill: none; stroke: var(--dw-ink); stroke-linecap: square; stroke-linejoin: miter;
+  vector-effect: non-scaling-stroke;
+}
+.dwg .ln  { stroke-width: 1.6px; }
+.dwg .ln2 { stroke-width: 0.9px; }
+.dwg .ln3 { stroke-width: 0.5px; stroke: var(--dw-hair); }
+.dwg .gnd { stroke-width: 2.4px; }
+.dwg .ctx { stroke-width: 0.7px; stroke: var(--dw-ctx); }
+.dwg .hid { fill: none; stroke: var(--dw-ink); stroke-width: 0.8px; stroke-dasharray: 5 3; vector-effect: non-scaling-stroke; }
+.dwg .fig { fill: none; stroke: var(--dw-ink); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.dwg .wtr { fill: none; stroke: var(--dw-ctx); stroke-width: 0.7px; stroke-dasharray: 14 8; vector-effect: non-scaling-stroke; }
+
+.dwg .void { fill: var(--dw-void); stroke: none; }
+.dwg .glz  { fill: var(--dw-glaze); stroke: none; }
+.dwg .shd  { fill: var(--dw-shade); stroke: none; }
+.dwg .lit  { fill: var(--dw-light); stroke: none; }
+.dwg .acc  { fill: var(--dw-accent); stroke: none; }
+.dwg .dot  { fill: var(--dw-hair); stroke: none; }
+.dwg .ink  { fill: var(--dw-ink); stroke: none; }
+.dwg .acc-ln { fill: none; stroke: var(--dw-accent); stroke-width: 1.6px; vector-effect: non-scaling-stroke; }
+.dwg .dim  { fill: none; stroke: var(--dw-ink); stroke-width: 0.7px; vector-effect: non-scaling-stroke; }
+.dwg .lbl  { fill: var(--dw-ink); font: 500 22px/1 var(--font-mono, ui-monospace, monospace); letter-spacing: .04em; }
+
+.dwg [data-layer] * { transition: stroke 1.2s ease, fill 1.2s ease; }
+.dwg [data-layer].issued * { stroke: var(--dw-accent); transition: none; }
+.dwg [data-layer].issued .sil, .dwg [data-layer].issued .glz, .dwg [data-layer].issued .void,
+.dwg [data-layer].issued .shd, .dwg [data-layer].issued .dot, .dwg [data-layer].issued .ink { fill: var(--dw-accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .dwg [data-layer], .dwg .sil, .dwg [data-layer] * { transition: none; }
+}
+
+/* Hidden until the concrete question is answered (see sheet.showSurface). */
+.dwg[data-nosurface] [data-layer="4"] :is(.ln3, .dot) { visibility: hidden; }
