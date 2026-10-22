@@ -22,11 +22,10 @@ export function closePanel() {
   if (dlg.open) dlg.close();
 }
 
-export function helpContent({ name, exampleRow }) {
+export function helpContent({ name }) {
   return [
-    h('p', {}, h('strong', { text: 'Guess the concrete building in six tries.' })),
-    h('p', { text: 'Each wrong guess adds detail to the drawing. Each guess shows how far away the answer is, which way, and how close you are out of 100.' }),
-    exampleRow ? h('div', { class: 'example' }, exampleRow) : null,
+    h('p', {}, h('strong', { text: 'Name the concrete building. You have six guesses.' })),
+    h('p', { text: 'Guess the building, its architect or its city. A wrong building or city shows how far away the answer is and which way. Each wrong guess adds detail to the drawing.' }),
     h('p', { text: 'Then five quick bonus questions: architect, year, size, concrete, and spot the lie.' }),
     h('p', { class: 'hint', text: `A new building every day at midnight. ${name} is named for Mark.` }),
   ];

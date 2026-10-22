@@ -55,7 +55,7 @@ for (const p of PUZZLES) {
   await pick(answer.name);
   await page.waitForTimeout(1000);
   const verdict = await page.locator('.verdict').first().textContent();
-  if (!/2\/6/.test(verdict)) { console.error(`  ✗ sheet ${p.no}: expected a 2/6 win, saw "${verdict}"`); failures += 1; }
+  if (!/2 of 6/.test(verdict)) { console.error(`  ✗ sheet ${p.no}: expected a 2/6 win, saw "${verdict}"`); failures += 1; }
   await page.click('button:has-text("Bonus questions")');
   for (let round = 0; round < 5; round += 1) {
     await page.waitForTimeout(250);

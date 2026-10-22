@@ -11,6 +11,7 @@ const SQUARES = {
 const EMPTY = '⬜';
 const SOLVED = '📐';
 const NEXT_DOOR = '📍';
+const ARCHITECT = '✏️';
 
 export function sheetLabel(no) {
   return String(no).padStart(3, '0');
@@ -19,11 +20,12 @@ export function sheetLabel(no) {
 // rows: [{ correct, pct, bearing }] in guess order
 export function shareText({ name = 'Markle', no, rows, won, closeup = false, bonus = null, streak = 0, url = '', contrast = false }) {
   const sq = contrast ? SQUARES.contrast : SQUARES.normal;
-  const best = rows.reduce((m, r) => Math.max(m, r.pct), 0);
+  const best = rows.reduce((m, r) => Math.max(m, r.pct || 0), 0);
   const score = won ? `${rows.length}/6` : `X/6 (${best}%)`;
   const lines = [`#${name} ${sheetLabel(no)} · ${score}${closeup ? '*' : ''}`];
 
   for (const r of rows) {
+    if (r.architect) { lines.push((r.correct ? sq.full : EMPTY).repeat(5) + ARCHITECT); continue; }
     const { full, half, empty } = proximitySquares(r.pct);
     const tail = r.correct ? SOLVED : r.bearing == null ? NEXT_DOOR : arrowEmoji(r.bearing);
     lines.push(sq.full.repeat(full) + sq.half.repeat(half) + EMPTY.repeat(empty) + tail);

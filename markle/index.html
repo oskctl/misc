@@ -37,12 +37,17 @@
 
 <form class="composer" id="composer" autocomplete="off" hidden>
   <div class="composer-inner">
-    <ul class="suggest" id="suggest" role="listbox" aria-label="Buildings" hidden></ul>
+    <ul class="suggest" id="suggest" role="listbox" aria-label="Suggestions" hidden></ul>
     <p class="composer-msg" id="composer-msg" role="status" hidden></p>
+    <div class="seg kinds" role="group" aria-label="What to guess">
+      <button type="button" data-kind="building" aria-pressed="true">Building</button>
+      <button type="button" data-kind="architect" aria-pressed="false">Architect</button>
+      <button type="button" data-kind="city" aria-pressed="false">City</button>
+    </div>
     <div class="composer-row">
-      <label class="sr-only" for="guess-input">Name a building, city or country</label>
+      <label class="sr-only" for="guess-input">Your guess</label>
       <input id="guess-input" name="guess" type="text" inputmode="search" enterkeyhint="go"
-        placeholder="Building, city or country" autocomplete="off" autocorrect="off"
+        placeholder="Type a building" autocomplete="off" autocorrect="off"
         autocapitalize="off" spellcheck="false" role="combobox" aria-expanded="false"
         aria-controls="suggest" aria-autocomplete="list">
       <button type="button" class="btn btn-ink" id="guess-btn">Guess</button>

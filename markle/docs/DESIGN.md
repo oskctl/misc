@@ -31,11 +31,16 @@ photographs. Photos could be added later as a reveal-screen extra.
 
 | | |
 |---|---|
-| Guesses | 6 |
-| Input | Type a building, city or country; pick from the list. Architect names never match (knowing who designed it is part of the test). The list shows name, city and country, never architect, year or a picture. |
-| Feedback | Distance (km or miles), an arrow rotated to the exact bearing, proximity out of 100. Each row also names the guessed building's city and country. Nothing about the answer's age, architect or size. |
-| Reveal ladder | Rev 0 silhouette → A structure + 1.75 m figure → B openings + TYPE hint → C surface → D context + COUNTRY hint → E CITY hint. The scale bar appears only once the Dimension round is settled. |
-| End | Win: the sheet is stamped APPROVED. Loss: SUPERSEDED, and the answer is shown. Either way the title-block round opens. |
+| Lives | 6 guesses, shown as dots. Any guess costs one. |
+| What to guess | Switch above the input: **Building**, **Architect** or **City**. Naming the building wins. |
+| Building or city guess | Distance (km or miles), an arrow to the exact bearing, proximity out of 100, measured from the guessed building or the middle of the guessed city. A right city fills in City (and Country). |
+| Architect guess | Right or wrong, no clue. A right architect fills in Architect and counts as the first bonus question. |
+| Drawing | Each guess adds a layer: silhouette, structure + 1.75 m figure, openings, surface, setting. |
+| Hints | Type after 3 wrong guesses, Country after 4, City after 5. |
+| End | Win: "Solved in N of 6". Loss: "Out of guesses", and the answer is shown. Either way the bonus questions open. |
+
+Nothing is special-cased per building: a near miss (Rio for Niterói, Paris for Saint-Denis) simply
+reads as a few kilometres away with a high score.
 
 **Why only one feedback channel.** The main round must not answer the title block. An earlier
 build added YEAR, ARCH and TYPE chips to every guess (the way Poeltl's attribute grid does), but

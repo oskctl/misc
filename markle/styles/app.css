@@ -410,3 +410,24 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .12s !important; }
 }
+
+/* ---------- Main round: hints, lives, guess types ---------- */
+.hints { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; }
+.hint-chip { display: inline-flex; gap: 6px; align-items: baseline; padding: 6px 10px; border: 1px solid var(--hair); font-size: .8125rem; }
+.hint-chip .k { font: 500 .625rem/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.hint-chip .v { color: var(--muted); }
+.hint-chip.on { border-color: var(--ink); }
+.hint-chip.on .v { color: var(--ink); font-weight: 600; }
+.lives { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lives:empty { display: none; }
+.lives-k { font-size: .875rem; color: var(--muted); }
+.dots { display: flex; gap: 6px; }
+.dots i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--ink); }
+.dots i.on { background: var(--ink); }
+.guesses:empty { display: none; }
+.row { grid-template-columns: 4.6rem minmax(0, 1fr); }
+.row .kind { font: 500 .625rem/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); grid-row: span 2; align-self: start; padding-top: 5px; }
+.row.hit .kind { color: var(--on-ok); opacity: .75; }
+.composer .kinds { margin-bottom: 8px; }
+.composer .kinds button { min-height: 40px; }
+.composer input { min-height: 52px; font-size: 1.0625rem; border-width: 2px; }
