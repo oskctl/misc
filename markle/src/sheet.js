@@ -96,7 +96,7 @@ export function buildSheet(puzzle, svgText) {
       over.append(dim);
     },
     stamp(text, sub) {
-      stampSlot.replaceChildren(text ? h('div', { class: 'stamp' }, text, sub ? h('small', { text: sub }) : null) : '');
+      stampSlot.replaceChildren(text ? h('div', { class: `stamp${/approved/i.test(text) ? ' ok' : ''}` }, text, sub ? h('small', { text: sub }) : null) : '');
     },
   };
 }

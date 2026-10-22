@@ -283,7 +283,7 @@ function renderResult(rec, justFinished) {
   const parts = [];
 
   parts.push(h('section', { class: 'card', 'aria-label': 'Answer' },
-    h('p', { class: 'verdict', text: won ? `${HEADLINES[rec.guesses.length - 1]} · ${rec.guesses.length}/6` : 'Still curing · it was…' }),
+    h('p', { class: `verdict${won ? ' ok' : ''}`, text: won ? `${HEADLINES[rec.guesses.length - 1]} · ${rec.guesses.length}/6` : 'Still curing · it was…' }),
     h('h2', { class: 'answer-name', text: answer.name }),
     h('p', { class: 'answer-where', text: `${answer.city}, ${answer.country}${answer.status === 'demolished' ? ' · demolished' : ''}` }),
     !bonus.done && !started ? [

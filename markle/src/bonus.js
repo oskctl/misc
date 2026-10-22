@@ -135,7 +135,7 @@ export function renderBonus(root, ctx) {
       if (!done) {
         return h('button', { type: 'button', class: 'tile', onclick: () => { result.pick = i; settle(n.lie); } }, n.text);
       }
-      const cls = n.lie ? 'lie struck' : result.pick === i ? 'picked' : '';
+      const cls = n.lie ? `lie struck${result.pass ? ' got' : ''}` : result.pick === i ? 'picked' : '';
       return h('div', { class: `tile ${cls}` },
         h('span', { class: 't', text: n.text }),
         h('small', {}, n.lie ? `False. ${n.correction} ` : 'True. ', source(n.source)));
@@ -145,7 +145,7 @@ export function renderBonus(root, ctx) {
   if (done) {
     const verdict = result.pass ? 'Correct' : result.skipped ? 'Skipped' : 'Not this time';
     body.append(
-      h('p', { class: 'verdict', text: verdict }),
+      h('p', { class: `verdict${result.pass ? ' ok' : ''}`, text: verdict }),
       h('div', { class: 'btn-row' }, h('button', { type: 'button', class: 'btn btn-ink', onclick: advance },
         index < ROUNDS.length - 1 ? 'Next →' : 'See results →')),
     );

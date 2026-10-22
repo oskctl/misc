@@ -50,3 +50,12 @@ test('limit and overflow count; empty query returns nothing', () => {
   assert.equal(r.more, 2);
   assert.deepEqual(search(index, '   ').hits, []);
 });
+
+test('a city also finds buildings just outside it, after its own', () => {
+  const near = buildIndex([
+    { id: 'mam', name: 'Museum of Modern Art', aka: [], city: 'Rio de Janeiro', country: 'Brazil', lat: -22.913, lon: -43.171 },
+    { id: 'mac', name: 'Niterói Contemporary Art Museum', aka: [], city: 'Niterói', country: 'Brazil', lat: -22.9079, lon: -43.1259 },
+    { id: 'masp', name: 'MASP', aka: [], city: 'São Paulo', country: 'Brazil', lat: -23.5614, lon: -46.6559 },
+  ]);
+  assert.deepEqual(search(near, 'rio').hits.map(h => h.b.id), ['mam', 'mac']);
+});

@@ -1,3 +1,5 @@
+import { distanceKm } from './geo.js';
+
 // Autocomplete matching: accent-insensitive, matches the start of any word in the building's
 // name, aliases, city or country. Architect names never match: knowing who designed it is the
 // title block's first question, not a way to find the building.
@@ -10,12 +12,17 @@ export function fold(s) {
     .replace(/[’'`]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
+// Cities within this distance count as the same place, so "Rio" finds Niterói across the bay.
+const NEAR_KM = 30;
+
 export function buildIndex(buildings) {
   return buildings.map(b => ({
     b,
     name: fold(b.name),
     aka: (b.aka || []).map(a => [a, fold(a)]),
     place: [fold(b.city), fold(b.country)],
+    near: [...new Set(buildings.filter(o => o.city !== b.city && o.lat != null && b.lat != null
+      && distanceKm(o, b) < NEAR_KM).map(o => fold(o.city)))],
   }));
 }
 
@@ -27,6 +34,7 @@ function score(e, q) {
   if (startsWord(e.name, q)) return [2];
   for (const [raw, folded] of e.aka) if (startsWord(folded, q)) return [3, raw];
   if (e.place.some(p => startsWord(p, q))) return [4];
+  if (q.length >= 3 && e.near.some(p => startsWord(p, q))) return [4.5];
   if (q.length >= 4 && e.name.includes(q)) return [5];
   return null;
 }
