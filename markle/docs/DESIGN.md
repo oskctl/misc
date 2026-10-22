@@ -57,13 +57,15 @@ answer itself.
 Five quick rounds after the main guess, win or lose, each filling a field on the drawing's title
 block. Fixed order, option order seeded by sheet number so friends see the same layout.
 
-| Field | Prompt | Interaction | Tries | Passes when |
-|---|---|---|---|---|
-| ✏️ Architect | Who designed it? | 6 name tiles | 2 | correct |
-| 📅 Completed | When was it completed? | Scale-rule slider with −/+ and ▲▼ feedback | 3 | within ±2 years |
-| 📏 Dimension | Dimension it. | The drawing with the scale bar hidden and a dimension line marked "?"; judge from storeys and the 1.75 m figure; 4 options spaced ×2 apart | 1 | correct |
-| 🏗️ Spec | Specify the concrete. | 4 techniques from a shared vocabulary | 1 | correct |
-| 📜 Notes | Two truths and a lie. | Tap the lie to strike it | 1 | the lie is struck |
+| Field | Prompt | Options | Tries |
+|---|---|---|---|
+| ✏️ Architect | Who designed it? | 4 names | 1 |
+| 📅 Year | When was it finished? | 4 years, 10 years apart | 1 |
+| 📏 Size | How big is it? | 4 sizes ×2 apart; the drawing with a "?" dimension line and the 1.75 m figure, no scale bar | 1 |
+| 🏗️ Concrete | How was the concrete made? | 4 techniques from a shared vocabulary | 1 |
+| 📜 Lie | Which one is false? | 3 statements, one false | 1 |
+
+Every bonus question is one pick from four options (three for the lie), like Worldle's follow-up rounds.
 
 Design rules that keep this honest: the ±2-year tolerance absorbs source disagreements about
 completion; the ×2 spacing means a 10% disagreement about a dimension can never flip the answer;

@@ -56,24 +56,13 @@ for (const p of PUZZLES) {
   await page.waitForTimeout(1000);
   const verdict = await page.locator('.verdict').first().textContent();
   if (!/2\/6/.test(verdict)) { console.error(`  ✗ sheet ${p.no}: expected a 2/6 win, saw "${verdict}"`); failures += 1; }
-  await page.click('button:has-text("Complete the title block")');
+  await page.click('button:has-text("Bonus questions")');
   for (let round = 0; round < 5; round += 1) {
     await page.waitForTimeout(250);
-    if (await page.locator('button:has-text("Submit")').count()) {
-      for (let t = 0; t < 3 && await page.locator('button:has-text("Submit")').count(); t += 1) {
-        await page.click('button:has-text("Submit")');
-        await page.waitForTimeout(150);
-      }
-    } else {
-      for (let t = 0; t < 2; t += 1) {
-        const open = page.locator('button.tile:not([disabled])');
-        if (!(await open.count()) || await page.locator('button:has-text("Next:"), button:has-text("Finish the sheet")').count()) break;
-        await open.first().click();
-        await page.waitForTimeout(150);
-      }
-    }
+    await page.locator('button.tile:not([disabled])').first().click();
+    await page.waitForTimeout(150);
     await shot(`${p.no}-2-round-${round + 1}`);
-    await page.click('button:has-text("Next:"), button:has-text("Finish the sheet")');
+    await page.click('button:has-text("Next →"), button:has-text("See results")');
   }
   await page.waitForTimeout(600);
   await shot(`${p.no}-3-summary`);

@@ -25,20 +25,11 @@ export function closePanel() {
 
 export function helpContent({ name, exampleRow }) {
   return [
-    h('p', {}, h('strong', { text: `Name today's concrete building in six guesses.` }),
-      ' Every guess is a building from the list: type a name, a city or a country.'),
-    h('p', { text: 'The drawing starts as a solid silhouette. Each wrong guess issues a revision with more detail: structure and a scale figure, then openings, surface, setting. Later revisions also fill in the title block with the building type, country and city.' }),
-    h('h3', { text: 'Each guess tells you' }),
-    h('div', { class: 'legend' },
-      h('div', {}, h('b', { class: 'mono', text: '7.7 km' }), ' how far the answer is, with an arrow pointing to it'),
-      h('div', {}, h('b', { class: 'mono', text: '92' }), ' how close you are, out of 100 (100 is on the spot)'),
-    ),
+    h('p', {}, h('strong', { text: 'Guess the concrete building in six tries.' })),
+    h('p', { text: 'Each wrong guess adds detail to the drawing. Each guess shows how far away the answer is, which way, and how close you are out of 100.' }),
     exampleRow ? h('div', { class: 'example' }, exampleRow) : null,
-    h('h3', { text: 'Then complete the title block' }),
-    h('p', { text: 'Win or lose, five quick questions finish the sheet: the architect, the year it was completed, one dimension, how the concrete was made, and a lie to strike out.' }),
-    h('h3', { text: 'Close-up mode' }),
-    h('p', { text: 'For experts: start zoomed tight into a detail of the finished drawing and step out with each miss, with no title-block hints. Turn it on in Settings before your first guess. It shows as * in your result.' }),
-    h('p', { class: 'hint', text: `A new sheet is issued at midnight, your time. ${name} is named for Mark, and for the marks timber formwork leaves in concrete.` }),
+    h('p', { text: 'Then five quick bonus questions: architect, year, size, concrete, and spot the lie.' }),
+    h('p', { class: 'hint', text: `A new building every day at midnight. ${name} is named for Mark.` }),
   ];
 }
 
@@ -57,7 +48,7 @@ export function statsContent({ games, latestIssued, todayNo, countdownAt, nextLa
         class: [v ? '' : 'zero', k === todayKey ? 'today' : ''].join(' ').trim(),
         style: `width: ${Math.max(8, (v / max) * 100)}%`,
       }, String(v))))),
-    h('h3', { text: `Title block · average ${st.bonusAverage.toFixed(1)} / 5` }),
+    h('h3', { text: `Bonus questions · average ${st.bonusAverage.toFixed(1)} / 5` }),
     h('div', { class: 'passrates' }, BONUS_KEYS.map(k => {
       const r = st.bonus[k];
       return h('div', {}, h('b', { text: r.played ? `${Math.round((r.passed / r.played) * 100)}%` : '–' }), ROUND_LABELS[k].toUpperCase());

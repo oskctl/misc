@@ -288,8 +288,7 @@ function renderResult(rec, justFinished) {
     h('h2', { class: 'answer-name', text: answer.name }),
     h('p', { class: 'answer-where', text: `${answer.city}, ${answer.country}${answer.status === 'demolished' ? ' · demolished' : ''}` }),
     !bonus.done && !started ? [
-      h('p', { class: 'lede', text: 'Now complete the title block: five quick questions on who designed it, when, how big, and how the concrete was made.' }),
-      h('div', { class: 'btn-row' }, h('button', { type: 'button', class: 'btn btn-ink', onclick: startBonus }, 'Complete the title block →')),
+      h('div', { class: 'btn-row' }, h('button', { type: 'button', class: 'btn btn-ink', onclick: startBonus }, 'Bonus questions →')),
     ] : null,
   ));
 
@@ -360,7 +359,7 @@ function summary(rec) {
   };
   const guesses = guessesOf(rec).map(id => byId.get(id));
   return h('section', { class: 'card', 'aria-label': 'The completed sheet' },
-    h('p', { class: 'q-k', text: `Title block · ${ROUNDS.filter(k => b[k]?.pass).length}/5` }),
+    h('p', { class: 'q-k', text: `Bonus · ${ROUNDS.filter(k => b[k]?.pass).length}/5` }),
     h('div', { class: 'recap' }, ROUNDS.map(k => [
       h('span', { class: 'k', text: ROUND_LABELS[k] }),
       h('span', { text: val[k] }),

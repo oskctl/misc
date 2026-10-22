@@ -1,10 +1,9 @@
-// Title-block rounds: the rules, kept free of DOM. Option order is seeded by sheet number so
-// everyone sees the same order and results compare fairly.
+// Bonus questions: the rules, kept free of DOM. Every question is one pick from four options;
+// option order is seeded by sheet number so everyone sees the same layout.
 
 export const ROUNDS = ['architect', 'year', 'dimension', 'spec', 'notes'];
-export const ROUND_TRIES = { architect: 2, year: 3, dimension: 1, spec: 1, notes: 1 };
 export const ROUND_LABELS = {
-  architect: 'Architect', year: 'Completed', dimension: 'Dimension', spec: 'Spec', notes: 'Notes',
+  architect: 'Architect', year: 'Year', dimension: 'Size', spec: 'Concrete', notes: 'Lie',
 };
 
 export function rng(seed) {
@@ -31,7 +30,14 @@ export function shuffled(items, seed) {
 const seedFor = (no, round) => no * 97 + ROUNDS.indexOf(round) * 13 + 7;
 
 export function architectOptions(puzzle) {
-  return shuffled([puzzle.architect.answer, ...puzzle.architect.distractors], seedFor(puzzle.no, 'architect'));
+  return shuffled([puzzle.architect.answer, ...puzzle.architect.distractors.slice(0, 3)], seedFor(puzzle.no, 'architect'));
+}
+
+// The completion year among three others 10, 20 or 30 years away (never in the future), oldest first.
+export function yearOptions(puzzle, thisYear = new Date().getFullYear()) {
+  const v = puzzle.year.value;
+  const others = shuffled([-30, -20, -10, 10, 20, 30].map(d => v + d).filter(y => y <= thisYear), seedFor(puzzle.no, 'year')).slice(0, 3);
+  return [v, ...others].sort((a, b) => a - b);
 }
 
 export function specOptions(puzzle) {
@@ -57,17 +63,8 @@ export function dimensionOptions(puzzle) {
 // Option tiles round to whole metres above 10 m; the revealed answer (exact) keeps one decimal
 // so it quotes the sourced figure.
 export function formatMetres(v, unit = 'm', { exact = false } = {}) {
-  const n = v >= 10 && !exact ? Math.round(v) : Math.round(v * 10) / 10;
+  const n = exact ? Math.round(v * 10) / 10 : v >= 2.5 ? Math.round(v) : Math.round(v * 2) / 2;
   return `${n.toLocaleString('en-GB')} ${unit}`;
-}
-
-export function yearVerdict(guess, puzzle) {
-  const delta = puzzle.year.value - guess;
-  return {
-    pass: Math.abs(delta) <= puzzle.year.tolerance,
-    dir: delta > 0 ? 'later' : delta < 0 ? 'earlier' : 'exact',
-    near: Math.abs(delta) <= 5,
-  };
 }
 
 // A round is settled once it has a pass/fail result.

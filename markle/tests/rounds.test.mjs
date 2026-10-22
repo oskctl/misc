@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { shuffled, architectOptions, dimensionOptions, noteOptions, formatMetres, yearVerdict, nextRound } from '../src/rounds.js';
+import { shuffled, architectOptions, yearOptions, dimensionOptions, noteOptions, formatMetres, nextRound } from '../src/rounds.js';
 
 const puzzle = {
   no: 3,
@@ -18,9 +18,9 @@ test('seeded shuffle is stable and a permutation', () => {
   assert.notDeepEqual(shuffled([1, 2, 3, 4, 5, 6], 43), [1, 2, 3, 4, 5, 6]);
 });
 
-test('architect options contain the answer once among six', () => {
+test('architect options contain the answer once among four', () => {
   const opts = architectOptions(puzzle);
-  assert.equal(opts.length, 6);
+  assert.equal(opts.length, 4);
   assert.equal(opts.filter(o => o === 'Ernő Goldfinger').length, 1);
 });
 
@@ -42,14 +42,18 @@ test('metres formatting', () => {
   assert.equal(formatMetres(24.5), '25 m');
   assert.equal(formatMetres(33.5, 'm', { exact: true }), '33.5 m');
   assert.equal(formatMetres(98, 'm', { exact: true }), '98 m');
-  assert.equal(formatMetres(5.9), '5.9 m');
+  assert.equal(formatMetres(5.9), '6 m');
+  assert.equal(formatMetres(5.9, 'm', { exact: true }), '5.9 m');
   assert.equal(formatMetres(1.475), '1.5 m');
 });
 
-test('year verdict', () => {
-  assert.deepEqual(yearVerdict(1970, puzzle), { pass: true, dir: 'later', near: true });
-  assert.deepEqual(yearVerdict(1980, puzzle), { pass: false, dir: 'earlier', near: false });
-  assert.equal(yearVerdict(1972, puzzle).dir, 'exact');
+test('year options: four, ten-year steps, never in the future', () => {
+  const y = yearOptions(puzzle, 2026);
+  assert.equal(y.length, 4);
+  assert.ok(y.includes(1972));
+  assert.ok(y.every(v => v <= 2026 && (v - 1972) % 10 === 0));
+  assert.deepEqual(y, y.slice().sort((a, b) => a - b));
+  assert.ok(yearOptions({ ...puzzle, year: { value: 2007 } }, 2026).every(v => v <= 2026));
 });
 
 test('next unsettled round', () => {
